@@ -33,8 +33,8 @@ public class A4Lb implements Closeable {
       while (true) {
         Socket clientSocket = serverSocket.accept();
         executor.submit(() -> {
-          A4Forward clientToBackend = new A4Forward(clientSocket, backendSocket);
-          A4Forward backendToClient = new A4Forward(backendSocket, clientSocket);
+          A4Tcp clientToBackend = new A4Tcp(clientSocket, backendSocket);
+          A4Tcp backendToClient = new A4Tcp(backendSocket, clientSocket);
           ExecutorService forwardExecutor = Executors.newFixedThreadPool(
               2, r -> new Thread(r, String.format("a4lb-%x", rnd.nextInt()))
           );
