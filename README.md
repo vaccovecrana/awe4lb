@@ -1,5 +1,9 @@
 # awe4lb
 
+## Security considerations
+
+- Do not allow public access to the REST api, since it allows for full management. Expose it only within a trusted network perimeter.
+
 ## Resources
 
 - https://stackoverflow.com/questions/53323855/sslserversocket-and-certificate-setup

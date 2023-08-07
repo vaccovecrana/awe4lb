@@ -1,0 +1,9 @@
+.idea
+settings.json
+
+build/
+bin/
+
+.gradle
+gradle/
+gradlew*
