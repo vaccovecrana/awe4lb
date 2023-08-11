@@ -15,13 +15,11 @@ public class A4Lb implements Closeable {
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
   private final ServerSocket serverSocket;
-  private final Socket backendSocket;
   private final Random rnd = new Random();
 
   public A4Lb() {
     try {
       this.serverSocket = new ServerSocket(port); // TODO what about SSL server connections?
-      this.backendSocket = new Socket("127.0.0.1", 6900); // TODO config param
       log.info("Server listening on port {}", port);
     } catch (Exception e) {
       throw new IllegalStateException("Balancer initialization error", e);
@@ -29,17 +27,32 @@ public class A4Lb implements Closeable {
   }
 
   public void start() {
-    try {
+    try (var backend = new Socket("127.0.0.1", 6900)) { // TODO config param
+
+      backend.setTcpNoDelay(true);
+
       while (true) {
-        Socket clientSocket = serverSocket.accept();
+        var clientSocket = serverSocket.accept();
+
+        clientSocket.setTcpNoDelay(true);
+
         executor.submit(() -> {
-          A4Tcp clientToBackend = new A4Tcp(clientSocket, backendSocket);
-          A4Tcp backendToClient = new A4Tcp(backendSocket, clientSocket);
-          ExecutorService forwardExecutor = Executors.newFixedThreadPool(
+          var a4 = new A4Tcp(clientSocket, backend);
+
+          // TODO pull a backend socket here...
+
+          var forwardExecutor = Executors.newFixedThreadPool(
               2, r -> new Thread(r, String.format("a4lb-%x", rnd.nextInt()))
           );
-          forwardExecutor.submit(clientToBackend);
-          forwardExecutor.submit(backendToClient);
+
+          // TODO I think it's really the Future what can be used to determine which I/O task has finished
+          //   and then, based on that, stop/interrupt the pending Future (i.e. returning backend connections to the socket pool).
+          forwardExecutor.submit(a4.c2b());
+          forwardExecutor.submit(a4.b2c());
+
+          CompletableFuture.anyOf(
+              // TODO here...
+          );
         });
       }
     } catch (IOException e) {
@@ -52,7 +65,6 @@ public class A4Lb implements Closeable {
       log.info("Stopping.");
       executor.shutdown();
       serverSocket.close();
-      backendSocket.close();
     } catch (Exception e) {
       log.error("Server stop error", e);
     }
