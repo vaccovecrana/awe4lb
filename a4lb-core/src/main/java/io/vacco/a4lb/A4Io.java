@@ -21,6 +21,7 @@ public class A4Io {
       int bytesRead = sc.read(bb);
       if (bytesRead == -1) {
         if (log.isTraceEnabled()) {
+          // TODO find a way to release the backend socket channel back to the pool.
           log.trace("{} - socket channel EOF", sc.socket());
         }
         close(sc);

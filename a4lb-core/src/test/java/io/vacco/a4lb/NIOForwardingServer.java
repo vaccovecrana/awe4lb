@@ -64,7 +64,7 @@ public class NIOForwardingServer {
         } catch (Exception e) {
           System.out.println("I/O session error");
           e.printStackTrace();
-          A4Io.close(backend[0]);
+          A4Io.close(backend[0]); // TODO if the backend socket channel failed, it needs to be marked as expired for the pool.
           backend[0] = null;
           A4Io.close(client[0]);
           client[0] = null;

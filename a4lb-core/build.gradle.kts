@@ -6,7 +6,7 @@ configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
 val api by configurations
 
 dependencies {
-  api("org.slf4j:slf4j-api:2.0.6")
+  api("io.vacco.shax:shax:2.0.6.0.1.0")
   api("com.github.chrisvest:stormpot:3.1")
-  testImplementation("io.vacco.shax:shax:2.0.6.0.1.0")
+  api("com.github.marianobarrios:tls-channel:0.8.0")
 }
