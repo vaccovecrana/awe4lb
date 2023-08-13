@@ -1,24 +1,28 @@
 package io.vacco.a4lb;
 
 import org.slf4j.*;
+import stormpot.*;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.*;
-import java.util.Random;
 import java.util.concurrent.*;
 
 public class A4Lb implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(A4Lb.class);
 
-  private final int port = 12345; // Change this to your desired port number
-  private final ExecutorService executor = Executors.newCachedThreadPool();
-
   private final ServerSocket serverSocket;
-  private final Random rnd = new Random();
+  private final Timeout to = new Timeout(1, TimeUnit.SECONDS);
+  private final Pool<A4PTcp> tcpPool = Pool
+      .from(new A4PTcpAlloc())
+      .setExpiration(new A4PTcpExp())
+      .build();
 
   public A4Lb() {
     try {
+      // TODO config param
+      int port = 12345;
       this.serverSocket = new ServerSocket(port); // TODO what about SSL server connections?
       log.info("Server listening on port {}", port);
     } catch (Exception e) {
@@ -27,33 +31,17 @@ public class A4Lb implements Closeable {
   }
 
   public void start() {
-    try (var backend = new Socket("127.0.0.1", 6900)) { // TODO config param
-
-      backend.setTcpNoDelay(true);
-
+    try {
+      var mon = new A4PTcpMon();
       while (true) {
         var clientSocket = serverSocket.accept();
-
-        clientSocket.setTcpNoDelay(true);
-
-        executor.submit(() -> {
-          var a4 = new A4Tcp(clientSocket, backend);
-
-          // TODO pull a backend socket here...
-
-          var forwardExecutor = Executors.newFixedThreadPool(
-              2, r -> new Thread(r, String.format("a4lb-%x", rnd.nextInt()))
-          );
-
-          // TODO I think it's really the Future what can be used to determine which I/O task has finished
-          //   and then, based on that, stop/interrupt the pending Future (i.e. returning backend connections to the socket pool).
-          forwardExecutor.submit(a4.c2b());
-          forwardExecutor.submit(a4.b2c());
-
-          CompletableFuture.anyOf(
-              // TODO here...
-          );
-        });
+        try {
+          var backendPs = tcpPool.claim(to);
+          mon.accept(clientSocket, backendPs);
+        } catch (Exception e) {
+          log.error("Unable to allocate backend socket.", e);
+          A4Io.close(clientSocket);
+        }
       }
     } catch (IOException e) {
       log.error("Server connection error", e);
@@ -63,7 +51,6 @@ public class A4Lb implements Closeable {
   public void stop() {
     try {
       log.info("Stopping.");
-      executor.shutdown();
       serverSocket.close();
     } catch (Exception e) {
       log.error("Server stop error", e);
