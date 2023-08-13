@@ -1,5 +1,7 @@
 package io.vacco.a4lb;
 
+import io.vacco.shax.logging.ShOption;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -7,74 +9,68 @@ import java.nio.channels.*;
 
 public class NIOForwardingServer {
 
-  public static int tryRead(SelectionKey k, SocketChannel c, ByteBuffer bb) throws IOException {
-    bb.clear();
-    int bytesRead = c.read(bb);
-    if (bytesRead == -1) {
-      System.out.printf("%s - channel EOF", k);
-      c.close();
-      k.cancel();
-    } else if (bytesRead > 0) {
-      bb.flip();
-    }
-    return bytesRead;
+  static {
+    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_DEVMODE, "true");
+    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
+    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_LOGLEVEL, "trace");
   }
 
-  public static void main(String[] args) throws IOException {
-
-    Selector selector = Selector.open();
-
-    var ssc = ServerSocketChannel.open();
-    ssc.bind(new InetSocketAddress(8080));
-    ssc.configureBlocking(false);
-    ssc.register(selector, SelectionKey.OP_ACCEPT);
-
+  public static SocketChannel openBackend(Selector sel) throws IOException {
     var bkc = SocketChannel.open();
     bkc.connect(new InetSocketAddress("localhost", 6900));
     bkc.configureBlocking(false);
-    bkc.register(selector, SelectionKey.OP_READ);
+    bkc.register(sel, SelectionKey.OP_READ);
+    return bkc;
+  }
 
-    var buffer = ByteBuffer.allocate(8192);
+  public static void main(String[] args) {
 
-    SocketChannel client = null;
+    var selector = A4Io.osSelector();
+    var buffer = ByteBuffer.allocate(16);
+
+    final SocketChannel[] client = { null };
+    final SocketChannel[] backend = { null };
+    A4Io.openServer(selector, new InetSocketAddress(8080));
 
     while (true) {
-      selector.select();
-      var keyIterator = selector.selectedKeys().iterator();
-
-      while (keyIterator.hasNext()) {
-        var key = keyIterator.next();
-        keyIterator.remove();
-
-        if (key.isAcceptable()) {
-          var serverChannel = (ServerSocketChannel) key.channel();
-          client = serverChannel.accept();
-          client.configureBlocking(false);
-          client.register(selector, SelectionKey.OP_READ);
-        } else if (key.isReadable()) {
-          var channel = (SocketChannel) key.channel();
-          if (channel == client) { // data from client, fill buffer
-            var bCount = tryRead(key, channel, buffer);
-            if (bCount == -1) {
-              continue;
+      A4Io.select(selector, key -> {
+        try {
+          if (key.isAcceptable()) {
+            var serverChannel = (ServerSocketChannel) key.channel();
+            client[0] = serverChannel.accept();
+            client[0].configureBlocking(false);
+            client[0].register(selector, SelectionKey.OP_READ);
+            if (backend[0] == null) {
+              backend[0] = openBackend(selector);
             }
-          } else { // data from backend, fill buffer
-            var bCount = tryRead(key, bkc, buffer);
-            if (bCount == -1) {
-              continue;
+          } else if (key.isReadable()) {
+            if (key.channel() == client[0]) {
+              if (A4Io.eofRead(key, client[0], buffer) == -1) {
+                return;
+              }
+            } else if (A4Io.eofRead(key, backend[0], buffer) == -1) {
+              return;
             }
+            key.interestOps(SelectionKey.OP_WRITE);
+          } else if (key.isWritable()) {
+            var channel = (SocketChannel) key.channel();
+            if (channel == client[0]) {
+              backend[0].write(buffer);
+            } else {
+              client[0].write(buffer);
+            }
+            key.interestOps(SelectionKey.OP_READ);
           }
-          key.interestOps(SelectionKey.OP_WRITE);
-        } else if (key.isWritable()) {
-          var channel = (SocketChannel) key.channel();
-          if (channel == client) { // client ready to receive, write buffer
-            bkc.write(buffer);
-          } else { // backend ready to receive, write buffer
-            client.write(buffer);
-          }
-          key.interestOps(SelectionKey.OP_READ);
+        } catch (Exception e) {
+          System.out.println("I/O session error");
+          e.printStackTrace();
+          A4Io.close(backend[0]);
+          backend[0] = null;
+          A4Io.close(client[0]);
+          client[0] = null;
+          A4Io.zeroFill(buffer);
         }
-      }
+      });
     }
   }
 }
