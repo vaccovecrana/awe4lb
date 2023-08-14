@@ -1,0 +1,90 @@
+{
+  "api": {
+    "enabled": true,
+    "bind": "0.0.0.0:8888"
+  },
+  "metrics": {
+    "enabled": true,
+    "bind": "0.0.0.0:9284"
+  },
+  "servers": {
+    "vacco-tls": {
+      "bind": "0.0.0.0:443",
+      "protocol": "tls",
+      "tls": {
+        "cert_path": "/etc/gobetween/vacco-li-chain.pem",
+        "key_path": "/etc/gobetween/vacco-li.key",
+        "min_version": "tls1.3",
+        "prefer_server_ciphers": false,
+        "session_tickets": true
+      },
+      "discovery": {
+        "kind": "static",
+        "static_list": [
+          "us-east-00-vault-00.lan:8200 sni=sso.vacco.li",
+          "us-east-00-git-00.lan:3000 sni=git.vacco.li",
+          "us-east-00-drone-00.lan:80 sni=ci.vacco.li",
+          "us-east-00-dcr-00.lan:5000 sni=dcr.vacco.li",
+          "us-east-00-dcr-01.lan:5000 sni=dcr-cache.vacco.li",
+          "us-east-00-grafana-00.lan:3000 sni=grf.vacco.li",
+          "172.16.40.1:10000 sni=cnt.vacco.li"
+        ]
+      },
+      "sni": {
+        "hostname_matching_strategy": "exact",
+        "unexpected_hostname_strategy": "reject"
+      },
+      "healthcheck": {
+        "kind": "ping",
+        "interval": "5s",
+        "ping_timeout_duration": "3000ms"
+      }
+    },
+    "vacco-ssh": {
+      "bind": "0.0.0.0:22",
+      "discovery": {
+        "kind": "static",
+        "static_list": [
+          "us-east-00-git-00.lan:22 sni=git.vacco.li"
+        ]
+      },
+      "healthcheck": {
+        "kind": "ping",
+        "interval": "5s",
+        "ping_timeout_duration": "3000ms"
+      }
+    },
+    "k0s-prd-kube-api": {
+      "bind": "0.0.0.0:6443",
+      "discovery": {
+        "kind": "static",
+        "static_list": [
+          "us-east-00-k8s-prd-cnt-00.lan:6443",
+          "us-east-00-k8s-prd-cnt-01.lan:6443",
+          "us-east-00-k8s-prd-cnt-02.lan:6443"
+        ]
+      },
+      "healthcheck": {
+        "interval": "1s",
+        "kind": "ping",
+        "ping_timeout_duration": "500ms"
+      }
+    },
+    "k0s-stg-kube-api": {
+      "bind": "0.0.0.0:6448",
+      "discovery": {
+        "kind": "static",
+        "static_list": [
+          "us-east-00-k8s-stg-cnt-00.lan:6443",
+          "us-east-00-k8s-stg-cnt-01.lan:6443",
+          "us-east-00-k8s-stg-cnt-02.lan:6443"
+        ]
+      },
+      "healthcheck": {
+        "interval": "1s",
+        "kind": "ping",
+        "ping_timeout_duration": "500ms"
+      }
+    }
+  }
+}

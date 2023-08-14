@@ -1,19 +1,26 @@
 package io.vacco.a4lb;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.function.Consumer;
 
 public class A4Io {
 
   public static final Logger log = LoggerFactory.getLogger(A4Io.class);
+
+  public static void close(SocketChannel sc) {
+    try {
+      if (sc != null) {
+        sc.close();
+      }
+    } catch (IOException ioe) {
+      if (log.isTraceEnabled()) {
+        log.trace("Unable to close socket channel {}", sc.socket(), ioe);
+      }
+    }
+  }
 
   public static int eofRead(SelectionKey k, SocketChannel sc, ByteBuffer bb) {
     try {
@@ -21,7 +28,6 @@ public class A4Io {
       int bytesRead = sc.read(bb);
       if (bytesRead == -1) {
         if (log.isTraceEnabled()) {
-          // TODO find a way to release the backend socket channel back to the pool.
           log.trace("{} - socket channel EOF", sc.socket());
         }
         close(sc);
@@ -38,40 +44,11 @@ public class A4Io {
     }
   }
 
-  public static void close(SocketChannel sc) {
-    try {
-      if (sc != null) {
-        sc.close();
-      }
-    } catch (IOException ioe) {
-      if (log.isTraceEnabled()) {
-        log.trace("Unable to close socket channel {}", sc.socket(), ioe);
-      }
-    }
-  }
-
   public static Selector osSelector() {
     try {
       return Selector.open();
     } catch (IOException ioe) {
       log.error("Unable to obtain OS selector", ioe);
-      throw new IllegalStateException(ioe);
-    }
-  }
-
-  public static ServerSocketChannel openServer(Selector sel, InetSocketAddress target) {
-    // TODO
-    //   this needs to accept custom configurations for each ingress type (tcp vs tls)
-    //   also what about UDP server socket channels? :/
-    try {
-      var ssc = ServerSocketChannel.open();
-      ssc.bind(target);
-      ssc.configureBlocking(false);
-      ssc.register(sel, SelectionKey.OP_ACCEPT);
-      log.info("{} - Ingress open", ssc.socket());
-      return ssc;
-    } catch (IOException ioe) {
-      log.error("Unable to open server socket channel {}", target, ioe);
       throw new IllegalStateException(ioe);
     }
   }

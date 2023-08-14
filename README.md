@@ -1,5 +1,9 @@
 # awe4lb
 
+## UDP configuration
+
+- Set the size of the reception buffer according to your application's requirements.
+
 ## Security considerations
 
 - Do not allow public access to the REST api, since it allows for full management. Expose it only within a trusted network perimeter.
