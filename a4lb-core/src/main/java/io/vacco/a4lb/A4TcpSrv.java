@@ -65,7 +65,7 @@ public class A4TcpSrv {
     A4Io.select(selector, key -> {
       if (key.channel() == this.channel && key.isAcceptable()) {
         initSession();
-      } else if (clIdx.containsKey(key)) { // perhaps this is a message for one of this server's sessions
+      } else if (clIdx.containsKey(key)) {
         clIdx.get(key).update(key);
       } else if (bkIdx.containsKey(key)) {
         bkIdx.get(key).update(key);
