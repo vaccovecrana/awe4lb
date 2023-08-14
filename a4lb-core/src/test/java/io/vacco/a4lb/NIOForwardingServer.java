@@ -36,6 +36,10 @@ public class NIOForwardingServer {
       A4Io.select(selector, key -> {
         try {
           if (key.isAcceptable()) {
+            if (client[0] != null) {
+              System.out.printf("last connection status - %s%n", client[0]);
+              A4Io.close(client[0]);
+            }
             var serverChannel = (ServerSocketChannel) key.channel();
             client[0] = serverChannel.accept();
             client[0].configureBlocking(false);
