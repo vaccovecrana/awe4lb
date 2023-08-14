@@ -35,6 +35,10 @@ public class A4TcpSess {
     onTearDown.run();
   }
 
+  private void sessionMismatch(SelectionKey key) {
+    throw new IllegalStateException("key/session mismatch " + key);
+  }
+
   public void update(SelectionKey key) {
     try {
       if (key.isReadable()) {
@@ -49,7 +53,7 @@ public class A4TcpSess {
             return;
           }
         } else {
-          throw new IllegalStateException("key/session mismatch " + key);
+          sessionMismatch(key);
         }
         key.interestOps(SelectionKey.OP_WRITE);
       } else if (key.isWritable()) {
@@ -59,7 +63,7 @@ public class A4TcpSess {
         } else if (channel == backend.channel) {
           client.write(backend.buffer);
         } else {
-          throw new IllegalStateException("key/session mismatch " + key);
+          sessionMismatch(key);
         }
         key.interestOps(SelectionKey.OP_READ);
       }
