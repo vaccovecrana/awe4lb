@@ -1,12 +1,10 @@
 package io.vacco.a4lb;
 
 import org.slf4j.*;
-import stormpot.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class A4TcpSrv {
 
@@ -14,10 +12,6 @@ public class A4TcpSrv {
 
   private final ServerSocketChannel channel;
   private final Selector selector;
-  private final Pool<A4TcpBk> bkPool;
-
-  private final Map<SelectionKey, A4TcpSess> clIdx = new HashMap<>();
-  private final Map<SelectionKey, A4TcpSess> bkIdx = new HashMap<>();
 
   public A4TcpSrv(Selector selector, InetSocketAddress address) {
     // TODO configuration parameters for all these
@@ -28,13 +22,6 @@ public class A4TcpSrv {
       this.channel.bind(address);
       this.channel.configureBlocking(false);
       this.channel.register(selector, SelectionKey.OP_ACCEPT);
-
-      // http://:8901/
-      var alloc = new A4TcpBkAlloc("websdr.ewi.utwente.nl", 8901, selector, 8192);
-      this.bkPool = Pool.from(alloc)
-          .setSize(8)
-          .setExpiration(new A4TcpBkExp())
-          .build();
       log.info("{} - Ingress open", this.channel.socket());
     } catch (IOException ioe) {
       log.error("Unable to open server socket channel {}", address, ioe);
@@ -42,20 +29,22 @@ public class A4TcpSrv {
     }
   }
 
+  // TODO
+  //   pass in some sort of configuration object that implements gobetween's backend selection strategies
+  //   https://gobetween.io/documentation.html#Balancing
+
+  // InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
+  InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
+
   private void initSession() {
     SocketChannel client = null;
     try { // TODO more config params...
       client = channel.accept();
       client.configureBlocking(false);
+      // TODO check for connection limits here.
       var clientKey = client.register(selector, SelectionKey.OP_READ);
-      var to = new Timeout(2, TimeUnit.SECONDS);
-      var bk = bkPool.claim(to);
-      var sess = new A4TcpSess(client, bk, () -> {
-        clIdx.remove(clientKey);
-        bkIdx.remove(bk.channelKey);
-      });
-      clIdx.put(clientKey, sess);
-      bkIdx.put(bk.channelKey, sess);
+      var bk = new A4TcpBk(dummy, this.selector, 8192);
+      new A4TcpSess(this, clientKey, client, bk);
     } catch (Exception ioe) {
       log.error("{} - Unable to initialize tcp session", channel.socket(), ioe);
       A4Io.close(client);
@@ -66,12 +55,13 @@ public class A4TcpSrv {
     A4Io.select(selector, key -> {
       if (key.channel() == this.channel && key.isAcceptable()) {
         initSession();
-      } else if (clIdx.containsKey(key)) {
-        clIdx.get(key).update(key);
-      } else if (bkIdx.containsKey(key)) {
-        bkIdx.get(key).update(key);
+      } else if (key.attachment() instanceof A4TcpSess) {
+        var sess = (A4TcpSess) key.attachment();
+        if (sess.owner == this) {
+          sess.update(key);
+        } // else not one of our sessions, pass to next server.
       } else {
-        log.info("Huh??? {}", key);
+        log.error("{} - Invalid key state", key);
       }
     });
   }

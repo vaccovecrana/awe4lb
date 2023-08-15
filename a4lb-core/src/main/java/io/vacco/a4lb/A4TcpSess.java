@@ -10,14 +10,18 @@ public class A4TcpSess {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
+  private final SelectionKey clientKey;
   private final SocketChannel client;
   private final A4TcpBk backend;
-  private final Runnable onTearDown;
+  public  final A4TcpSrv owner;
 
-  public A4TcpSess(SocketChannel client, A4TcpBk backend, Runnable onTearDown) {
-    this.backend = Objects.requireNonNull(backend);
+  public A4TcpSess(A4TcpSrv owner, SelectionKey clientKey, SocketChannel client, A4TcpBk backend) {
+    this.clientKey = Objects.requireNonNull(clientKey);
     this.client = Objects.requireNonNull(client);
-    this.onTearDown = Objects.requireNonNull(onTearDown);
+    this.backend = Objects.requireNonNull(backend);
+    this.owner = Objects.requireNonNull(owner);
+    clientKey.attach(this);
+    backend.channelKey.attach(this);
   }
 
   private void tearDown(Exception e) {
@@ -27,17 +31,12 @@ public class A4TcpSess {
           client.socket(), backend.channel.socket(), e
       );
     }
-    // TODO ... maybe we also need to cancel the client's selection key as well??
+    clientKey.attach(null);
+    clientKey.cancel();
     close(client);
+    backend.channelKey.attach(null);
     backend.channelKey.cancel();
-    backend.expire();
-    /* TODO nope, kill both ends of the pipe when tearing down sessions.
-    if (!backend.channel.isConnected()) {
-      backend.expire();
-    }
-    */
-    backend.release();
-    onTearDown.run();
+    close(backend.channel);
   }
 
   private void sessionMismatch(SelectionKey key) {
@@ -46,14 +45,15 @@ public class A4TcpSess {
 
   public void update(SelectionKey key) {
     try {
+      var channel = (SocketChannel) key.channel();
       if (key.isReadable()) {
-        if (key.channel() == client) {
-          if (eofRead(key, client, backend.buffer) == -1) {
+        if (channel == client) {
+          if (eofRead(client, backend.buffer) == -1) {
             tearDown(null);
             return;
           }
-        } else if (key.channel() == backend.channel) {
-          if (eofRead(key, backend.channel, backend.buffer) == -1) {
+        } else if (channel == backend.channel) {
+          if (eofRead(backend.channel, backend.buffer) == -1) {
             tearDown(null);
             return;
           }
@@ -62,7 +62,6 @@ public class A4TcpSess {
         }
         key.interestOps(SelectionKey.OP_WRITE);
       } else if (key.isWritable()) {
-        var channel = (SocketChannel) key.channel();
         if (channel == client) {
           backend.channel.write(backend.buffer);
         } else if (channel == backend.channel) {
@@ -72,7 +71,7 @@ public class A4TcpSess {
         }
         key.interestOps(SelectionKey.OP_READ);
       } else {
-        log.info("Now wut?? - {}", key);
+        throw new IllegalStateException(channel.socket() + " - Unexpected channel key state");
       }
     } catch (Exception e) {
       tearDown(e);

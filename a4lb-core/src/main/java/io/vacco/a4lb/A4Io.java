@@ -22,7 +22,7 @@ public class A4Io {
     }
   }
 
-  public static int eofRead(SelectionKey k, SocketChannel sc, ByteBuffer bb) {
+  public static int eofRead(SocketChannel sc, ByteBuffer bb) {
     try {
       bb.clear();
       int bytesRead = sc.read(bb);
@@ -30,8 +30,6 @@ public class A4Io {
         if (log.isTraceEnabled()) {
           log.trace("{} - socket channel EOF", sc.socket());
         }
-        close(sc);
-        k.cancel();
       } else if (bytesRead > 0) {
         bb.flip();
       }
@@ -69,14 +67,6 @@ public class A4Io {
       }
     } catch (IOException ioe) {
       log.error("Unable to perform selection - {}", sel, ioe);
-    }
-  }
-
-  public static void zeroFill(ByteBuffer bb) { // TODO there's likely a faster way to do this.
-    bb.clear();
-    int len = bb.capacity() - 1;
-    for (int i = 0; i < len; i++) {
-      bb.put(i, (byte) 0x00);
     }
   }
 
