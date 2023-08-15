@@ -12,7 +12,7 @@ public class NIOForwardingServer {
   }
 
   public static void main(String[] args) {
-    var srv = new A4TcpSrv(A4Io.osSelector(), new InetSocketAddress(8080));
+    var srv = new A4TcpSrv(A4Io.osSelector(), new InetSocketAddress("0.0.0.0", 8080));
     while (true) {
       srv.update();
     }

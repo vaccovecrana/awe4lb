@@ -27,10 +27,15 @@ public class A4TcpSess {
           client.socket(), backend.channel.socket(), e
       );
     }
+    // TODO ... maybe we also need to cancel the client's selection key as well??
     close(client);
+    backend.channelKey.cancel();
+    backend.expire();
+    /* TODO nope, kill both ends of the pipe when tearing down sessions.
     if (!backend.channel.isConnected()) {
       backend.expire();
     }
+    */
     backend.release();
     onTearDown.run();
   }
@@ -66,6 +71,8 @@ public class A4TcpSess {
           sessionMismatch(key);
         }
         key.interestOps(SelectionKey.OP_READ);
+      } else {
+        log.info("Now wut?? - {}", key);
       }
     } catch (Exception e) {
       tearDown(e);

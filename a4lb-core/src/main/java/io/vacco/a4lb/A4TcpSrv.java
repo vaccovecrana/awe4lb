@@ -29,9 +29,10 @@ public class A4TcpSrv {
       this.channel.configureBlocking(false);
       this.channel.register(selector, SelectionKey.OP_ACCEPT);
 
-      var alloc = new A4TcpBkAlloc("127.0.0.1", 6900, selector, 512);
+      // http://:8901/
+      var alloc = new A4TcpBkAlloc("websdr.ewi.utwente.nl", 8901, selector, 8192);
       this.bkPool = Pool.from(alloc)
-          .setSize(2)
+          .setSize(8)
           .setExpiration(new A4TcpBkExp())
           .build();
       log.info("{} - Ingress open", this.channel.socket());
@@ -69,7 +70,9 @@ public class A4TcpSrv {
         clIdx.get(key).update(key);
       } else if (bkIdx.containsKey(key)) {
         bkIdx.get(key).update(key);
-      } // else no match, should this be logged?
+      } else {
+        log.info("Huh??? {}", key);
+      }
     });
   }
 
