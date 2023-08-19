@@ -33,18 +33,17 @@ public class A4TcpSrv {
   //   pass in some sort of configuration object that implements gobetween's backend selection strategies
   //   https://gobetween.io/documentation.html#Balancing
 
-  // InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
-  InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
+  InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
+  // InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
 
   private void initSession() {
     SocketChannel client = null;
-    try { // TODO more config params...
-      client = channel.accept();
-      client.configureBlocking(false);
+    try {
+      // TODO more config params...
       // TODO check for connection limits here.
-      var clientKey = client.register(selector, SelectionKey.OP_READ);
+      var cl = new A4TcpCl(channel, selector);
       var bk = new A4TcpBk(dummy, this.selector, 8192);
-      new A4TcpSess(this, clientKey, client, bk);
+      new A4TcpSess(this, cl, bk);
     } catch (Exception ioe) {
       log.error("{} - Unable to initialize tcp session", channel.socket(), ioe);
       A4Io.close(client);

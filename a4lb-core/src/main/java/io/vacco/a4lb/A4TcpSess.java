@@ -10,17 +10,15 @@ public class A4TcpSess {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
-  private final SelectionKey clientKey;
-  private final SocketChannel client;
+  private final A4TcpCl client;
   private final A4TcpBk backend;
   public  final A4TcpSrv owner;
 
-  public A4TcpSess(A4TcpSrv owner, SelectionKey clientKey, SocketChannel client, A4TcpBk backend) {
-    this.clientKey = Objects.requireNonNull(clientKey);
+  public A4TcpSess(A4TcpSrv owner, A4TcpCl client, A4TcpBk backend) {
     this.client = Objects.requireNonNull(client);
     this.backend = Objects.requireNonNull(backend);
     this.owner = Objects.requireNonNull(owner);
-    clientKey.attach(this);
+    client.channelKey.attach(this);
     backend.channelKey.attach(this);
   }
 
@@ -28,15 +26,11 @@ public class A4TcpSess {
     if (e != null && log.isTraceEnabled()) {
       log.trace(
           "{} - {} - abnormal session termination",
-          client.socket(), backend.channel.socket(), e
+          client.channel.socket(), backend.channel.socket(), e
       );
     }
-    clientKey.attach(null);
-    clientKey.cancel();
-    close(client);
-    backend.channelKey.attach(null);
-    backend.channelKey.cancel();
-    close(backend.channel);
+    close(client.channelKey, client.channel);
+    close(backend.channelKey, backend.channel);
   }
 
   private void sessionMismatch(SelectionKey key) {
@@ -47,8 +41,8 @@ public class A4TcpSess {
     try {
       var channel = (SocketChannel) key.channel();
       if (key.isReadable()) {
-        if (channel == client) {
-          if (eofRead(client, backend.buffer) == -1) {
+        if (channel == client.channel) {
+          if (eofRead(client.channel, backend.buffer) == -1) {
             tearDown(null);
             return;
           }
@@ -62,10 +56,10 @@ public class A4TcpSess {
         }
         key.interestOps(SelectionKey.OP_WRITE);
       } else if (key.isWritable()) {
-        if (channel == client) {
+        if (channel == client.channel) {
           backend.channel.write(backend.buffer);
         } else if (channel == backend.channel) {
-          client.write(backend.buffer);
+          client.channel.write(backend.buffer);
         } else {
           sessionMismatch(key);
         }

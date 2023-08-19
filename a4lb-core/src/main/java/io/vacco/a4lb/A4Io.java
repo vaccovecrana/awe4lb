@@ -22,6 +22,12 @@ public class A4Io {
     }
   }
 
+  public static void close(SelectionKey key, SocketChannel channel) {
+    key.attach(null);
+    key.cancel();
+    close(channel);
+  }
+
   public static int eofRead(SocketChannel sc, ByteBuffer bb) {
     try {
       bb.clear();
