@@ -33,8 +33,9 @@ public class A4TcpSrv {
   //   pass in some sort of configuration object that implements gobetween's backend selection strategies
   //   https://gobetween.io/documentation.html#Balancing
 
-  InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
+  // InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
   // InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
+  InetSocketAddress dummy = new InetSocketAddress("0.0.0.0", 6900);
 
   private void initSession() {
     SocketChannel client = null;

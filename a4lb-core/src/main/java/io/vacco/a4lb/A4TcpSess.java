@@ -1,14 +1,11 @@
 package io.vacco.a4lb;
 
-import org.slf4j.*;
 import java.nio.channels.*;
 import java.util.Objects;
 
 import static io.vacco.a4lb.A4Io.*;
 
 public class A4TcpSess {
-
-  private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
   private final A4TcpCl client;
   private final A4TcpBk backend;
@@ -22,17 +19,6 @@ public class A4TcpSess {
     backend.channelKey.attach(this);
   }
 
-  private void tearDown(Exception e) {
-    if (e != null && log.isTraceEnabled()) {
-      log.trace(
-          "{} - {} - abnormal session termination",
-          client.channel.socket(), backend.channel.socket(), e
-      );
-    }
-    close(client.channelKey, client.channel);
-    close(backend.channelKey, backend.channel);
-  }
-
   private void sessionMismatch(SelectionKey key) {
     throw new IllegalStateException("key/session mismatch " + key);
   }
@@ -43,12 +29,12 @@ public class A4TcpSess {
       if (key.isReadable()) {
         if (channel == client.channel) {
           if (eofRead(client.channel, backend.buffer) == -1) {
-            tearDown(null);
+            tearDown(client, backend, null);
             return;
           }
         } else if (channel == backend.channel) {
           if (eofRead(backend.channel, backend.buffer) == -1) {
-            tearDown(null);
+            tearDown(client, backend, null);
             return;
           }
         } else {
@@ -68,7 +54,7 @@ public class A4TcpSess {
         throw new IllegalStateException(channel.socket() + " - Unexpected channel key state");
       }
     } catch (Exception e) {
-      tearDown(e);
+      tearDown(client, backend, e);
     }
   }
 

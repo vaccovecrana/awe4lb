@@ -28,6 +28,17 @@ public class A4Io {
     close(channel);
   }
 
+  public static void tearDown(A4TcpCl client, A4TcpBk backend, Exception e) {
+    if (e != null && log.isTraceEnabled()) {
+      log.trace(
+          "{} - {} - abnormal session termination",
+          client.channel.socket(), backend.channel.socket(), e
+      );
+    }
+    close(client.channelKey, client.channel);
+    close(backend.channelKey, backend.channel);
+  }
+
   public static int eofRead(SocketChannel sc, ByteBuffer bb) {
     try {
       bb.clear();
