@@ -7,3 +7,5 @@ bin/
 .gradle
 gradle/
 gradlew*
+
+*.pem

@@ -22,30 +22,13 @@ public class A4Io {
     }
   }
 
-  public static void close(SelectionKey key, SocketChannel channel) {
-    key.attach(null);
-    key.cancel();
-    close(channel);
-  }
-
-  public static void tearDown(A4TcpCl client, A4TcpBk backend, Exception e) {
-    if (e != null && log.isTraceEnabled()) {
-      log.trace(
-          "{} - {} - abnormal session termination",
-          client.channel.socket(), backend.channel.socket(), e
-      );
-    }
-    close(client.channelKey, client.channel);
-    close(backend.channelKey, backend.channel);
-  }
-
-  public static int eofRead(SocketChannel sc, ByteBuffer bb) {
+  public static int eofRead(String channelId, ByteChannel sc, ByteBuffer bb) {
     try {
       bb.clear();
       int bytesRead = sc.read(bb);
       if (bytesRead == -1) {
         if (log.isTraceEnabled()) {
-          log.trace("{} - socket channel EOF", sc.socket());
+          log.trace("{} - channel EOF", channelId);
         }
       } else if (bytesRead > 0) {
         bb.flip();
@@ -53,7 +36,7 @@ public class A4Io {
       return bytesRead;
     } catch (IOException ioe) {
       if (log.isTraceEnabled()) {
-        log.trace("Unable to read data from socket channel {}", sc.socket(), ioe);
+        log.trace("Unable to read data from channel {}", channelId, ioe);
       }
       throw new IllegalStateException(ioe);
     }

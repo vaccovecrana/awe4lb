@@ -1,6 +1,8 @@
 package io.vacco.a4lb;
 
 import org.slf4j.*;
+import javax.net.ssl.SSLContext;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
@@ -34,20 +36,31 @@ public class A4TcpSrv {
   //   https://gobetween.io/documentation.html#Balancing
 
   // InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
-  // InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
-  InetSocketAddress dummy = new InetSocketAddress("0.0.0.0", 6900);
+  InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
+  // InetSocketAddress dummy = new InetSocketAddress("0.0.0.0", 6900);
+
+  // TODO how many SSL context customization options should be exposed as config parameters?
+  SSLContext sslContext = A4Tls.contextFrom(
+      new File("/home/jjzazuet/code/awe4lb/a4lb-core/src/test/resources/cert.pem"),
+      new File("/home/jjzazuet/code/awe4lb/a4lb-core/src/test/resources/key.pem")
+  );
 
   private void initSession() {
-    SocketChannel client = null;
+    A4TcpIo cl = null, bk = null;
     try {
       // TODO more config params...
       // TODO check for connection limits here.
-      var cl = new A4TcpCl(channel, selector);
-      var bk = new A4TcpBk(dummy, this.selector, 8192);
-      new A4TcpSess(this, cl, bk);
+      cl = new A4TcpIo(channel, selector, null);
+      bk = new A4TcpIo(dummy, this.selector);
+      new A4TcpSess(this, cl, bk, 8192);
     } catch (Exception ioe) {
       log.error("{} - Unable to initialize tcp session", channel.socket(), ioe);
-      A4Io.close(client);
+      if (cl != null) {
+        cl.close();
+      }
+      if (bk != null) {
+        bk.close();
+      }
     }
   }
 
