@@ -35,8 +35,8 @@ public class A4TcpSrv {
   //   pass in some sort of configuration object that implements gobetween's backend selection strategies
   //   https://gobetween.io/documentation.html#Balancing
 
-  // InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
-  InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
+  InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
+  // InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
   // InetSocketAddress dummy = new InetSocketAddress("0.0.0.0", 6900);
 
   // TODO how many SSL context customization options should be exposed as config parameters?
@@ -50,7 +50,7 @@ public class A4TcpSrv {
     try {
       // TODO more config params...
       // TODO check for connection limits here.
-      cl = new A4TcpIo(channel, selector, null);
+      cl = new A4TcpIo(channel, selector, sslContext);
       bk = new A4TcpIo(dummy, this.selector);
       new A4TcpSess(this, cl, bk, 8192);
     } catch (Exception ioe) {

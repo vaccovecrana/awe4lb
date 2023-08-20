@@ -20,7 +20,7 @@ public class A4TcpIo implements Closeable {
       this.channel.configureBlocking(false);
       this.tlsChannel = sslContext == null
           ? null
-          : ServerTlsChannel.newBuilder(this.channel, sslContext).withRunTasks(false).build();
+          : ServerTlsChannel.newBuilder(this.channel, sslContext).build();
       this.channelKey = this.channel.register(selector, SelectionKey.OP_READ);
       this.id = this.channel.socket().toString();
     } catch (Exception e) {

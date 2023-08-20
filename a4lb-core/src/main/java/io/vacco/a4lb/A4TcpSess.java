@@ -1,5 +1,6 @@
 package io.vacco.a4lb;
 
+import tlschannel.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -9,8 +10,7 @@ import static io.vacco.a4lb.A4Io.*;
 
 public class A4TcpSess {
 
-  private final A4TcpIo client;
-  private final A4TcpIo backend;
+  private final A4TcpIo client, backend;
   public  final A4TcpSrv owner;
   public final ByteBuffer buffer;
 
@@ -35,57 +35,71 @@ public class A4TcpSess {
     backend.close();
   }
 
-  private void doTcpRead(SelectionKey key, A4TcpIo from) {
-    if (eofRead(from.id, from.channel, buffer) == -1) {
+  private void doTcpRead(String channelId, ByteChannel from) {
+    if (eofRead(channelId, from, buffer) == -1) {
       tearDown(null);
-    } else if (key.isValid()) {
+    }
+  }
+
+  private void onTcpRead(SelectionKey key, ByteChannel channel) {
+    if (channel == client.channel) {
+      if (client.tlsChannel != null) {
+        doTcpRead(client.id, client.tlsChannel);
+      } else {
+        doTcpRead(client.id, client.channel);
+      }
+    } else if (channel == backend.channel) {
+      // TODO add case for reading from TLS backend channel too.
+      doTcpRead(backend.id, backend.channel);
+    } else {
+      sessionMismatch(key);
+    }
+    if (key.isValid()) {
       key.interestOps(SelectionKey.OP_WRITE);
     }
   }
 
-  private void onTcpRead(SelectionKey key, SocketChannel channel) {
-    if (channel == client.channel) {
-      doTcpRead(key, client);
-    } else if (channel == backend.channel) {
-      doTcpRead(key, backend);
-    } else {
-      sessionMismatch(key);
-    }
-  }
-
-  private void onTcpWrite(SelectionKey key, SocketChannel channel) throws IOException {
+  private void onTcpWrite(SelectionKey key, ByteChannel channel) throws IOException {
     if (channel == client.channel) {
       backend.channel.write(buffer);
     } else if (channel == backend.channel) {
-      client.channel.write(buffer);
+      if (client.tlsChannel != null) {
+        client.tlsChannel.write(buffer);
+      } else {
+        client.channel.write(buffer);
+      }
     } else {
       sessionMismatch(key);
     }
-    key.interestOps(SelectionKey.OP_READ);
+    if (key.isValid()) {
+      key.interestOps(SelectionKey.OP_READ);
+    }
   }
 
-  private void tcpUpdate(SelectionKey key) {
-    try {
-      var channel = (SocketChannel) key.channel();
-      if (key.isReadable()) {
-        onTcpRead(key, channel);
-      } else if (key.isWritable()) {
-        onTcpWrite(key, channel);
-      } else {
-        throw new IllegalStateException(channel.socket() + " - Unexpected channel key state");
-      }
-    } catch (Exception e) {
-      tearDown(e);
+  private void tcpUpdate(SelectionKey key) throws IOException {
+    var channel = (SocketChannel) key.channel();
+    if (key.isReadable()) {
+      onTcpRead(key, channel);
+    } else if (key.isWritable()) {
+      onTcpWrite(key, channel);
+    } else {
+      throw new IllegalStateException(channel.socket() + " - Unexpected channel key state");
     }
   }
 
   public void update(SelectionKey key) {
-    if (key.attachment() == this) {
-      if (client.tlsChannel == null) {
+    try {
+      if (key.attachment() == this) {
         tcpUpdate(key);
-      } // else { } TODO so how do we handle TLS???
-    } else {
-      sessionMismatch(key);
+      } else {
+        sessionMismatch(key);
+      }
+    } catch (Exception e) {
+      if (e.getCause() instanceof NeedsReadException) {
+        key.interestOps(SelectionKey.OP_READ);
+      } else {
+        tearDown(e);
+      }
     }
   }
 
