@@ -1,4 +1,4 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.tcp;
 
 import tlschannel.*;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Objects;
 
-import static io.vacco.a4lb.A4Io.*;
+import static io.vacco.a4lb.tcp.A4Io.*;
 
 public class A4TcpSess {
 

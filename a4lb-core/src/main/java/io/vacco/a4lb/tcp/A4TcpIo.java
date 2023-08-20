@@ -1,4 +1,4 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.tcp;
 
 import tlschannel.*;
 import javax.net.ssl.SSLContext;

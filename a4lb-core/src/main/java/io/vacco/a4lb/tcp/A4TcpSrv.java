@@ -1,4 +1,4 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.tcp;
 
 import org.slf4j.*;
 import javax.net.ssl.SSLContext;
@@ -35,9 +35,9 @@ public class A4TcpSrv {
   //   pass in some sort of configuration object that implements gobetween's backend selection strategies
   //   https://gobetween.io/documentation.html#Balancing
 
-  InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
+  // InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
   // InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
-  // InetSocketAddress dummy = new InetSocketAddress("0.0.0.0", 6900);
+  InetSocketAddress dummy = new InetSocketAddress("0.0.0.0", 6900);
 
   // TODO how many SSL context customization options should be exposed as config parameters?
   SSLContext sslContext = A4Tls.contextFrom(

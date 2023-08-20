@@ -1,4 +1,4 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.tcp;
 
 import javax.net.ssl.*;
 import java.io.*;

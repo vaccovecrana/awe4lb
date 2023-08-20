@@ -1,4 +1,4 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.tcp;
 
 import org.slf4j.*;
 import java.io.IOException;
