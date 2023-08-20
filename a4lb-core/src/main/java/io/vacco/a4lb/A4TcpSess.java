@@ -38,8 +38,7 @@ public class A4TcpSess {
   private void doTcpRead(SelectionKey key, A4TcpIo from) {
     if (eofRead(from.id, from.channel, buffer) == -1) {
       tearDown(null);
-    }
-    if (key.isValid()) {
+    } else if (key.isValid()) {
       key.interestOps(SelectionKey.OP_WRITE);
     }
   }
