@@ -95,8 +95,11 @@ public class A4TcpSess {
         sessionMismatch(key);
       }
     } catch (Exception e) {
-      if (e.getCause() instanceof NeedsReadException) {
+      var x = getRootException(e);
+      if (x instanceof NeedsReadException) {
         key.interestOps(SelectionKey.OP_READ);
+      } else if (x instanceof NeedsWriteException) {
+        key.interestOps(SelectionKey.OP_WRITE);
       } else {
         tearDown(e);
       }

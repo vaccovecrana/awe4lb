@@ -35,10 +35,8 @@ public class A4Io {
       }
       return bytesRead;
     } catch (IOException ioe) {
-      if (log.isTraceEnabled()) {
-        log.trace("Unable to read data from channel {}", channelId, ioe);
-      }
-      throw new IllegalStateException(ioe);
+      var msg = String.format("Unable to read data from channel %s", channelId);
+      throw new IllegalStateException(msg, ioe);
     }
   }
 
@@ -46,8 +44,7 @@ public class A4Io {
     try {
       return Selector.open();
     } catch (IOException ioe) {
-      log.error("Unable to obtain OS selector", ioe);
-      throw new IllegalStateException(ioe);
+      throw new IllegalStateException("Unable to obtain OS selector", ioe);
     }
   }
 
@@ -68,6 +65,14 @@ public class A4Io {
     } catch (IOException ioe) {
       log.error("Unable to perform selection - {}", sel, ioe);
     }
+  }
+
+  public static Throwable getRootException(Throwable exception){
+    var rootException = exception;
+    while (rootException.getCause() != null) {
+      rootException = rootException.getCause();
+    }
+    return rootException;
   }
 
 }

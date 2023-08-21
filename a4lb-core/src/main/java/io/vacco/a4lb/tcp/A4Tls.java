@@ -11,12 +11,18 @@ import java.util.Base64;
 
 public class A4Tls {
 
-  public static SSLContext contextFrom(File pemCert, File pemKey) {
+  public static X509Certificate loadCertificate(File pemCert) {
     try {
       var certificateFactory = CertificateFactory.getInstance("X.509");
       var certInputStream = new FileInputStream(pemCert);
-      var certificate = (X509Certificate) certificateFactory.generateCertificate(certInputStream);
+      return (X509Certificate) certificateFactory.generateCertificate(certInputStream);
+    } catch (Exception e) {
+      throw new IllegalStateException("Unable to load certificate: " + pemCert.getAbsolutePath(), e);
+    }
+  }
 
+  public static PrivateKey loadKey(File pemKey) {
+    try {
       var keyInputStream = new FileInputStream(pemKey);
       var keyBytes = new byte[keyInputStream.available()];
       keyInputStream.read(keyBytes);
@@ -30,7 +36,16 @@ public class A4Tls {
       var encodedKey = Base64.getDecoder().decode(privateKeyPEM);
       var keySpec = new PKCS8EncodedKeySpec(encodedKey);
       var keyFactory = KeyFactory.getInstance("RSA");
-      var privateKey = keyFactory.generatePrivate(keySpec);
+      return keyFactory.generatePrivate(keySpec);
+    } catch (Exception e) {
+      throw new IllegalStateException("Unable to load private key: " + pemKey.getAbsolutePath(), e);
+    }
+  }
+
+  public static SSLContext contextFrom(File pemCert, File pemKey) {
+    try {
+      var certificate = loadCertificate(pemCert); // TODO the SSLContext should include intermediate certificates in the PEM chain.
+      var privateKey = loadKey(pemKey);
 
       var keyStore = KeyStore.getInstance("PKCS12");
       keyStore.load(null, null);

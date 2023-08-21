@@ -20,6 +20,16 @@
       },
       "discovery": {
         "kind": "static",
+
+        "match": [
+          {
+            "sni": { "startsWith": "ci." },
+            "address": { "lol": "lol" },
+            "static": [
+            ]
+          }
+        ],
+
         "static_list": [
           "us-east-00-vault-00.lan:8200 sni=sso.vacco.li",
           "us-east-00-git-00.lan:3000 sni=git.vacco.li",
