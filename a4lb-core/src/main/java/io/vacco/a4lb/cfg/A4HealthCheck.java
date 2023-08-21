@@ -6,17 +6,17 @@ public class A4HealthCheck {
   public long timeoutMs;  // health check probe timeout in milliseconds.
   public A4Exec exec;
 
-  public A4HealthCheck withIntervalMs(long intervalMs) {
+  public A4HealthCheck intervalMs(long intervalMs) {
     this.intervalMs = intervalMs;
     return this;
   }
 
-  public A4HealthCheck withTimeoutMs(long timeoutMs) {
+  public A4HealthCheck timeoutMs(long timeoutMs) {
     this.timeoutMs = timeoutMs;
     return this;
   }
 
-  public A4HealthCheck withExec(A4Exec exec) {
+  public A4HealthCheck exec(A4Exec exec) {
     this.exec = exec;
     return this;
   }

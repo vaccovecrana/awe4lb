@@ -6,17 +6,17 @@ public class A4Exec {
   public String passOutput; // if the script produces this output, the host is marked healthy.
   public String failOutput; // if the script produces this output, the host is marked unhealthy.
 
-  public A4Exec withCommand(String command) {
+  public A4Exec command(String command) {
     this.command = command;
     return this;
   }
 
-  public A4Exec withPassOutput(String passOutput) {
+  public A4Exec passOutput(String passOutput) {
     this.passOutput = passOutput;
     return this;
   }
 
-  public A4Exec withFailOutput(String failOutput) {
+  public A4Exec failOutput(String failOutput) {
     this.failOutput = failOutput;
     return this;
   }

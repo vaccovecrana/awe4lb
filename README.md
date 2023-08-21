@@ -14,6 +14,8 @@
 - https://stackoverflow.com/a/62263402/491160
 - https://github.com/raell2/SSLAsynchronousSocketChannel/tree/master
 - https://stackoverflow.com/questions/14225957/socket-vs-socketchannel
+- https://bugs.openjdk.org/browse/JDK-8202625
+- https://github.com/yyyar/gobetween/issues/335
 
 Layer 4 load balancer
 

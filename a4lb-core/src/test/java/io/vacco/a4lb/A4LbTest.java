@@ -26,11 +26,11 @@ public class A4LbTest {
   static {
     it("Validates service definitions", () -> {
       var a4s = new A4Service()
-          .withHost("0.0.0.0").withPort(75000)
-          .withHealthCheck(
+          .host("0.0.0.0").port(75000)
+          .healthCheck(
               new A4HealthCheck()
-                  .withIntervalMs(3000)
-                  .withTimeoutMs(5000)
+                  .intervalMs(3000)
+                  .timeoutMs(5000)
           );
       var constraints = A4Valid.A4ServiceVld.validate(a4s);
       for (var cnt : constraints) {
