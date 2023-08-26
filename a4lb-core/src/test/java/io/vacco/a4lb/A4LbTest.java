@@ -35,6 +35,11 @@ public class A4LbTest {
     it("Validates service definitions", () -> {
       var a4s = new A4Service()
           .addr(new A4Sock().host("0.0.0.0").port(75000))
+          .match(
+              new A4Match()
+                  .and(new A4MatchOp().sni(new A4StringOp().equals("ci.gopher.io").endsWith("lol")))
+                  .or(new A4MatchOp().sni(new A4StringOp().contains("momo")))
+          )
           .healthCheck(
               new A4HealthCheck()
                   .intervalMs(3000)

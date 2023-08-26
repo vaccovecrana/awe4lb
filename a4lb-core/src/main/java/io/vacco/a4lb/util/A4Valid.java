@@ -7,6 +7,9 @@ import am.ik.yavi.constraint.LongConstraint;
 import am.ik.yavi.core.Validator;
 import io.vacco.a4lb.cfg.*;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import static am.ik.yavi.builder.ValidatorBuilder.*;
 
 public class A4Valid {
@@ -21,6 +24,10 @@ public class A4Valid {
 
   public static <T> CharSequenceConstraint<T, String> nnNeNb(CharSequenceConstraint<T, String> c) {
     return c.notNull().notBlank().notEmpty();
+  }
+
+  public static boolean arrayValsNnLtEq(int ltEq, Object ... vals) {
+    return Arrays.stream(vals).filter(Objects::nonNull).count() <= ltEq;
   }
 
   public static final Validator<A4Exec> A4ExecVld = ValidatorBuilder.<A4Exec>of()
@@ -43,15 +50,60 @@ public class A4Valid {
       .constraint((ToCharSequence<A4Sock, String>) s -> s.host, "host", A4Valid::nnNeNb)
       .build();
 
-  public static final Validator<A4Service> A4ServiceVld = ValidatorBuilder.<A4Service>of()
-      .nest(s -> s.addr, "addr", A4SockVld)
-      .nest(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
-      .build();
-
   public static final Validator<A4Backend> A4BackendVld = ValidatorBuilder.<A4Backend>of()
       .constraint((ToInteger<A4Backend>) b -> b.weight, "weight", c -> gtLtEq(c, 1, 100))
       .constraint((ToInteger<A4Backend>) b -> b.priority, "priority", c -> gtLtEq(c, 1, 100))
       .nest(b -> b.addr, "addr", A4SockVld)
+      .build();
+
+  public static final Validator<A4StringOp> A4StringOpVld = ValidatorBuilder.<A4StringOp>of()
+      .constraintOnCondition(
+          (op, cg) -> op.equals != null,
+          b -> b.constraint((ToCharSequence<A4StringOp, String>) op -> op.equals, "equals", A4Valid::nnNeNb)
+      ).constraintOnCondition(
+          (op, cg) -> op.contains != null,
+          b -> b.constraint((ToCharSequence<A4StringOp, String>) op -> op.contains, "contains", A4Valid::nnNeNb)
+      ).constraintOnCondition(
+          (op, cg) -> op.startsWith != null,
+          b -> b.constraint((ToCharSequence<A4StringOp, String>) op -> op.startsWith, "startsWith", A4Valid::nnNeNb)
+      ).constraintOnCondition(
+          (op, cg) -> op.endsWith != null,
+          b -> b.constraint((ToCharSequence<A4StringOp, String>) op -> op.endsWith, "endsWith", A4Valid::nnNeNb)
+      ).constraintOnTarget(
+          op -> op.equals != null || op.contains != null || op.startsWith != null || op.endsWith != null,
+          "stringOp", "stringOp.anyOf",
+          "Missing any of [equals, contains, startsWith, endsWith]"
+      ).constraintOnTarget(
+          op -> arrayValsNnLtEq(1, op.equals, op.contains, op.startsWith, op.endsWith),
+          "stringOp", "stringOp.oneOf",
+          "\"{0}\" only one of [equals, contains, startsWith, endsWith] allowed"
+      ).build();
+
+  public static final Validator<A4MatchOp> A4MatchOpVld = ValidatorBuilder.<A4MatchOp>of()
+      .nestIfPresent(mo -> mo.host, "host", A4StringOpVld)
+      .nestIfPresent(mo -> mo.sni, "sni", A4StringOpVld)
+      .constraintOnTarget(
+          mo -> mo.host != null || mo.sni != null,
+          "matchOp", "matchOp.oneOf", "Missing one of [host, sni]"
+      ).build();
+
+  public static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
+      .constraintOnCondition(
+          (m, cg) -> m.and != null,
+          b -> b.forEach(A4Match::andOps, "match.andOps", A4MatchOpVld)
+      ).constraintOnCondition(
+          (m, cg) -> m.or != null,
+          b -> b.forEach(A4Match::orOps, "match.orOps", A4MatchOpVld)
+      ).constraintOnTarget(
+          m -> arrayValsNnLtEq(1, m.and, m.or),
+          "match.andOr", "match.andOr.oneOf", "Only one of [and, or] allowed"
+      )
+      .build();
+
+  public static final Validator<A4Service> A4ServiceVld = ValidatorBuilder.<A4Service>of()
+      .nest(s -> s.addr, "addr", A4SockVld)
+      .nest(s -> s.match, "match", A4MatchVld)
+      .nest(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
       .build();
 
 }
