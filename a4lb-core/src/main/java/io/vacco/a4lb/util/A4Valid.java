@@ -41,7 +41,8 @@ public class A4Valid {
       .constraint((ToLong<A4HealthCheck>) hc -> hc.timeoutMs, "timeoutMs", A4Valid::gt0)
       .constraintOnTarget(
           hc -> hc.timeoutMs < hc.intervalMs, "timeoutMs",
-          "timeoutMs.isLessThanInterval", "\"timeoutMs\" must be less than \"intervalMs\""
+          "timeoutMs.isLessThanInterval",
+          "\"{0}\" \"timeoutMs\" must be less than \"intervalMs\""
       ).nestIfPresent(hc -> hc.exec, "exec", A4ExecVld)
       .build();
 
@@ -51,9 +52,16 @@ public class A4Valid {
       .build();
 
   public static final Validator<A4Backend> A4BackendVld = ValidatorBuilder.<A4Backend>of()
-      .constraint((ToInteger<A4Backend>) b -> b.weight, "weight", c -> gtLtEq(c, 1, 100))
-      .constraint((ToInteger<A4Backend>) b -> b.priority, "priority", c -> gtLtEq(c, 1, 100))
-      .nest(b -> b.addr, "addr", A4SockVld)
+      .constraint((ToInteger<A4Backend>) b -> b.weight, "weight", c -> gtLtEq(c, 0, 100))
+      .constraint((ToInteger<A4Backend>) b -> b.priority, "priority", c -> gtLtEq(c, 0, 100))
+      .constraintOnCondition(
+          (b, cg) -> b.weight != null || b.priority != null,
+          b -> b.constraintOnTarget(
+              b0 -> b0.weight != null && b0.priority != null,
+              "weightPriotity", "weightPriority.allOf",
+              "\"{0}\" must specify [weight, priority]"
+          )
+      ).nest(b -> b.addr, "addr", A4SockVld)
       .build();
 
   public static final Validator<A4StringOp> A4StringOpVld = ValidatorBuilder.<A4StringOp>of()
@@ -72,7 +80,7 @@ public class A4Valid {
       ).constraintOnTarget(
           op -> op.equals != null || op.contains != null || op.startsWith != null || op.endsWith != null,
           "stringOp", "stringOp.anyOf",
-          "Missing any of [equals, contains, startsWith, endsWith]"
+          "\"{0}\" missing any of [equals, contains, startsWith, endsWith]"
       ).constraintOnTarget(
           op -> arrayValsNnLtEq(1, op.equals, op.contains, op.startsWith, op.endsWith),
           "stringOp", "stringOp.oneOf",
@@ -84,8 +92,13 @@ public class A4Valid {
       .nestIfPresent(mo -> mo.sni, "sni", A4StringOpVld)
       .constraintOnTarget(
           mo -> mo.host != null || mo.sni != null,
-          "matchOp", "matchOp.oneOf", "Missing one of [host, sni]"
+          "matchOp", "matchOp.oneOf", "\"{0}\" missing one of [host, sni]"
       ).build();
+
+  public static final Validator<A4Pool> A4PoolVld = ValidatorBuilder.<A4Pool>of()
+      .constraint((ToObjectArray<A4Pool, A4Backend>) m -> m.hosts, "match.hosts", c -> c.notNull().notEmpty())
+      .forEach(A4Pool::hostList, "hosts", A4BackendVld)
+      .build();
 
   public static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
       .constraintOnCondition(
@@ -96,9 +109,11 @@ public class A4Valid {
           b -> b.forEach(A4Match::orOps, "match.orOps", A4MatchOpVld)
       ).constraintOnTarget(
           m -> arrayValsNnLtEq(1, m.and, m.or),
-          "match.andOr", "match.andOr.oneOf", "Only one of [and, or] allowed"
-      )
-      .build();
+          "matchOps.andOr", "matchOps.andOr.oneOf",
+          "\"{0}\" only one of [and, or] allowed"
+      ).nest(
+          m -> m.pool, "pool", A4PoolVld
+      ).build();
 
   public static final Validator<A4Service> A4ServiceVld = ValidatorBuilder.<A4Service>of()
       .nest(s -> s.addr, "addr", A4SockVld)

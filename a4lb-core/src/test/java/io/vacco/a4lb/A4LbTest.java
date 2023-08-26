@@ -1,8 +1,6 @@
 package io.vacco.a4lb;
 
-import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.tcp.*;
-import io.vacco.a4lb.util.A4Valid;
 import io.vacco.shax.logging.ShOption;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
@@ -32,24 +30,6 @@ public class A4LbTest {
   } */
 
   static {
-    it("Validates service definitions", () -> {
-      var a4s = new A4Service()
-          .addr(new A4Sock().host("0.0.0.0").port(75000))
-          .match(
-              new A4Match()
-                  .and(new A4MatchOp().sni(new A4StringOp().equals("ci.gopher.io").endsWith("lol")))
-                  .or(new A4MatchOp().sni(new A4StringOp().contains("momo")))
-          )
-          .healthCheck(
-              new A4HealthCheck()
-                  .intervalMs(3000)
-                  .timeoutMs(5000)
-          );
-      var constraints = A4Valid.A4ServiceVld.validate(a4s);
-      for (var cnt : constraints) {
-        System.out.println(cnt.message());
-      }
-    });
     it("Forwards socket data", () -> {
       var srv = new A4TcpSrv(A4Io.osSelector(), new InetSocketAddress("0.0.0.0", 8080));
       while (true) {

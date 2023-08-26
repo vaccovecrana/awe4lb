@@ -21,7 +21,7 @@
         {
           "and": [{"sni": {"equals": "sso.vacco.li"}}, {"address": {"equals": "172.16.0.1"}}],
           "pool": {
-            "static": [
+            "hosts": [
               {"addr": {"host": "us-east-00-vault-test-00.lan", "port": 8200}}
             ]
           }
@@ -30,7 +30,7 @@
           "and": [{"sni": {"equals": "sso.vacco.li"}}],
           "pool": {
             "type": "weight",
-            "static": [
+            "hosts": [
               {"addr": {"host": "us-east-00-vault-00.lan", "port": 8200}, "weight": 2, "priority": 1},
               {"addr": {"host": "us-east-00-vault-01.lan", "port": 8200}, "weight": 1, "priority": 1},
               {"addr": {"host": "us-east-00-vault-02.lan", "port": 8200}, "weight": 1, "priority": 2}
@@ -41,7 +41,7 @@
           "and": [{"sni": {"equals": "ci.vacco.li"}}],
           "pool": {
             "type": "roundrobin",
-            "static": [
+            "hosts": [
               {"addr": {"host": "us-east-00-vault-test-00.lan", "port": 8200}},
               {"addr": {"host": "us-east-00-vault-test-01.lan", "port": 8200}}
             ]
@@ -55,7 +55,7 @@
       "match": [
         {
           "pool": {
-            "static": [
+            "hosts": [
               {"addr": {"host": "us-east-00-git-00.lan", "port": 22}}
             ]
           }
@@ -69,7 +69,7 @@
         {
           "pool": {
             "type": "leastconn",
-            "static": [
+            "hosts": [
               {"addr": {"host": "us-east-00-k8s-prd-cnt-00.lan", "port": 6443}},
               {"addr": {"host": "us-east-00-k8s-prd-cnt-01.lan", "port": 6443}},
               {"addr": {"host": "us-east-00-k8s-prd-cnt-02.lan", "port": 6443}}
