@@ -9,7 +9,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
-public class A4Tls {
+public class A4X509 {
 
   public static X509Certificate loadCertificate(File pemCert) {
     try {

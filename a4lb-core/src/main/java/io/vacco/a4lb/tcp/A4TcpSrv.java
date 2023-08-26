@@ -40,7 +40,7 @@ public class A4TcpSrv {
   InetSocketAddress dummy = new InetSocketAddress("0.0.0.0", 6900);
 
   // TODO how many SSL context customization options should be exposed as config parameters?
-  SSLContext sslContext = A4Tls.contextFrom(
+  SSLContext sslContext = A4X509.contextFrom(
       new File("/home/jjzazuet/code/awe4lb/a4lb-core/src/test/resources/cert.pem"),
       new File("/home/jjzazuet/code/awe4lb/a4lb-core/src/test/resources/key.pem")
   );

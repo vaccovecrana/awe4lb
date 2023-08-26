@@ -15,6 +15,13 @@ public class A4ValidTest {
     it("Validates a service definition", () -> {
       var a4s = new A4Service()
           .addr(new A4Sock().host("0.0.0.0").port(75000))
+          .tls(
+              new A4Tls()
+                  .certPath("/etc/momo/momo.pem")
+                  .keyPath("/etc/momo/momo-key.pem")
+                  .tlsVersions(" ")
+                  .ciphers("momo-cipher")
+          )
           .match(
               new A4Match()
                   .and(new A4MatchOp().sni(new A4StringOp().equals("ci.gopher.io")))

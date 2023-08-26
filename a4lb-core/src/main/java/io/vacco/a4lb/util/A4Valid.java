@@ -6,7 +6,6 @@ import am.ik.yavi.constraint.IntegerConstraint;
 import am.ik.yavi.constraint.LongConstraint;
 import am.ik.yavi.core.Validator;
 import io.vacco.a4lb.cfg.*;
-
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -115,10 +114,22 @@ public class A4Valid {
           m -> m.pool, "pool", A4PoolVld
       ).build();
 
+  public static final Validator<A4Tls> A4TlsVld = ValidatorBuilder.<A4Tls>of()
+      .constraint((ToCharSequence<A4Tls, String>) t -> t.certPath, "certPath", A4Valid::nnNeNb)
+      .constraint((ToCharSequence<A4Tls, String>) t -> t.keyPath, "keyPath", A4Valid::nnNeNb)
+      .forEach(A4Tls::tlsVersionList, "tlsVersions.version",
+          svb -> svb.constraint((ToCharSequence<String, String>) s -> s, "value", A4Valid::nnNeNb)
+      )
+      .forEach(A4Tls::cipherList, "ciphers.cipher",
+          svb -> svb.constraint((ToCharSequence<String, String>) s -> s, "value", A4Valid::nnNeNb)
+      )
+      .build();
+
   public static final Validator<A4Service> A4ServiceVld = ValidatorBuilder.<A4Service>of()
       .nest(s -> s.addr, "addr", A4SockVld)
       .nest(s -> s.match, "match", A4MatchVld)
       .nest(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
+      .nestIfPresent(s -> s.tls, "tls", A4TlsVld)
       .build();
 
 }
