@@ -1,35 +1,29 @@
 {
   "api": {
     "enabled": true,
-    "bind": "0.0.0.0:8888"
+    "bind": {"host":"0.0.0.0", "port": 8888}
   },
   "metrics": {
     "enabled": true,
-    "bind": "0.0.0.0:9284"
+    "bind": {"host":"0.0.0.0", "port": 9284}
   },
   "servers": {
     "vacco-tls": {
       "addr": {"host":"0.0.0.0", "port": 443},
       "tls": {
-        "cert_path": "/etc/gobetween/cert-chain.pem",
-        "key_path": "/etc/gobetween/cert-key.pem",
-        "min_version": "tls1.3",
-        "prefer_server_ciphers": false,
-        "session_tickets": true
+        "certPath": "/etc/gobetween/cert-chain.pem",
+        "keyPath": "/etc/gobetween/cert-key.pem"
       },
       "match": [
         {
-          "and": [{"sni": {"equals": "sso.vacco.li"}}, {"address": {"equals": "172.16.0.1"}}],
+          "and": [{"sni": {"equals": "sso.vacco.li"}}, {"host": {"equals": "172.16.0.1"}}],
           "pool": {
-            "hosts": [
-              {"addr": {"host": "us-east-00-vault-test-00.lan", "port": 8200}}
-            ]
+            "hosts": [{"addr": {"host": "us-east-00-vault-test-00.lan", "port": 8200}}]
           }
         },
         {
           "and": [{"sni": {"equals": "sso.vacco.li"}}],
           "pool": {
-            "type": "weight",
             "hosts": [
               {"addr": {"host": "us-east-00-vault-00.lan", "port": 8200}, "weight": 2, "priority": 1},
               {"addr": {"host": "us-east-00-vault-01.lan", "port": 8200}, "weight": 1, "priority": 1},
@@ -40,7 +34,7 @@
         {
           "and": [{"sni": {"equals": "ci.vacco.li"}}],
           "pool": {
-            "type": "roundrobin",
+            "type": "RoundRobin",
             "hosts": [
               {"addr": {"host": "us-east-00-vault-test-00.lan", "port": 8200}},
               {"addr": {"host": "us-east-00-vault-test-01.lan", "port": 8200}}
@@ -48,27 +42,25 @@
           }
         }
       ],
-      "healthcheck": {"kind": "ping", "interval": "5s", "ping_timeout_duration": "3000ms"}
+      "healthCheck": {"intervalMs": 5000, "timeoutMs": 3000}
     },
     "vacco-ssh": {
       "addr": {"host": "0.0.0.0", "port": 22},
       "match": [
         {
           "pool": {
-            "hosts": [
-              {"addr": {"host": "us-east-00-git-00.lan", "port": 22}}
-            ]
+            "hosts": [{"addr": {"host": "us-east-00-git-00.lan", "port": 22}}]
           }
         }
       ],
-      "healthcheck": {"kind": "ping", "interval": "5s", "ping_timeout_duration": "3000ms"}
+      "healthCheck": {"intervalMs": 5000, "timeoutMs": 3000}
     },
     "k0s-kube-api": {
       "addr": {"host": "0.0.0.0", "port": 6443},
       "match": [
         {
           "pool": {
-            "type": "leastconn",
+            "type": "LeastConn",
             "hosts": [
               {"addr": {"host": "us-east-00-k8s-prd-cnt-00.lan", "port": 6443}},
               {"addr": {"host": "us-east-00-k8s-prd-cnt-01.lan", "port": 6443}},
@@ -77,7 +69,7 @@
           }
         }
       ],
-      "healthcheck": {"interval": "1s", "kind": "ping", "ping_timeout_duration": "500ms"}
+      "healthCheck": {"intervalMs": 1000, "timeoutMs": 500}
     }
   }
 }

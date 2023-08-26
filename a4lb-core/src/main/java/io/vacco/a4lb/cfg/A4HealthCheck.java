@@ -2,8 +2,8 @@ package io.vacco.a4lb.cfg;
 
 public class A4HealthCheck {
 
-  public long intervalMs; // health check probe period in milliseconds.
-  public long timeoutMs;  // health check probe timeout in milliseconds.
+  public long intervalMs;
+  public long timeoutMs;
   public A4Exec exec;
 
   public A4HealthCheck intervalMs(long intervalMs) {
