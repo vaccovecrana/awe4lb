@@ -1,0 +1,24 @@
+package io.vacco.a4lb.cfg;
+
+public class A4Backend {
+
+  public A4Sock addr;
+  public int weight;
+  public int priority;
+
+  public A4Backend addr(A4Sock addr) {
+    this.addr = addr;
+    return this;
+  }
+
+  public A4Backend weight(int weight) {
+    this.weight = weight;
+    return this;
+  }
+
+  public A4Backend priority(int priority) {
+    this.priority = priority;
+    return this;
+  }
+
+}

@@ -2,18 +2,11 @@ package io.vacco.a4lb.cfg;
 
 public class A4Service {
 
-  public String host;
-  public int port;
-
+  public A4Sock addr;
   public A4HealthCheck healthCheck;
 
-  public A4Service host(String host) {
-    this.host = host;
-    return this;
-  }
-
-  public A4Service port(int port) {
-    this.port = port;
+  public A4Service addr(A4Sock addr) {
+    this.addr = addr;
     return this;
   }
 

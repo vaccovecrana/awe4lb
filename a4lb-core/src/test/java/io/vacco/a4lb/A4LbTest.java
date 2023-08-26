@@ -23,6 +23,14 @@ public class A4LbTest {
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_LOGLEVEL, "trace");
   }
 
+  /*
+    private static void getActiveProtocols() throws NoSuchAlgorithmException {
+    var eng = SSLContext.getDefault().createSSLEngine();
+    System.out.println(Arrays.toString(eng.getEnabledProtocols()));
+    System.out.println(Arrays.toString(eng.getEnabledCipherSuites()));
+  }
+   */
+
   static {
     it("Validates service definitions", () -> {
       var a4s = new A4Service()
