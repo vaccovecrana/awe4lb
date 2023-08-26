@@ -34,7 +34,7 @@ public class A4LbTest {
   static {
     it("Validates service definitions", () -> {
       var a4s = new A4Service()
-          .host("0.0.0.0").port(75000)
+          .addr(new A4Sock().host("0.0.0.0").port(75000))
           .healthCheck(
               new A4HealthCheck()
                   .intervalMs(3000)

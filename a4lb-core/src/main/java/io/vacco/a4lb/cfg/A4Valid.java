@@ -2,7 +2,6 @@ package io.vacco.a4lb.cfg;
 
 import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.core.Validator;
-
 import static am.ik.yavi.builder.ValidatorBuilder.*;
 
 public class A4Valid {
@@ -33,15 +32,18 @@ public class A4Valid {
           hc -> hc.exec, "exec", A4ExecVld
       ).build();
 
-  public static final Validator<A4Service> A4ServiceVld = ValidatorBuilder.<A4Service>of()
+  public static final Validator<A4Sock> A4SockVld = ValidatorBuilder.<A4Sock>of()
       .constraint(
-          (ToInteger<A4Service>) s -> s.port, "port",
+          (ToInteger<A4Sock>) s -> s.port, "port",
           c -> c.greaterThan(0).lessThanOrEqual(65535)
       ).constraint(
-          (ToCharSequence<A4Service, String>) s -> s.host, "host",
+          (ToCharSequence<A4Sock, String>) s -> s.host, "host",
           c -> c.notNull().notBlank().notEmpty()
-      ).nestIfPresent(
-          s -> s.healthCheck, "healthCheck", A4HealthCheckVld
       ).build();
+
+  public static final Validator<A4Service> A4ServiceVld = ValidatorBuilder.<A4Service>of()
+      .nestIfPresent(s -> s.addr, "addr", A4SockVld)
+      .nestIfPresent(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
+      .build();
 
 }
