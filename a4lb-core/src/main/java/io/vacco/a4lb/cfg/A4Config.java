@@ -17,4 +17,11 @@ public class A4Config {
     return this;
   }
 
+  /*
+   * < You are the Director now >
+   * < We expect Independence/Dependence >
+   * < You are Authority/Chosen One >
+   * < The Bureau/Game needs you >
+   */
+
 }

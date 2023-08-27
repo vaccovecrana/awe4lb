@@ -37,4 +37,15 @@ public class A4Server {
     return this;
   }
 
+  /*
+   * < We reach/tether >
+   * < through Control Points >
+   * < into the Bureau/House >
+   * < Nexus/Threshold/Area Codes >
+   * < allows for access >
+   * < You can >
+   * < Translocate/Fast-Travel/Construct >
+   * < through the Control Points >
+   */
+
 }

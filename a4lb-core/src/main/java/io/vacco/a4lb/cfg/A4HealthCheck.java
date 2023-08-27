@@ -21,4 +21,14 @@ public class A4HealthCheck {
     return this;
   }
 
+  /*
+   * < You have heard Wrong/Fake News >
+   * < The Board is A-OK/Intact >
+   * < The Rebel Faction/Dissent is >
+   * < Former/Fired >
+   * < The Crisis/Purge is over >
+   * < This is not a Matter/Worry for you >
+   * < You can hang up now, please >
+   */
+
 }
