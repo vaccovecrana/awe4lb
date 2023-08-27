@@ -1,9 +1,7 @@
 package io.vacco.a4lb.util;
 
 import am.ik.yavi.builder.ValidatorBuilder;
-import am.ik.yavi.constraint.CharSequenceConstraint;
-import am.ik.yavi.constraint.IntegerConstraint;
-import am.ik.yavi.constraint.LongConstraint;
+import am.ik.yavi.constraint.*;
 import am.ik.yavi.core.Validator;
 import io.vacco.a4lb.cfg.*;
 import java.util.Arrays;
@@ -148,5 +146,23 @@ public class A4Valid {
       .constraint(A4Config::serverIdx, "servers", c -> c.notNull().notEmpty())
       .forEach(A4Config::serverIdx, "servers", A4ServerVld)
       .build();
+
+  /*
+   * A director needs a team. My management team. These people know the secrets of the Bureau
+   * as well as I do, some even better.
+   *
+   * They have proven themselves. Darling, Tommasi, Salvador. Marshall. Marshall especially,
+   * my Head of Operations. She sees right through me. She knows I don't like relying on people.
+   * The only person you should fail is yourself. So I followed my own orders.
+   *
+   * Northmoor hated my guts for that. But things change when you become Director. You suddenly
+   * see this dark void for the horror show it truly is, filled with screaming fear we pretend to control.
+   *
+   * Sand leaks through my fingers. The roses I pruned in the garden, back when I still had a family,
+   * all dead. Heat escapes my body. My thoughts are scattered. The universe keeps expanding.
+   * I can't keep up with it alone. When I forget that, things go wrong. And my team has to pick up the pieces.
+   *
+   * Damage control, to help me get out of my mess.
+   */
 
 }

@@ -145,4 +145,21 @@ public class A4TcpSess {
     this.client.channelKey.attach(this);
   }
 
+  /*
+   * The Oceanview Motel and Casino is a familiar friend to me. I stayed in countless motels like it
+   * while investigating A.W.E’s across the country, back in my field agent days.
+   *
+   * Those roadside motels all bleed together like a dream, same and not the same, anywhere and nowhere.
+   * The Oceanview operates on dream-logic, and the light-switch cord leaks out to be found in the most
+   * unexpected places, and sometimes, successfully encouraged to appear and act as a convenient lock
+   * to keep out those not trained in dreamscape navigation.
+   *
+   * Even Bureau veterans can only find one key in the Motel, the key that opens the door marked with
+   * the inverted Black Pyramid. The rest, the many other doors, are still mysteries to us.
+   *
+   * We’re all merely guests there. Even the Board. Sometimes I need to visit, just to breathe easier
+   * for a while. It beats the numb sterile apartment I spend my nights in, insulated from everything
+   * but myself. I guess that’s where the whiskey comes in.
+   */
+
 }
