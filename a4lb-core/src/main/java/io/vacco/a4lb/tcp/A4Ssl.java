@@ -1,17 +1,16 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Tls;
-
 import javax.net.ssl.*;
 import java.io.*;
 import java.security.*;
+import java.security.cert.*;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
+import java.util.Optional;
 
-public class A4X509 {
+public class A4Ssl {
 
   public static X509Certificate loadCertificate(File pemCert) {
     try {
@@ -45,9 +44,11 @@ public class A4X509 {
   }
 
   public static SSLContext contextFrom(A4Tls tlsConfig) {
+    var pemCert = new File(tlsConfig.certPath);
+    var pemKey = new File(tlsConfig.keyPath);
     try {
-      var certificate = loadCertificate(new File(tlsConfig.certPath)); // TODO the SSLContext should include intermediate certificates in the PEM chain.
-      var privateKey = loadKey(new File(tlsConfig.keyPath));
+      var certificate = loadCertificate(pemCert); // TODO the SSLContext should include intermediate certificates in the PEM chain.
+      var privateKey = loadKey(pemKey);
 
       var keyStore = KeyStore.getInstance("PKCS12");
       keyStore.load(null, null);
@@ -58,8 +59,6 @@ public class A4X509 {
       keyManagerFactory.init(keyStore, new char[0]);
 
       var sslContext = SSLContext.getInstance("TLS");
-
-      sslContext.createSSLEngine()
       sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
 
       return sslContext;
@@ -67,6 +66,27 @@ public class A4X509 {
       var msg = String.format("Unable to build SSL context: %s, %s", pemCert, pemKey);
       throw new IllegalStateException(msg, e);
     }
+  }
+
+  public static SSLEngine configureServer(SSLContext ctx, A4Tls tlsConfig) {
+    var eng = ctx.createSSLEngine();
+    eng.setUseClientMode(false);
+    if (tlsConfig != null) {
+      if (tlsConfig.tlsVersions != null && tlsConfig.tlsVersions.length > 0) {
+        eng.setEnabledProtocols(tlsConfig.tlsVersions);
+      }
+      if (tlsConfig.ciphers != null && tlsConfig.ciphers.length > 0) {
+        eng.setEnabledCipherSuites(tlsConfig.ciphers);
+      }
+    }
+    return eng;
+  }
+
+  public static Optional<String> sniOf(Optional<SNIServerName> sni) {
+    if (sni.isEmpty() || !(sni.get() instanceof SNIHostName)) {
+      return Optional.empty();
+    }
+    return Optional.of(((SNIHostName) sni.get()).getAsciiName());
   }
 
 }

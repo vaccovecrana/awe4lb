@@ -7,7 +7,7 @@ import java.util.List;
 public class A4Pool {
 
   public enum Type {
-    RoundRobin, LeastConn, IpHash
+    Weight, RoundRobin, LeastConn, IpHash
   }
 
   public Type type;

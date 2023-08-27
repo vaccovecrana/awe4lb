@@ -2,12 +2,11 @@ package io.vacco.a4lb;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.util.A4Configs;
 import io.vacco.a4lb.util.A4Valid;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
-
-import java.io.InputStreamReader;
 
 import static j8spec.J8Spec.*;
 
@@ -51,15 +50,10 @@ public class A4ValidTest {
     });
     it("Validates a JSON configuration", () -> {
       System.out.println("============================");
-      var g = new Gson();
-      var url = A4ValidTest.class.getResource("/config.json");
-      try (var is = url.openStream()) {
-        var isr = new InputStreamReader(is);
-        var cfg = g.fromJson(isr, A4Config.class);
-        var constraints = A4Valid.A4ConfigVld.validate(cfg);
-        for (var cnt : constraints) {
-          System.out.println(cnt.message());
-        }
+      var cfg = A4Configs.loadFrom(A4ValidTest.class.getResource("/config.json"), new Gson());
+      var constraints = A4Valid.A4ConfigVld.validate(cfg);
+      for (var cnt : constraints) {
+        System.out.println(cnt.message());
       }
     });
   }

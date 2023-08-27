@@ -1,12 +1,15 @@
 package io.vacco.a4lb;
 
+import com.google.gson.Gson;
 import io.vacco.a4lb.tcp.*;
+import io.vacco.a4lb.util.A4Configs;
 import io.vacco.shax.logging.ShOption;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import java.net.InetSocketAddress;
+
+import java.util.ArrayList;
 
 import static j8spec.J8Spec.*;
 
@@ -22,16 +25,12 @@ public class A4LbTest {
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_LOGLEVEL, "trace");
   }
 
-  /*
-    private static void getActiveProtocols() throws NoSuchAlgorithmException {
-    var eng = SSLContext.getDefault().createSSLEngine();
-    System.out.println(Arrays.toString(eng.getEnabledProtocols()));
-    System.out.println(Arrays.toString(eng.getEnabledCipherSuites()));
-  } */
-
   static {
     it("Forwards socket data", () -> {
-      var srv = new A4TcpSrv(A4Io.osSelector(), new InetSocketAddress("0.0.0.0", 8080));
+      var cfg = A4Configs.loadFrom(A4ValidTest.class.getResource("/config.json"), new Gson());
+      var srvE = new ArrayList<>(cfg.servers.entrySet());
+      var srvN = srvE.get(1);
+      var srv = new A4TcpSrv(A4Io.newSelector(), srvN.getKey(), srvN.getValue());
       while (true) {
         srv.update();
       }

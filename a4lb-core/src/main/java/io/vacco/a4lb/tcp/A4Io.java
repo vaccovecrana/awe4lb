@@ -40,7 +40,7 @@ public class A4Io {
     }
   }
 
-  public static Selector osSelector() {
+  public static Selector newSelector() {
     try {
       return Selector.open();
     } catch (IOException ioe) {

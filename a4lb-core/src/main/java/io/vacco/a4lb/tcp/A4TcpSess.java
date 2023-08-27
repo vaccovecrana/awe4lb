@@ -1,6 +1,9 @@
 package io.vacco.a4lb.tcp;
 
+import org.slf4j.*;
 import tlschannel.*;
+
+import javax.net.ssl.SSLEngineResult;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -10,17 +13,17 @@ import static io.vacco.a4lb.tcp.A4Io.*;
 
 public class A4TcpSess {
 
-  private final A4TcpIo client, backend;
-  public  final A4TcpSrv owner;
+  private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
+
+  public final A4TcpSrv owner;
   public final ByteBuffer buffer;
 
-  public A4TcpSess(A4TcpSrv owner, A4TcpIo client, A4TcpIo backend, int bufferSize) {
-    this.client = Objects.requireNonNull(client);
-    this.backend = Objects.requireNonNull(backend);
+  private A4TcpIo client, backend;
+  private String tlsSni;
+
+  public A4TcpSess(A4TcpSrv owner, int bufferSize) {
     this.owner = Objects.requireNonNull(owner);
     this.buffer = ByteBuffer.allocateDirect(bufferSize);
-    client.channelKey.attach(this);
-    backend.channelKey.attach(this);
   }
 
   private void sessionMismatch(SelectionKey key) {
@@ -29,10 +32,14 @@ public class A4TcpSess {
 
   private void tearDown(Exception e) {
     if (e != null && log.isTraceEnabled()) {
-      log.trace("{} - {} - abnormal session termination", client.id, backend.id, e);
+      log.trace(
+          "[{}] - [{}] - abnormal session termination",
+          client != null ? client.id : "?",
+          backend != null ? backend.id : "?", e
+      );
     }
-    client.close();
-    backend.close();
+    if (client != null) { client.close(); }
+    if (backend != null) { backend.close(); }
   }
 
   private void doTcpRead(String channelId, ByteChannel from) {
@@ -42,6 +49,9 @@ public class A4TcpSess {
   }
 
   private void onTcpRead(SelectionKey key, ByteChannel channel) {
+    if (log.isTraceEnabled()) {
+      log.trace("<<<< {}", key.channel());
+    }
     if (channel == client.channel) {
       if (client.tlsChannel != null) {
         doTcpRead(client.id, client.tlsChannel);
@@ -60,6 +70,9 @@ public class A4TcpSess {
   }
 
   private void onTcpWrite(SelectionKey key, ByteChannel channel) throws IOException {
+    if (log.isTraceEnabled()) {
+      log.trace(">>>> {}", key.channel());
+    }
     if (channel == client.channel) {
       backend.channel.write(buffer);
     } else if (channel == backend.channel) {
@@ -76,8 +89,25 @@ public class A4TcpSess {
     }
   }
 
+  private void initBackend(SelectionKey key) {
+    if (client.tlsChannel == null) {
+      this.backend = owner.backendPool.get(key.selector(), client.channel, null);
+    } else if (client.tlsChannel.getSslEngine() != null) {
+      var hsStat = client.tlsChannel.getSslEngine().getHandshakeStatus();
+      if (hsStat == SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
+        this.backend = owner.backendPool.get(key.selector(), client.channel, tlsSni);
+      }
+    }
+    if (this.backend != null) {
+      this.backend.channelKey.attach(this);
+    }
+  }
+
   private void tcpUpdate(SelectionKey key) throws IOException {
     var channel = (SocketChannel) key.channel();
+    if (backend == null && channel == client.channel) {
+      initBackend(key);
+    }
     if (key.isReadable()) {
       onTcpRead(key, channel);
     } else if (key.isWritable()) {
@@ -104,6 +134,15 @@ public class A4TcpSess {
         tearDown(e);
       }
     }
+  }
+
+  public void setTlsSni(String tlsSni) {
+    this.tlsSni = Objects.requireNonNull(tlsSni);
+  }
+
+  public void setClient(A4TcpIo client) {
+    this.client = Objects.requireNonNull(client);
+    this.client.channelKey.attach(this);
   }
 
 }

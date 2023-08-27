@@ -91,7 +91,11 @@ public class A4Valid {
       .nestIfPresent(mo -> mo.sni, "sni", A4StringOpVld)
       .constraintOnTarget(
           mo -> mo.host != null || mo.sni != null,
-          "matchOp", "matchOp.oneOf", "\"{0}\" missing one of [host, sni]"
+          "matchOp", "matchOp.anyOf", "\"{0}\" missing any of [host, sni]"
+      ).constraintOnTarget(
+          mo -> arrayValsNnLtEq(1, mo.host, mo.sni),
+          "matchOp", "matchOp.oneOf",
+          "\"{0}\" only one of [host, sni] allowed"
       ).build();
 
   public static final Validator<A4Pool> A4PoolVld = ValidatorBuilder.<A4Pool>of()
@@ -130,6 +134,7 @@ public class A4Valid {
       .nest(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
       .nestIfPresent(s -> s.tls, "tls", A4TlsVld)
       .constraint(A4Server::matchList, "match", c -> c.notNull().notEmpty())
+      .constraint((ToInteger<A4Server>) s -> s.bufferSize, "bufferSize", c -> c.greaterThan(0))
       .forEach(A4Server::matchList, "match", A4MatchVld)
       .build();
 

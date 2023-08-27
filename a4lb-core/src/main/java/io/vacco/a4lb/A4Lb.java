@@ -13,7 +13,7 @@ public class A4Lb {
   }
 
   public void start() {
-    config.servers;
+
   }
 
 }

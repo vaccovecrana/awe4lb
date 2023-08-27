@@ -24,4 +24,18 @@ public class A4StringOp {
     return this;
   }
 
+  @Override public String toString() {
+    return String.format("%s %s",
+        equals != null ? "=="
+            : contains != null ? "contains"
+            : startsWith != null ? "startsWith"
+            : endsWith != null ? "endsWith"
+            : "?",
+        equals != null ? equals
+            : contains != null ? contains
+            : startsWith != null ? startsWith
+            : endsWith != null ? endsWith
+            : "?"
+    );
+  }
 }

@@ -1,7 +1,6 @@
 package io.vacco.a4lb.tcp;
 
 import tlschannel.*;
-import javax.net.ssl.SSLContext;
 import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
@@ -14,17 +13,14 @@ public class A4TcpIo implements Closeable {
   public final SocketChannel channel;
   public final TlsChannel tlsChannel;
 
-  public A4TcpIo(ServerSocketChannel source, Selector selector, SSLContext sslContext) {
+  public A4TcpIo(Selector selector, SocketChannel rawChannel, TlsChannel tlsChannel) {
     try {
-      this.channel = Objects.requireNonNull(source).accept();
-      this.channel.configureBlocking(false);
-      this.tlsChannel = sslContext == null
-          ? null
-          : ServerTlsChannel.newBuilder(this.channel, sslContext).build();
+      this.channel = Objects.requireNonNull(rawChannel);
+      this.tlsChannel = tlsChannel;
       this.channelKey = this.channel.register(selector, SelectionKey.OP_READ);
       this.id = this.channel.socket().toString();
     } catch (Exception e) {
-      throw new IllegalStateException("Client channel initialization error - " + source.socket(), e);
+      throw new IllegalStateException("Client to Server channel initialization error - " + rawChannel.socket(), e);
     }
   }
 

@@ -11,6 +11,8 @@ public class A4Server {
   public A4Match[] match;
   public A4HealthCheck healthCheck;
 
+  public int bufferSize = 8192;
+
   public A4Server addr(A4Sock addr) {
     this.addr = addr;
     return this;
