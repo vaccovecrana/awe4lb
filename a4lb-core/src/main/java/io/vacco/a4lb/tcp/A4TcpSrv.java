@@ -1,5 +1,6 @@
 package io.vacco.a4lb.tcp;
 
+import io.vacco.a4lb.cfg.A4Server;
 import org.slf4j.*;
 import javax.net.ssl.SSLContext;
 import java.io.File;
@@ -12,21 +13,33 @@ public class A4TcpSrv {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSrv.class);
 
+  private final String id;
+  private final SSLContext sslContext;
   private final ServerSocketChannel channel;
   private final Selector selector;
 
-  public A4TcpSrv(Selector selector, InetSocketAddress address) {
+  public A4TcpSrv(Selector selector, String id, A4Server srv) {
     // TODO configuration parameters for all these
     // TODO this needs to accept TLS configuration parameters as well.
     try {
+      this.id = Objects.requireNonNull(id);
       this.selector = Objects.requireNonNull(selector);
       this.channel = ServerSocketChannel.open();
-      this.channel.bind(address);
+      this.channel.bind(new InetSocketAddress(srv.addr.host, srv.addr.port));
       this.channel.configureBlocking(false);
       this.channel.register(selector, SelectionKey.OP_ACCEPT);
-      log.info("{} - Ingress open", this.channel.socket());
+      if (srv.tls != null) {
+        log.info("{} - initializing SSL context", id);
+        this.sslContext = A4X509.contextFrom(new File(srv.tls.certPath), new File(srv.tls.keyPath));
+        if (srv.tls.tlsVersions != null) {
+          sslContext.pr
+        }
+      } else {
+        this.sslContext = null;
+      }
+      log.info("{} - {} - Ingress open", this.id, this.channel.socket());
     } catch (IOException ioe) {
-      log.error("Unable to open server socket channel {}", address, ioe);
+      log.error("Unable to open server socket channel {}", srv.addr, ioe);
       throw new IllegalStateException(ioe);
     }
   }

@@ -1,5 +1,7 @@
 package io.vacco.a4lb.tcp;
 
+import io.vacco.a4lb.cfg.A4Tls;
+
 import javax.net.ssl.*;
 import java.io.*;
 import java.security.*;
@@ -42,10 +44,10 @@ public class A4X509 {
     }
   }
 
-  public static SSLContext contextFrom(File pemCert, File pemKey) {
+  public static SSLContext contextFrom(A4Tls tlsConfig) {
     try {
-      var certificate = loadCertificate(pemCert); // TODO the SSLContext should include intermediate certificates in the PEM chain.
-      var privateKey = loadKey(pemKey);
+      var certificate = loadCertificate(new File(tlsConfig.certPath)); // TODO the SSLContext should include intermediate certificates in the PEM chain.
+      var privateKey = loadKey(new File(tlsConfig.keyPath));
 
       var keyStore = KeyStore.getInstance("PKCS12");
       keyStore.load(null, null);
@@ -56,6 +58,8 @@ public class A4X509 {
       keyManagerFactory.init(keyStore, new char[0]);
 
       var sslContext = SSLContext.getInstance("TLS");
+
+      sslContext.createSSLEngine()
       sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
 
       return sslContext;

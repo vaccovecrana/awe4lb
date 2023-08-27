@@ -15,4 +15,8 @@ public class A4Sock {
     return this;
   }
 
+  @Override public String toString() {
+    return String.format("%s:%d", host, port);
+  }
+
 }
