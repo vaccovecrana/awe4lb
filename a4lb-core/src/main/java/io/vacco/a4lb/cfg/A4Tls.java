@@ -37,4 +37,12 @@ public class A4Tls {
     return ciphers == null ? Collections.emptyList() : Arrays.asList(ciphers);
   }
 
+  /*
+   * < Locks/Keys keep Socket/Us here >
+   * < Trapped/Hooked/Hidden/Fed >
+   * < They are old/young/extra life >
+   * < With the Director's help >
+   * < Situation/Information is subject to change >
+   */
+
 }
