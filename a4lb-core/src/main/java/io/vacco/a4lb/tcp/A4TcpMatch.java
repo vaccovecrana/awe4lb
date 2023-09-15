@@ -16,8 +16,7 @@ public class A4TcpMatch {
     this.cfg = Objects.requireNonNull(cfg);
   }
 
-  public A4Backend select(SocketChannel client, String tlsSni) {
-    var clientHost = client.socket().getInetAddress().getHostAddress();
+  public A4Backend select(String clientHost, String tlsSni) {
     var oPool = A4MatchOps.eval(tlsSni, clientHost, cfg);
     if (oPool.isPresent()) {
       var pool = oPool.get();
@@ -36,7 +35,8 @@ public class A4TcpMatch {
   }
 
   public A4TcpIo get(Selector selector, SocketChannel client, String tlsSni) {
-    var bk = select(client, tlsSni);
+    var clientHost = client.socket().getInetAddress().getHostAddress();
+    var bk = select(clientHost, tlsSni);
     return new A4TcpIo(new InetSocketAddress(bk.addr.host, bk.addr.port), selector);
   }
 

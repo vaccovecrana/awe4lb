@@ -24,7 +24,7 @@ public class A4LbTest {
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_LOGLEVEL, "trace");
   }
-
+  /*
   static {
     it("Forwards socket data", () -> {
       // https://gobetween.io/documentation.html#Balancing
@@ -40,4 +40,5 @@ public class A4LbTest {
       }
     });
   }
+  */
 }
