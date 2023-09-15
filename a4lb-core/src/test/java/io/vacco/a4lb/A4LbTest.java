@@ -27,6 +27,10 @@ public class A4LbTest {
 
   static {
     it("Forwards socket data", () -> {
+      // https://gobetween.io/documentation.html#Balancing
+      // InetSocketAddress dummy = new InetSocketAddress("websdr.ewi.utwente.nl", 8901);
+      // InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
+
       var cfg = A4Configs.loadFrom(A4ValidTest.class.getResource("/config.json"), new Gson());
       var srvE = new ArrayList<>(cfg.servers.entrySet());
       var srvN = srvE.get(1);
