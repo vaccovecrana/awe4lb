@@ -82,11 +82,11 @@ public class A4Ssl {
     return eng;
   }
 
-  public static Optional<String> sniOf(Optional<SNIServerName> sni) {
-    if (sni.isEmpty() || !(sni.get() instanceof SNIHostName)) {
+  public static Optional<String> sniOf(SNIServerName sni) {
+    if (!(sni instanceof SNIHostName)) {
       return Optional.empty();
     }
-    return Optional.of(((SNIHostName) sni.get()).getAsciiName());
+    return Optional.of(((SNIHostName) sni).getAsciiName());
   }
 
 }

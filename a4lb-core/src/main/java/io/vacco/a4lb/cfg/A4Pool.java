@@ -1,17 +1,18 @@
 package io.vacco.a4lb.cfg;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class A4Pool {
 
   public enum Type {
-    Weight, RoundRobin, LeastConn, IpHash
+    RoundRobin, LeastConn, IpHash, Weight
   }
 
   public Type type;
-  public A4Backend[] hosts;
+  public List<A4Backend> hosts;
+  public transient boolean sorted = false;
 
   // TODO add discovery strategy configurations here.
 
@@ -20,13 +21,17 @@ public class A4Pool {
     return this;
   }
 
-  public A4Pool hosts(A4Backend ... hosts) {
-    this.hosts = hosts;
+  public A4Pool hosts(List<A4Backend> hosts) {
+    this.hosts = new ArrayList<>(hosts);
     return this;
   }
 
+  public A4Pool hosts(A4Backend ... hosts) {
+    return hosts(new ArrayList<>(Arrays.asList(hosts)));
+  }
+
   public List<A4Backend> hostList() {
-    return hosts == null ? Collections.emptyList() : Arrays.asList(hosts);
+    return hosts;
   }
 
   /*

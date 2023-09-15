@@ -97,7 +97,7 @@ public class A4Valid {
       ).build();
 
   public static final Validator<A4Pool> A4PoolVld = ValidatorBuilder.<A4Pool>of()
-      .constraint((ToObjectArray<A4Pool, A4Backend>) m -> m.hosts, "match.hosts", c -> c.notNull().notEmpty())
+      .constraint(A4Pool::hostList, "hosts", c -> c.notNull().notEmpty())
       .forEach(A4Pool::hostList, "hosts", A4BackendVld)
       .build();
 

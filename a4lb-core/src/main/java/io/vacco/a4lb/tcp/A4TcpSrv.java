@@ -55,7 +55,7 @@ public class A4TcpSrv {
       if (sslContext != null) {
         tlc = ServerTlsChannel
             .newBuilder(clientChannel, osni -> {
-              A4Ssl.sniOf(osni).ifPresent(sess::setTlsSni);
+              osni.flatMap(A4Ssl::sniOf).ifPresent(sess::setTlsSni);
               return Optional.of(sslContext);
             })
             .withEngineFactory(sslCtx -> A4Ssl.configureServer(sslCtx, srvConfig.tls))
