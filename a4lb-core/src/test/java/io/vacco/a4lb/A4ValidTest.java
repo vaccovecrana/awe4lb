@@ -38,9 +38,7 @@ public class A4ValidTest {
                       )
               )
               .healthCheck(
-                  new A4HealthCheck()
-                      .intervalMs(3000)
-                      .timeoutMs(5000)
+                  new A4HealthCheck().intervalMs(3000).timeoutMs(5000)
               )
           );
       var constraints = A4Valid.A4ConfigVld.validate(a4Cfg);
