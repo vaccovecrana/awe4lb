@@ -10,6 +10,7 @@ import java.nio.channels.*;
 import java.util.Objects;
 
 import static io.vacco.a4lb.tcp.A4Io.*;
+import static io.vacco.a4lb.util.A4Exceptions.rootCauseOf;
 
 public class A4TcpSess {
 
@@ -137,7 +138,7 @@ public class A4TcpSess {
         sessionMismatch(key);
       }
     } catch (Exception e) {
-      var x = getRootException(e);
+      var x = rootCauseOf(e);
       if (x instanceof NeedsReadException) {
         key.interestOps(SelectionKey.OP_READ);
       } else if (x instanceof NeedsWriteException) {

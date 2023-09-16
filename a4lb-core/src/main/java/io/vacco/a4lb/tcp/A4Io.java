@@ -68,12 +68,4 @@ public class A4Io {
     }
   }
 
-  public static Throwable getRootException(Throwable exception){
-    var rootException = exception;
-    while (rootException.getCause() != null) {
-      rootException = rootException.getCause();
-    }
-    return rootException;
-  }
-
 }

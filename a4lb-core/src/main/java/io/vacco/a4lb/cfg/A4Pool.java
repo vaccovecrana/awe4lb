@@ -13,7 +13,7 @@ public class A4Pool {
   public List<A4Backend> hosts;
 
   public transient Random rnd = new Random(A4Config.Seed);
-  public transient int rrIdx = 0;
+  public transient int rrVal = 0;
 
   // TODO add discovery strategy configurations here.
 

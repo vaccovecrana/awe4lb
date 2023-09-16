@@ -6,12 +6,12 @@ import io.vacco.a4lb.cfg.A4Pool;
 public class A4SelRRobin {
 
   public static A4Backend select(A4Pool pool) {
-    pool.rrIdx = pool.rrIdx + 1;
-    if (pool.rrIdx == Integer.MAX_VALUE) {
-      pool.rrIdx = 0;
+    pool.rrVal = pool.rrVal + 1;
+    if (pool.rrVal == Integer.MAX_VALUE) {
+      pool.rrVal = 0;
     }
     var up = pool.upHosts();
-    return up.get(pool.rrIdx % (up.size() - 1));
+    return up.get(pool.rrVal % (up.size() - 1));
   }
 
 }

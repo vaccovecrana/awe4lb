@@ -24,4 +24,12 @@ public class A4Exceptions {
     }
   }
 
+  public static Throwable rootCauseOf(Throwable t){
+    var root = t;
+    while (root.getCause() != null && root.getCause() != root) {
+      root = root.getCause();
+    }
+    return root;
+  }
+
 }
