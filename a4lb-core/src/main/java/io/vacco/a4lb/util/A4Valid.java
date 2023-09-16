@@ -11,8 +11,8 @@ import static am.ik.yavi.builder.ValidatorBuilder.*;
 
 public class A4Valid {
 
-  public static <T> LongConstraint<T> gt0(LongConstraint<T> c) {
-    return c.greaterThan(0L);
+  public static <T> IntegerConstraint<T> gt0I(IntegerConstraint<T> c) {
+    return c.greaterThan(0);
   }
 
   public static <T> IntegerConstraint<T> gtLtEq(IntegerConstraint<T> c, int gt, int ltEq) {
@@ -34,8 +34,8 @@ public class A4Valid {
       .build();
 
   public static final Validator<A4HealthCheck> A4HealthCheckVld = ValidatorBuilder.<A4HealthCheck>of()
-      .constraint((ToLong<A4HealthCheck>) hc -> hc.intervalMs, "intervalMs", A4Valid::gt0)
-      .constraint((ToLong<A4HealthCheck>) hc -> hc.timeoutMs, "timeoutMs", A4Valid::gt0)
+      .constraint((ToInteger<A4HealthCheck>) hc -> hc.intervalMs, "intervalMs", A4Valid::gt0I)
+      .constraint((ToInteger<A4HealthCheck>) hc -> hc.timeoutMs, "timeoutMs", A4Valid::gt0I)
       .constraintOnTarget(
           hc -> hc.timeoutMs < hc.intervalMs, "timeoutMs",
           "timeoutMs.isLessThanInterval",

@@ -3,6 +3,7 @@ package io.vacco.a4lb.cfg;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class A4Server {
 
@@ -30,6 +31,10 @@ public class A4Server {
 
   public List<A4Match> matchList() {
     return match == null ? Collections.emptyList() : Arrays.asList(match);
+  }
+
+  public Stream<A4Backend> allBackends() {
+    return Arrays.stream(match).flatMap(m -> m.pool.hosts.stream());
   }
 
   public A4Server healthCheck(A4HealthCheck healthCheck) {

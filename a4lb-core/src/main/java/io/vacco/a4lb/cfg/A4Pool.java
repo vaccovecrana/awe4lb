@@ -10,7 +10,7 @@ public class A4Pool {
   }
 
   public Type type;
-  public List<A4Backend> hosts;
+  public List<A4Backend> hosts = new ArrayList<>();
 
   public transient Random rnd = new Random(A4Config.Seed);
   public transient int rrVal = 0;

@@ -10,6 +10,9 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static java.util.stream.Stream.concat;
+import static java.util.stream.Collectors.toList;
+
 public class A4Lb {
 
   static {
@@ -20,11 +23,7 @@ public class A4Lb {
   private static final Logger log = LoggerFactory.getLogger(A4Lb.class);
 
   private final A4Config config;
-
-  private final ExecutorService
-      tskEx = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb-io")),
-      dscEx = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb-discover")),
-      hltEx = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb-health-check"));
+  private final ExecutorService tskEx = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb"));
 
   public A4Lb(A4Config config) {
     this.config = Objects.requireNonNull(config);
@@ -36,21 +35,20 @@ public class A4Lb {
 
   public void start() throws InterruptedException {
     log.info("Starting");
-    var tasks = new ArrayList<Callable<A4TcpSrv>>();
-    for (var srvE : config.servers.entrySet()) {
-      tasks.add(() -> new A4TcpSrv(A4Io.newSelector(), srvE.getKey(), srvE.getValue()).updateLoop());
-      // TODO spin a second per-server discovery thread (in case the host list is not static). Provides new backend entries.
-      // TODO spin a third per-server health check thread. Marks backend statuses as UP, DOWN, UNKNOWN.
-    }
+    var allTasks = concat(
+        config.servers.entrySet().stream()
+            .map(srvE -> new A4TcpSrv(A4Io.newSelector(), srvE.getKey(), srvE.getValue())),
+        config.servers.entrySet().stream()
+            .map(srvE -> new A4TcpHealth(tskEx, srvE.getKey(), srvE.getValue()))
+        // TODO spin a per-server discovery thread (in case the host list is not static). Provides new backend entries.
+    ).collect(toList());
     log.info("Started");
-    tskEx.invokeAll(tasks);
+    tskEx.invokeAll(allTasks);
   }
 
   public void stop() {
     log.info("Stopping");
     tskEx.shutdownNow();
-    dscEx.shutdownNow();
-    hltEx.shutdownNow();
     log.info("Stopped");
   }
 

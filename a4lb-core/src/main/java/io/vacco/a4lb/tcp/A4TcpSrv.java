@@ -8,8 +8,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.Callable;
 
-public class A4TcpSrv {
+public class A4TcpSrv implements Callable<Void> {
 
   public static final Logger log = LoggerFactory.getLogger(A4TcpSrv.class);
 
@@ -85,7 +86,7 @@ public class A4TcpSrv {
     });
   }
 
-  public A4TcpSrv updateLoop() {
+  @Override public Void call() {
     while (true) {
       update();
     }
