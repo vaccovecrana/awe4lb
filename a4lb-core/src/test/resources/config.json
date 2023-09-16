@@ -11,8 +11,8 @@
     "vacco-tls": {
       "addr": {"host":"0.0.0.0", "port": 8080},
       "tls": {
-        "certPath": "./a4lb-core/src/test/resources/cert.pem",
-        "keyPath": "./a4lb-core/src/test/resources/key.pem"
+        "certPath": "./src/test/resources/cert.pem",
+        "keyPath": "./src/test/resources/key.pem"
       },
       "match": [
         {

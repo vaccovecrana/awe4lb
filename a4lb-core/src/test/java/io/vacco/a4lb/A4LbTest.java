@@ -24,7 +24,7 @@ public class A4LbTest {
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_LOGLEVEL, "trace");
   }
-  /*
+
   static {
     it("Forwards socket data", () -> {
       // https://gobetween.io/documentation.html#Balancing
@@ -33,12 +33,12 @@ public class A4LbTest {
 
       var cfg = A4Configs.loadFrom(A4ValidTest.class.getResource("/config.json"), new Gson());
       var srvE = new ArrayList<>(cfg.servers.entrySet());
-      var srvN = srvE.get(1);
+      var srvN = srvE.get(0);
       var srv = new A4TcpSrv(A4Io.newSelector(), srvN.getKey(), srvN.getValue());
       while (true) {
         srv.update();
       }
     });
   }
-  */
+
 }
