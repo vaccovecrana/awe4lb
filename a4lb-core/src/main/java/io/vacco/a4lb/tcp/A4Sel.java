@@ -6,11 +6,11 @@ import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.*;
 
-public class A4TcpMatch {
+public class A4Sel {
 
   private final A4Match[] cfg;
 
-  public A4TcpMatch(A4Match[] cfg) {
+  public A4Sel(A4Match[] cfg) {
     this.cfg = Objects.requireNonNull(cfg);
   }
 
@@ -20,12 +20,12 @@ public class A4TcpMatch {
       if (oPool.isPresent()) {
         var pool = oPool.get();
         if (pool.type == null) {
-          return A4TcpStd.select(pool);
+          return A4SelStd.select(pool);
         }
         switch (pool.type) {
-          case Weight: return A4TcpWeight.select(pool);
-          case RoundRobin: return A4TcpRRobin.select(pool);
-          case IpHash: return A4TcpIpHash.select(pool, clientIpHash);
+          case Weight: return A4SelWeight.select(pool);
+          case RoundRobin: return A4SelRRobin.select(pool);
+          case IpHash: return A4SelIpHash.select(pool, clientIpHash);
         }
       }
       throw new IllegalStateException();
@@ -34,7 +34,7 @@ public class A4TcpMatch {
     }
   }
 
-  public A4TcpIo get(Selector selector, SocketChannel client, String tlsSni) {
+  public A4TcpIo assign(Selector selector, SocketChannel client, String tlsSni) {
     var clientIp = client.socket().getInetAddress();
     var bk = select(clientIp.getHostAddress(), clientIp.hashCode(), tlsSni);
     var io = new A4TcpIo(new InetSocketAddress(bk.addr.host, bk.addr.port), selector);

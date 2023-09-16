@@ -103,11 +103,11 @@ public class A4TcpSess {
 
   private void initBackend(SelectionKey key) {
     if (client.tlsChannel == null) {
-      this.backend = owner.backendPool.get(key.selector(), client.channel, null);
+      this.backend = owner.bkSelect.assign(key.selector(), client.channel, null);
     } else if (client.tlsChannel.getSslEngine() != null) {
       var hsStat = client.tlsChannel.getSslEngine().getHandshakeStatus();
       if (hsStat == SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
-        this.backend = owner.backendPool.get(key.selector(), client.channel, tlsSni);
+        this.backend = owner.bkSelect.assign(key.selector(), client.channel, tlsSni);
       }
     }
     if (this.backend != null) {

@@ -3,7 +3,7 @@ package io.vacco.a4lb.tcp;
 import io.vacco.a4lb.cfg.A4Backend;
 import io.vacco.a4lb.cfg.A4Pool;
 
-public class A4TcpIpHash {
+public class A4SelIpHash {
 
   public static long getUnsignedInt(int x) {
     return x & 0x00000000ffffffffL;

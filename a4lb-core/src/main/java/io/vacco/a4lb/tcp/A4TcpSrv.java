@@ -19,7 +19,7 @@ public class A4TcpSrv {
   private final ServerSocketChannel channel;
 
   private final A4Server srvConfig;
-  public  final A4TcpMatch backendPool;
+  public  final A4Sel bkSelect;
 
   public A4TcpSrv(Selector selector, String id, A4Server srv) {
     try {
@@ -29,7 +29,7 @@ public class A4TcpSrv {
       this.channel.bind(new InetSocketAddress(srv.addr.host, srv.addr.port));
       this.channel.configureBlocking(false);
       this.channel.register(selector, SelectionKey.OP_ACCEPT);
-      this.backendPool = new A4TcpMatch(srv.match);
+      this.bkSelect = new A4Sel(srv.match);
       this.srvConfig = Objects.requireNonNull(srv);
       if (srv.tls != null) {
         log.info("{} - initializing SSL context", id);

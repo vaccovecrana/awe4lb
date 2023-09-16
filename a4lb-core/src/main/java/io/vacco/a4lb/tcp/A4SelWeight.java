@@ -5,7 +5,7 @@ import java.util.*;
 
 import static java.util.stream.Collectors.groupingBy;
 
-public class A4TcpWeight {
+public class A4SelWeight {
 
   public static A4Backend wtRdSelect(List<A4Backend> backends, Random rnd) {
     int tw = 0;

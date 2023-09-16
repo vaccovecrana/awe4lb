@@ -1,7 +1,7 @@
 package io.vacco.a4lb;
 
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.tcp.A4TcpWeight;
+import io.vacco.a4lb.tcp.A4SelWeight;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
-public class A4TcpWeightTest {
+public class A4SelWeightTest {
   static {
     it("Performs weighted random backend selection", () -> {
       // Create a list of backend servers
@@ -28,7 +28,7 @@ public class A4TcpWeightTest {
       int totalSelections = 10000;
 
       for (int i = 0; i < totalSelections; i++) {
-        var bk = A4TcpWeight.select(pool);
+        var bk = A4SelWeight.select(pool);
         if (bk.addr.host.equals("bk00")) {
           host1Count++;
         } else if (bk.addr.host.equals("bk01")) {
