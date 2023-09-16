@@ -26,6 +26,7 @@ public class A4Sel {
           case Weight: return A4SelWeight.select(pool);
           case RoundRobin: return A4SelRRobin.select(pool);
           case IpHash: return A4SelIpHash.select(pool, clientIpHash);
+          case LeastConn: return A4SelLConn.select(pool);
         }
       }
       throw new IllegalStateException();
