@@ -1,8 +1,7 @@
 package io.vacco.a4lb.cfg;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class A4Pool {
 
@@ -12,7 +11,9 @@ public class A4Pool {
 
   public Type type;
   public List<A4Backend> hosts;
-  public transient boolean sorted = false;
+
+  public transient Random rnd = new Random(A4Config.Seed);
+  public transient int rrIdx = 0;
 
   // TODO add discovery strategy configurations here.
 
@@ -32,6 +33,12 @@ public class A4Pool {
 
   public List<A4Backend> hostList() {
     return hosts;
+  }
+
+  public List<A4Backend> upHosts() {
+    return hosts.stream()
+        .filter(bk -> bk.state == A4Backend.State.Up)
+        .collect(Collectors.toList());
   }
 
   /*

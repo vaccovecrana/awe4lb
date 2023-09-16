@@ -2,6 +2,7 @@ package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.*;
 import java.util.*;
+
 import static java.util.stream.Collectors.groupingBy;
 
 public class A4TcpWeight {
@@ -23,16 +24,10 @@ public class A4TcpWeight {
     throw new IllegalStateException(msg);
   }
 
-  public static A4Backend wtSelect(A4Pool pool, Random rnd) {
-    if (!pool.sorted) {
-      pool.hosts.sort(Comparator.comparingInt(bk -> bk.priority == null ? 0 : bk.priority));
-    }
-    var hostIdx = new TreeMap<>(
-        pool.hosts.stream()
-            .filter(bk -> bk.state == A4Backend.State.Up)
-            .collect(groupingBy(bk -> bk.priority))
-    );
-    return wtRdSelect(hostIdx.values().iterator().next(), rnd);
+  public static A4Backend select(A4Pool pool) {
+    var up = pool.upHosts();
+    var hostIdx = new TreeMap<>(up.stream().collect(groupingBy(bk -> bk.priority)));
+    return wtRdSelect(hostIdx.values().iterator().next(), pool.rnd);
   }
 
 }

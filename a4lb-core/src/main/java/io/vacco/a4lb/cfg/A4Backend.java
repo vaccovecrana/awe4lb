@@ -7,10 +7,11 @@ public class A4Backend {
   }
 
   public A4Sock addr;
-  public Integer weight;
-  public Integer priority;
+  public Integer weight, priority;
 
-  public transient State state = State.Unknown;
+  public State state = State.Unknown;
+  public A4RxTx rxTx = new A4RxTx();
+  public int connections = 0;
 
   public A4Backend addr(A4Sock addr) {
     this.addr = addr;
@@ -32,8 +33,16 @@ public class A4Backend {
     return this;
   }
 
+  public void trackConnOpen() {
+    this.connections = this.connections + 1;
+  }
+
+  public void trackConnClose() {
+    this.connections = this.connections - 1;
+  }
+
   @Override public String toString() {
-    return String.format("%s[w: %d, p: %d]", addr, weight, priority);
+    return String.format("%s[w: %d, p: %d, s: %s]", addr, weight, priority, state);
   }
 
   /*

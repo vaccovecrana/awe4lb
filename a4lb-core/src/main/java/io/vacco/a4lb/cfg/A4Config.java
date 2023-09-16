@@ -5,6 +5,8 @@ import java.util.Map;
 
 public class A4Config {
 
+  public static final long Seed = 1984;
+
   public A4Probe api, metrics;
   public Map<String, A4Server> servers = new LinkedHashMap<>();
 

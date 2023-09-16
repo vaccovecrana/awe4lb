@@ -42,9 +42,20 @@ public class A4TcpSess {
     if (backend != null) { backend.close(); }
   }
 
-  private void doTcpRead(String channelId, ByteChannel from) {
-    if (eofRead(channelId, from, buffer) == -1) {
+  private void doTcpRead(String channelId, ByteChannel from, boolean updateStats) {
+    var readBytes = eofRead(channelId, from, buffer);
+    if (updateStats) {
+      backend.target.rxTx.updateTx(readBytes);
+    }
+    if (readBytes == -1) {
       tearDown(null);
+    }
+  }
+
+  private void doTcpWrite(ByteChannel to, ByteBuffer b, boolean updateStats) throws IOException {
+    var writtenBytes = to.write(b);
+    if (updateStats) {
+      backend.target.rxTx.updateRx(writtenBytes);
     }
   }
 
@@ -54,13 +65,13 @@ public class A4TcpSess {
     }
     if (channel == client.channel) {
       if (client.tlsChannel != null) {
-        doTcpRead(client.id, client.tlsChannel);
+        doTcpRead(client.id, client.tlsChannel, false);
       } else {
-        doTcpRead(client.id, client.channel);
+        doTcpRead(client.id, client.channel, false);
       }
     } else if (channel == backend.channel) {
       // TODO add case for reading from TLS backend channel too.
-      doTcpRead(backend.id, backend.channel);
+      doTcpRead(backend.id, backend.channel, true);
     } else {
       sessionMismatch(key);
     }
@@ -74,12 +85,13 @@ public class A4TcpSess {
       log.trace(">>>> {}", key.channel());
     }
     if (channel == client.channel) {
-      backend.channel.write(buffer);
+      // TODO add case for writing from TLS backend channel too.
+      doTcpWrite(backend.channel, buffer, false);
     } else if (channel == backend.channel) {
       if (client.tlsChannel != null) {
-        client.tlsChannel.write(buffer);
+        doTcpWrite(client.tlsChannel, buffer, true);
       } else {
-        client.channel.write(buffer);
+        doTcpWrite(client.channel, buffer, true);
       }
     } else {
       sessionMismatch(key);

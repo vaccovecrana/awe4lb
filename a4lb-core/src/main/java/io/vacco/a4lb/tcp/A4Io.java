@@ -22,7 +22,8 @@ public class A4Io {
     }
   }
 
-  public static int eofRead(String channelId, ByteChannel sc, ByteBuffer bb) { // TODO SSH 'yes' command causes "Bad packet length". < We/The Board do/does not approve >
+  public static int eofRead(String channelId, ByteChannel sc, ByteBuffer bb) {
+    // TODO SSH 'yes' command causes "Bad packet length". < We/The Board do/does not approve >
     try {
       bb.clear();
       int bytesRead = sc.read(bb);

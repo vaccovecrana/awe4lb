@@ -6,7 +6,6 @@ import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
 import java.util.List;
-import java.util.Random;
 
 import static j8spec.J8Spec.*;
 import static org.junit.Assert.*;
@@ -22,7 +21,6 @@ public class A4TcpWeightTest {
           new A4Backend().addr(new A4Sock().host("bk01")).weight(1).priority(0).state(A4Backend.State.Up)
       );
       var pool = new A4Pool().hosts(backends);
-      var rnd = new Random();
 
       // Perform weighted random selection multiple times
       int host1Count = 0;
@@ -30,7 +28,7 @@ public class A4TcpWeightTest {
       int totalSelections = 10000;
 
       for (int i = 0; i < totalSelections; i++) {
-        var bk = A4TcpWeight.wtSelect(pool, rnd);
+        var bk = A4TcpWeight.select(pool);
         if (bk.addr.host.equals("bk00")) {
           host1Count++;
         } else if (bk.addr.host.equals("bk01")) {

@@ -9,8 +9,6 @@ import java.util.concurrent.Executors;
 
 public class A4Lb {
 
-  public static final long Seed = 1984;
-
   private final A4Config config;
   private final ExecutorService lbx = Executors.newCachedThreadPool(r -> {
     var t = new Thread(r);

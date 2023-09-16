@@ -18,7 +18,8 @@ public class A4TcpMatchTest {
 
       var srv = cfg.servers.get("vacco-tls");
       var mat = new A4TcpMatch(srv.match);
-      var bk = mat.select("172.16.0.111", "momo.xio.vacco.li");
+      var host = "172.16.0.111";
+      var bk = mat.select(host, host.hashCode(), "momo.xio.vacco.li");
       System.out.println(bk);
     });
   }
