@@ -50,7 +50,7 @@
       "match": [
         {
           "pool": {
-            "hosts": [{"addr": {"host": "172.16.0.1", "port": 10022}}]
+            "hosts": [{"addr": {"host": "172.16.0.1", "port": 10022}, "state": "Up"}]
           }
         }
       ],

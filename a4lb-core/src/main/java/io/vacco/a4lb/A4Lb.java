@@ -1,28 +1,30 @@
 package io.vacco.a4lb;
 
+import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.A4Config;
-import io.vacco.a4lb.util.A4Exceptions;
-import io.vacco.a4lb.util.A4Valid;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import io.vacco.a4lb.tcp.*;
+import io.vacco.a4lb.util.*;
+import org.slf4j.*;
+import org.slf4j.bridge.SLF4JBridgeHandler;
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class A4Lb {
 
+  static {
+    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    SLF4JBridgeHandler.install();
+  }
+
+  private static final Logger log = LoggerFactory.getLogger(A4Lb.class);
+
   private final A4Config config;
-  private final ExecutorService lbx = Executors.newCachedThreadPool(r -> {
-    var t = new Thread(r);
 
-    /*
-     * TODO set thread names:
-     *   awe4lb-<server-name>-io
-     *   awe4lb-<server-name>-discovery
-     *   awe4lb-<server-name>-health
-     */
-
-    t.setName("awe4lb-task-pool");
-    return t;
-  });
+  private final ExecutorService
+      tskEx = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb-io")),
+      dscEx = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb-discover")),
+      hltEx = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb-health-check"));
 
   public A4Lb(A4Config config) {
     this.config = Objects.requireNonNull(config);
@@ -32,13 +34,46 @@ public class A4Lb {
     }
   }
 
-  public void start() {
-    // TODO
-    //   load each server definition, and map to A4TcpSrv
-    //   next, spin a new thread per server.
-    //   Then, spin a second per-server discovery thread (in case the host list is not static). Provides new backend entries.
-    //   Then, spin a third per-server health check thread. Marks backend statuses as UP, DOWN, UNKNOWN.
-    //   Then, launch a metrics thread. An actor which receives events on a queue from server threads (host/up/down, session rx/tx byte counts, etc.).
+  public void start() throws InterruptedException {
+    log.info("Starting");
+    var tasks = new ArrayList<Callable<A4TcpSrv>>();
+    for (var srvE : config.servers.entrySet()) {
+      tasks.add(() -> new A4TcpSrv(A4Io.newSelector(), srvE.getKey(), srvE.getValue()).updateLoop());
+      // TODO spin a second per-server discovery thread (in case the host list is not static). Provides new backend entries.
+      // TODO spin a third per-server health check thread. Marks backend statuses as UP, DOWN, UNKNOWN.
+    }
+    log.info("Started");
+    tskEx.invokeAll(tasks);
+  }
+
+  public void stop() {
+    log.info("Stopping");
+    tskEx.shutdownNow();
+    dscEx.shutdownNow();
+    hltEx.shutdownNow();
+    log.info("Stopped");
+  }
+
+  public static void main(String[] args) {
+    A4Lb a4lb = null;
+    try {
+      if (args == null || args.length != 1) {
+        throw new IllegalArgumentException("Must provide a single configuration file argument.");
+      }
+      var cfgFile = new File(args[0]);
+      if (!cfgFile.exists()) {
+        throw new IllegalArgumentException("Missing configuration file " + cfgFile.getAbsolutePath());
+      }
+      var g = new Gson();
+      var cfg = A4Configs.loadFrom(cfgFile.toURI().toURL(), g);
+      a4lb = new A4Lb(cfg);
+      a4lb.start();
+    } catch (Exception e) {
+      log.error("Unable to initialize load balancer", e);
+      if (a4lb != null) {
+        a4lb.stop();
+      }
+    }
   }
 
 }

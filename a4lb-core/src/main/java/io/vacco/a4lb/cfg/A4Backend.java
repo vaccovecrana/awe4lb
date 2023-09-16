@@ -39,10 +39,16 @@ public class A4Backend {
 
   public void trackConnClose() {
     this.connections = this.connections - 1;
+    if (this.connections < 0) {
+      this.connections = 0; // TODO check that this doesn't happen
+    }
   }
 
   @Override public String toString() {
-    return String.format("%s[w: %d, p: %d, s: %s]", addr, weight, priority, state);
+    return String.format(
+        "%s[w: %d, p: %d, s: %s, c: %d]",
+        addr, weight, priority, state, connections
+    );
   }
 
   /*

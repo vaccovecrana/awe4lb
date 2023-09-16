@@ -85,4 +85,10 @@ public class A4TcpSrv {
     });
   }
 
+  public A4TcpSrv updateLoop() {
+    while (true) {
+      update();
+    }
+  }
+
 }
