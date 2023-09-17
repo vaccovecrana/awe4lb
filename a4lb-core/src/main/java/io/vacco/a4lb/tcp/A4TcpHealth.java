@@ -29,9 +29,9 @@ public class A4TcpHealth implements Callable<Void> {
       socket.close();
       return A4Backend.State.Up;
     } catch (Exception e) {
-      if (log.isTraceEnabled()) {
+      if (log.isDebugEnabled()) {
         var x = A4Exceptions.rootCauseOf(e);
-        log.trace("{} - TCP health check failed - {} - {}", bk, x.getClass().getSimpleName(), x.getMessage());
+        log.debug("{} - TCP health check failed - {} - {}", bk, x.getClass().getSimpleName(), x.getMessage());
       }
       return A4Backend.State.Down;
     }

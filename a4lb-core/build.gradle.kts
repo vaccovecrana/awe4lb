@@ -1,3 +1,7 @@
+plugins {
+  application
+}
+
 configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
   addJ8Spec()
   sharedLibrary(true, false)
@@ -12,4 +16,8 @@ dependencies {
   api("org.buildobjects:jproc:2.8.2")
   api("com.google.code.gson:gson:2.10.1")
   api("org.slf4j:jul-to-slf4j:2.0.6")
+}
+
+application {
+  mainClass.set("io.vacco.a4lb.A4Lb")
 }

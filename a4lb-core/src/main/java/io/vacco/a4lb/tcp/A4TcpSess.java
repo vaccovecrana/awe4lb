@@ -2,7 +2,6 @@ package io.vacco.a4lb.tcp;
 
 import org.slf4j.*;
 import tlschannel.*;
-
 import javax.net.ssl.SSLEngineResult;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -45,6 +44,9 @@ public class A4TcpSess {
 
   private void doTcpRead(String channelId, ByteChannel from, boolean updateStats) {
     var readBytes = eofRead(channelId, from, buffer);
+    if (log.isTraceEnabled()) {
+      log.trace("R [{}] <<<< {}", readBytes, from);
+    }
     if (updateStats) {
       backend.target.rxTx.updateTx(readBytes);
     }
@@ -55,15 +57,15 @@ public class A4TcpSess {
 
   private void doTcpWrite(ByteChannel to, ByteBuffer b, boolean updateStats) throws IOException {
     var writtenBytes = to.write(b);
+    if (log.isTraceEnabled()) {
+      log.trace("W [{}] >>>> {}", writtenBytes, to);
+    }
     if (updateStats) {
       backend.target.rxTx.updateRx(writtenBytes);
     }
   }
 
   private void onTcpRead(SelectionKey key, ByteChannel channel) {
-    if (log.isTraceEnabled()) {
-      log.trace("<<<< {}", key.channel());
-    }
     if (channel == client.channel) {
       if (client.tlsChannel != null) {
         doTcpRead(client.id, client.tlsChannel, false);
@@ -82,12 +84,12 @@ public class A4TcpSess {
   }
 
   private void onTcpWrite(SelectionKey key, ByteChannel channel) throws IOException {
-    if (log.isTraceEnabled()) {
-      log.trace(">>>> {}", key.channel());
-    }
     if (channel == client.channel) {
       // TODO add case for writing from TLS backend channel too.
       doTcpWrite(backend.channel, buffer, false);
+      if (backend.channelKey.interestOps() == 0) {
+        backend.channelKey.interestOps(SelectionKey.OP_WRITE); // are we ready to write now?
+      }
     } else if (channel == backend.channel) {
       if (client.tlsChannel != null) {
         doTcpWrite(client.tlsChannel, buffer, true);
@@ -130,6 +132,21 @@ public class A4TcpSess {
     }
   }
 
+  private void onSessionError(SelectionKey key, Exception e, Throwable x) {
+    if (x instanceof NeedsReadException) {
+      key.interestOps(SelectionKey.OP_READ); // TODO this code is likely not correct
+    } else if (x instanceof NeedsWriteException) {
+      if (key.channel() == backend.channel) {
+        key.interestOps(0); // delay backend channel ops until client channel is ready.
+        client.channelKey.interestOps(SelectionKey.OP_WRITE);
+      } else {
+        log.warn("Unknown client/backend state {}", key);
+      }
+    } else {
+      tearDown(e);
+    }
+  }
+
   public void update(SelectionKey key) {
     try {
       if (key.attachment() == this) {
@@ -138,14 +155,7 @@ public class A4TcpSess {
         sessionMismatch(key);
       }
     } catch (Exception e) {
-      var x = rootCauseOf(e);
-      if (x instanceof NeedsReadException) {
-        key.interestOps(SelectionKey.OP_READ);
-      } else if (x instanceof NeedsWriteException) {
-        key.interestOps(SelectionKey.OP_WRITE);
-      } else {
-        tearDown(e);
-      }
+      onSessionError(key, e, rootCauseOf(e));
     }
   }
 
@@ -160,9 +170,9 @@ public class A4TcpSess {
 
   /*
    * The Oceanview Motel and Casino is a familiar friend to me. I stayed in countless motels like it
-   * while investigating A.W.E’s across the country, back in my field agent days.
+   * while investigating A.W.E’s across the country, back in my field agent days. Those roadside motels
+   * all bleed together like a dream, same and not the same, anywhere and nowhere.
    *
-   * Those roadside motels all bleed together like a dream, same and not the same, anywhere and nowhere.
    * The Oceanview operates on dream-logic, and the light-switch cord leaks out to be found in the most
    * unexpected places, and sometimes, successfully encouraged to appear and act as a convenient lock
    * to keep out those not trained in dreamscape navigation.
