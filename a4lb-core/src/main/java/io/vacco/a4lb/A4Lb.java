@@ -62,6 +62,15 @@ public class A4Lb {
       if (!cfgFile.exists()) {
         throw new IllegalArgumentException("Missing configuration file " + cfgFile.getAbsolutePath());
       }
+      log.info(
+          String.join("\n", "",
+              "                       __ __  ____  ",
+              "  ____ __      _____  / // / / / /_ ",
+              " / __ `/ | /| / / _ \\/ // /_/ / __ \\",
+              "/ /_/ /| |/ |/ /  __/__  __/ / /_/ /",
+              "\\__,_/ |__/|__/\\___/  /_/ /_/_.___/ "
+          )
+      );
       var g = new Gson();
       var cfg = A4Configs.loadFrom(cfgFile.toURI().toURL(), g);
       a4lb = new A4Lb(cfg);
