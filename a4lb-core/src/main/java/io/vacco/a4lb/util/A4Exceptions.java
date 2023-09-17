@@ -10,6 +10,9 @@ public class A4Exceptions {
     public A4ConfigException(ConstraintViolations violations) {
       this.violations = violations;
     }
+    @Override public String toString() {
+      return violations.toString();
+    }
   }
 
   public static class A4SelectException extends RuntimeException {

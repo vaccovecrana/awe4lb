@@ -18,43 +18,31 @@
         {
           "and": [{"sni": {"equals": "momo.xio.vacco.li"}}, {"host": {"equals": "172.16.0.111"}}],
           "pool": {
-            "hosts": [{"addr": {"host": "0.0.0.0", "port": 6900}, "state": "Up"}]
+            "hosts": [{"addr": {"host": "0.0.0.0", "port": 6900}}]
           }
         },
         {
-          "and": [{"sni": {"equals": "sso.vacco.li"}}],
+          "and": [{"sni": {"equals": "sdr.xio.vacco.li"}}],
           "pool": {
             "type": "Weight",
             "hosts": [
-              {"addr": {"host": "us-east-00-vault-00.lan", "port": 8200}, "weight": 2, "priority": 1},
-              {"addr": {"host": "us-east-00-vault-01.lan", "port": 8200}, "weight": 1, "priority": 1},
-              {"addr": {"host": "us-east-00-vault-02.lan", "port": 8200}, "weight": 1, "priority": 2}
-            ]
-          }
-        },
-        {
-          "and": [{"sni": {"equals": "ci.vacco.li"}}],
-          "pool": {
-            "type": "RoundRobin",
-            "hosts": [
-              {"addr": {"host": "us-east-00-vault-test-00.lan", "port": 8200}},
-              {"addr": {"host": "us-east-00-vault-test-01.lan", "port": 8200}}
+              {"addr": {"host": "websdr.ewi.utwente.nl", "port": 8901}, "weight": 1, "priority": 1}
             ]
           }
         }
       ],
-      "healthCheck": {"intervalMs": 5000, "timeoutMs": 3000}
+      "healthCheck": {"intervalMs": 5000, "timeoutMs": 2500}
     },
     "vacco-ssh": {
       "addr": {"host": "0.0.0.0", "port": 8022},
       "match": [
         {
           "pool": {
-            "hosts": [{"addr": {"host": "172.16.0.1", "port": 10022}, "state": "Up"}]
+            "hosts": [{"addr": {"host": "172.16.0.1", "port": 10022}}]
           }
         }
       ],
-      "healthCheck": {"intervalMs": 5000, "timeoutMs": 3000}
+      "healthCheck": {"intervalMs": 5000, "timeoutMs": 2500}
     }
   }
 }
