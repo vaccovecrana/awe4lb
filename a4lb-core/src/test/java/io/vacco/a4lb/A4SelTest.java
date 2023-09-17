@@ -1,7 +1,7 @@
 package io.vacco.a4lb;
 
 import com.google.gson.Gson;
-import io.vacco.a4lb.tcp.A4Sel;
+import io.vacco.a4lb.sel.A4Sel;
 import io.vacco.a4lb.util.A4Configs;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;

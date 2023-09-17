@@ -1,7 +1,7 @@
 package io.vacco.a4lb;
 
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.tcp.A4SelWeight;
+import io.vacco.a4lb.sel.A4SelWeight;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
