@@ -88,7 +88,7 @@ public class A4TcpSess {
       // TODO add case for writing from TLS backend channel too.
       doTcpWrite(backend.channel, buffer, false);
       if (backend.channelKey.interestOps() == 0) {
-        backend.channelKey.interestOps(SelectionKey.OP_WRITE); // are we ready to write now?
+        backend.channelKey.interestOps(SelectionKey.OP_WRITE);
       }
     } else if (channel == backend.channel) {
       if (client.tlsChannel != null) {
