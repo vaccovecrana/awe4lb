@@ -74,17 +74,13 @@ public class A4TcpSrv implements Callable<Void> {
 
   public void update() {
     A4Io.select(selector, key -> {
-      if (key.isValid()) {
-        if (key.channel() == this.channel && key.isAcceptable()) {
-          initSession();
-        } else if (key.attachment() instanceof A4TcpSess) {
-          var sess = (A4TcpSess) key.attachment();
-          if (sess.owner == this) {
-            sess.update(key);
-          } // else not one of our sessions, pass to next server.
-        }
-      } else if (log.isTraceEnabled()) {
-        log.trace("{} - Invalid key state", key);
+      if (key.channel() == this.channel && key.isAcceptable()) {
+        initSession();
+      } else if (key.attachment() instanceof A4TcpSess) {
+        var sess = (A4TcpSess) key.attachment();
+        if (sess.owner == this) {
+          sess.update(key);
+        } // else not one of our sessions
       }
     });
   }

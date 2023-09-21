@@ -57,7 +57,11 @@ public class A4Io {
         var key = kit.next();
         kit.remove();
         try {
-          onKey.accept(key);
+          if (key.isValid()) {
+            onKey.accept(key);
+          } else if (log.isTraceEnabled()) {
+            log.trace("{} - Invalid key state", key);
+          }
         } catch (Exception e) {
           log.error("Unhandled key processing error. Discarding. - {}", key, e);
           key.cancel();
