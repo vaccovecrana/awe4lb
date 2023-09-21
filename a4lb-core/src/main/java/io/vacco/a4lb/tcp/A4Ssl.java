@@ -7,19 +7,44 @@ import java.security.*;
 import java.security.cert.*;
 import java.security.cert.Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
-import java.util.Optional;
+import java.util.*;
 
 public class A4Ssl {
 
-  public static X509Certificate loadCertificate(File pemCert) {
+  private static X509Certificate parseCertificate(String pem) {
     try {
       var certificateFactory = CertificateFactory.getInstance("X.509");
-      var certInputStream = new FileInputStream(pemCert);
-      return (X509Certificate) certificateFactory.generateCertificate(certInputStream);
+      var certBytes = Base64.getMimeDecoder().decode(pem);
+      return (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(certBytes));
     } catch (Exception e) {
+      throw new IllegalStateException("Unable to parse certificate: " + e.getMessage(), e);
+    }
+  }
+
+  public static List<X509Certificate> loadCertificates(File pemCert) {
+    var certificates = new ArrayList<X509Certificate>();
+    try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(pemCert)))) {
+      var line = "";
+      var certStringBuilder = new StringBuilder();
+      var inCertBlock = false;
+
+      while ((line = reader.readLine()) != null) {
+        if (line.startsWith("-----BEGIN CERTIFICATE-----")) {
+          inCertBlock = true;
+          certStringBuilder = new StringBuilder();
+        } else if (line.startsWith("-----END CERTIFICATE-----")) {
+          inCertBlock = false;
+          var certPem = certStringBuilder.toString();
+          var certificate = parseCertificate(certPem);
+          certificates.add(certificate);
+        } else if (inCertBlock) {
+          certStringBuilder.append(line).append('\n');
+        }
+      }
+    } catch (IOException e) {
       throw new IllegalStateException("Unable to load certificate: " + pemCert.getAbsolutePath(), e);
     }
+    return certificates;
   }
 
   public static PrivateKey loadKey(File pemKey) {
@@ -47,13 +72,12 @@ public class A4Ssl {
     var pemCert = new File(tlsConfig.certPath);
     var pemKey = new File(tlsConfig.keyPath);
     try {
-      var certificate = loadCertificate(pemCert); // TODO the SSLContext should include intermediate certificates in the PEM chain.
+      var certificates = loadCertificates(pemCert);
       var privateKey = loadKey(pemKey);
 
       var keyStore = KeyStore.getInstance("PKCS12");
       keyStore.load(null, null);
-      keyStore.setCertificateEntry("cert", certificate);
-      keyStore.setKeyEntry("key", privateKey, new char[0], new Certificate[] { certificate });
+      keyStore.setKeyEntry("key", privateKey, new char[0], certificates.toArray(new Certificate[0]));
 
       var keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
       keyManagerFactory.init(keyStore, new char[0]);
