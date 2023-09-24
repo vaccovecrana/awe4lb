@@ -1,5 +1,6 @@
 package io.vacco.a4lb.tcp;
 
+import io.vacco.a4lb.niossl.SSLSocketChannel;
 import org.slf4j.*;
 import javax.net.ssl.*;
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 
 import static io.vacco.a4lb.tcp.A4Io.*;
 import static io.vacco.a4lb.util.A4Exceptions.rootCauseOf;
+import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher {
 
@@ -39,29 +41,43 @@ public class A4TcpSess extends SNIMatcher {
   }
 
   private void tearDown(Exception e) {
-    if (e != null && log.isTraceEnabled()) {
-      log.trace(
-          "[{}] - [{}] - abnormal session termination",
-          client != null ? client.id : "?",
-          backend != null ? backend.id : "?", e
-      );
+    if (e != null) {
+      var x = rootCauseOf(e);
+      if (log.isDebugEnabled()) {
+        log.debug("!!!! [{}, {}] {} - {} - {}",
+            client != null ? client.id : "?",
+            backend != null ? backend.id : "?",
+            e.getClass().getSimpleName(), x.getClass().getSimpleName(), x.getMessage());
+      } else if (log.isTraceEnabled()) {
+        log.trace("!!!! [{}, {}] {} - {} - {}",
+            client != null ? client.id : "?",
+            backend != null ? backend.id : "?",
+            e.getClass().getSimpleName(), x.getClass().getSimpleName(), x.getMessage(), x);
+      }
     }
     if (client != null) { client.close(); }
     if (backend != null) { backend.close(); }
+    if (log.isDebugEnabled()) {
+      log.debug("------------------------------");
+    }
   }
 
   private void logState(int bytes, ByteChannel c, IOOp op) {
     if (log.isDebugEnabled()) {
-      log.debug("{} ({}, {}), c[{},{}] b[{},{}] {} {}",
+      var sck = c instanceof SSLSocketChannel
+          ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
+          : ((SocketChannel) c).socket();
+      log.debug("{} ({}, {}), c[{},{}] b[{},{}] {} {} {}",
           op == IOOp.Read ? 'R' : 'W',
-          buffer.hasRemaining() ? '+' : '-',
-          String.format("%08d", bytes),
-          String.format("%02d", client.channelKey.interestOps()),
-          String.format("%02d", client.channelKey.readyOps()),
-          backend != null ? String.format("%02d", backend.channelKey.interestOps()) : "??",
-          backend != null ? String.format("%02d", backend.channelKey.readyOps()) : "??",
+          format("%06d", bytes),
+          format("%06d", buffer.remaining()),
+          format("%02d", client.channelKey.interestOps()),
+          format("%02d", client.channelKey.readyOps()),
+          backend != null ? format("%02d", backend.channelKey.interestOps()) : "??",
+          backend != null ? format("%02d", backend.channelKey.readyOps()) : "??",
+          sck.getLocalSocketAddress(),
           op == IOOp.Read ? "<<<<" : ">>>>",
-          c
+          sck.getRemoteSocketAddress()
       );
     }
   }
@@ -92,10 +108,19 @@ public class A4TcpSess extends SNIMatcher {
     if (op == IOOp.Read && bytes == 0) {
       buffer.limit(buffer.position());
     }
-    if (bytes == 0 && backend != null && key == backend.channelKey) { // TODO client TCP buffer possibly full
-      System.out.println("slow down??");
+    if (bytes == 0 && backend != null && key == backend.channelKey) { // TODO client TCP buffer full
+      System.out.println("client slow down??");
       try { Thread.sleep(1000); }
       catch (InterruptedException e) { throw new RuntimeException(e); }
+    }
+    if (bytes == 0 && key == client.channelKey && buffer.hasRemaining()) { // TODO backend TCP buffer full
+      System.out.println("backend slow down??");
+      try {
+        Thread.sleep(1000);
+        doTcpWrite(backend.channel);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
     }
     if (op == IOOp.Read && buffer.hasRemaining()) {
       key.interestOps(SelectionKey.OP_WRITE);
@@ -160,12 +185,6 @@ public class A4TcpSess extends SNIMatcher {
     }
   }
 
-  private void onSessionError(SelectionKey key, Exception e, Throwable x) {
-    // TODO clean this up.
-    log.warn("!!! - {} - {}", e.getClass().getSimpleName(), x.getClass().getSimpleName());
-    tearDown(e);
-  }
-
   public void update(SelectionKey key) {
     try {
       if (key.attachment() == this) {
@@ -174,7 +193,7 @@ public class A4TcpSess extends SNIMatcher {
         sessionMismatch(key);
       }
     } catch (Exception e) {
-      onSessionError(key, e, rootCauseOf(e));
+      tearDown(e);
     }
   }
 

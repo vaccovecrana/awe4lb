@@ -41,7 +41,7 @@ public class A4Sel {
       var pool = matches(client, tlsSni).orElseThrow();
       var bk = select(pool, clientIp.hashCode());
       var io = new A4TcpIo(new InetSocketAddress(bk.addr.host, bk.addr.port), selector, pool.openTls, tlsExec);
-      return io.target(bk);
+      return io.backend(bk);
     } catch (Exception e) {
       throw new A4Exceptions.A4SelectException(clientIp, tlsSni, this.cfg, e);
     }

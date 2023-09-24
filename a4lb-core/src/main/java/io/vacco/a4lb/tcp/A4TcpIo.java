@@ -47,10 +47,16 @@ public class A4TcpIo implements Closeable {
     }
   }
 
-  public A4TcpIo target(A4Backend backend) {
+  public A4TcpIo backend(A4Backend backend) {
     this.target = Objects.requireNonNull(backend);
     this.target.trackConnOpen();
     return this;
+  }
+
+  public SocketChannel getRawChannel() {
+    return channel instanceof SSLSocketChannel
+        ? ((SSLSocketChannel) channel).getWrappedSocketChannel()
+        : channel;
   }
 
   @Override public void close() {
