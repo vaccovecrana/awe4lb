@@ -10,7 +10,7 @@ public class A4SelLConn {
     return pool.upHosts()
         .stream()
         .min(Comparator.comparingInt(bk -> bk.connections))
-        .get();
+        .orElseThrow();
   }
 
 }
