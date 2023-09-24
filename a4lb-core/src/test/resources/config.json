@@ -8,8 +8,19 @@
     "bind": {"host":"0.0.0.0", "port": 9284}
   },
   "servers": {
-    "vacco-tls": {
+    "vacco-http": {
       "addr": {"host":"0.0.0.0", "port": 8080},
+      "match": [
+        {
+          "pool": {
+            "hosts": [{"addr": {"host": "0.0.0.0", "port": 6900}}]
+          }
+        }
+      ],
+      "healthCheck": {"intervalMs": 5000, "timeoutMs": 2500}
+    },
+    "vacco-tls": {
+      "addr": {"host":"0.0.0.0", "port": 8443},
       "tls": {
         "certPath": "./src/test/resources/cert.pem",
         "keyPath": "./src/test/resources/key.pem"

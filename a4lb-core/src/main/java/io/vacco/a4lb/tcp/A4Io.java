@@ -16,8 +16,8 @@ public class A4Io {
         sc.close();
       }
     } catch (IOException ioe) {
-      if (log.isTraceEnabled()) {
-        log.trace("Unable to close socket channel {}", sc.socket(), ioe);
+      if (log.isDebugEnabled()) {
+        log.debug("Unable to close socket channel {}", sc.socket(), ioe);
       }
     }
   }
@@ -28,8 +28,8 @@ public class A4Io {
       bb.clear();
       int bytesRead = sc.read(bb);
       if (bytesRead == -1) {
-        if (log.isTraceEnabled()) {
-          log.trace("{} - channel EOF", channelId);
+        if (log.isDebugEnabled()) {
+          log.debug("{} - channel EOF", channelId);
         }
       } else if (bytesRead > 0) {
         bb.flip();

@@ -13,6 +13,8 @@ import static io.vacco.a4lb.util.A4Exceptions.rootCauseOf;
 
 public class A4TcpSess extends SNIMatcher {
 
+  public enum IOOp { Read, Write }
+
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
   public final A4TcpSrv owner;
@@ -29,7 +31,7 @@ public class A4TcpSess extends SNIMatcher {
     this.owner = Objects.requireNonNull(owner);
     this.buffer = ByteBuffer.allocateDirect(bufferSize);
     this.isTls = isTls;
-    this.tlsExec = Objects.requireNonNull(tlsExec);
+    this.tlsExec = tlsExec;
   }
 
   private void sessionMismatch(SelectionKey key) {
@@ -48,59 +50,86 @@ public class A4TcpSess extends SNIMatcher {
     if (backend != null) { backend.close(); }
   }
 
-  private void doTcpRead(String channelId, ByteChannel from, boolean updateStats) {
-    var readBytes = eofRead(channelId, from, buffer);
+  private void logState(int bytes, ByteChannel c, IOOp op) {
     if (log.isDebugEnabled()) {
-      log.debug("R [{}] <<<< {}", readBytes, from);
-    }
-    if (updateStats) {
-      backend.target.rxTx.updateTx(readBytes);
-    }
-    if (readBytes == -1) {
-      tearDown(null);
+      log.debug("{} ({}, {}), c[{},{}] b[{},{}] {} {}",
+          op == IOOp.Read ? 'R' : 'W',
+          buffer.hasRemaining() ? '+' : '-',
+          String.format("%08d", bytes),
+          String.format("%02d", client.channelKey.interestOps()),
+          String.format("%02d", client.channelKey.readyOps()),
+          backend != null ? String.format("%02d", backend.channelKey.interestOps()) : "??",
+          backend != null ? String.format("%02d", backend.channelKey.readyOps()) : "??",
+          op == IOOp.Read ? "<<<<" : ">>>>",
+          c
+      );
     }
   }
 
-  private void doTcpWrite(ByteChannel to, ByteBuffer b, boolean updateStats) throws IOException {
-    var writtenBytes = to.write(b);
-    if (log.isDebugEnabled()) {
-      log.debug("W [{}] >>>> {}", writtenBytes, to);
+  private int doTcpRead(String channelId, ByteChannel from) {
+    var readBytes = eofRead(channelId, from, buffer);
+    logState(readBytes, from, IOOp.Read);
+    return readBytes;
+  }
+
+  private int doTcpWrite(ByteChannel to) throws IOException {
+    var writtenBytes = to.write(buffer);
+    logState(writtenBytes, to, IOOp.Write);
+    return writtenBytes;
+  }
+
+  private void syncOps(SelectionKey key, IOOp op, int bytes) {
+    if (bytes == -1) {
+      tearDown(null);
+      return;
     }
-    if (updateStats) {
-      backend.target.rxTx.updateRx(writtenBytes);
+    if (op == IOOp.Read && backend != null && key == backend.channelKey && bytes > 0) {
+      backend.target.rxTx.updateTx(bytes);
+    }
+    if (op == IOOp.Write && backend != null && key == backend.channelKey && bytes > 0) {
+      backend.target.rxTx.updateRx(bytes);
+    }
+    if (op == IOOp.Read && bytes == 0) {
+      buffer.limit(buffer.position());
+    }
+    if (bytes == 0 && backend != null && key == backend.channelKey) { // TODO client TCP buffer possibly full
+      System.out.println("slow down??");
+      try { Thread.sleep(1000); }
+      catch (InterruptedException e) { throw new RuntimeException(e); }
+    }
+    if (op == IOOp.Read && buffer.hasRemaining()) {
+      key.interestOps(SelectionKey.OP_WRITE);
+    }
+    if (op == IOOp.Write && !buffer.hasRemaining()) {
+      key.interestOps(SelectionKey.OP_READ);
     }
   }
 
   private void onTcpRead(SelectionKey key) {
+    int bytes = -1;
     if (key == client.channelKey) {
-      doTcpRead(client.id, client.channel, false);
+      bytes = doTcpRead(client.id, client.channel);
     } else if (key == backend.channelKey) {
-      doTcpRead(backend.id, backend.channel, true);
+      bytes = doTcpRead(backend.id, backend.channel);
     } else {
       sessionMismatch(key);
     }
-    if (key.isValid()) {
-      key.interestOps(SelectionKey.OP_WRITE);
-    }
+    syncOps(key, IOOp.Read, bytes);
   }
 
   private void onTcpWrite(SelectionKey key) throws IOException {
+    int bytes = -1;
     if (key == client.channelKey) {
       if (backend == null) {
         initBackend(key);
       }
-      doTcpWrite(backend.channel, buffer, false);
-      if (backend.channelKey.interestOps() == 0) {
-        backend.channelKey.interestOps(SelectionKey.OP_WRITE);
-      }
+      bytes = doTcpWrite(backend.channel);
     } else if (key == backend.channelKey) {
-      doTcpWrite(client.channel, buffer, true);
+      bytes = doTcpWrite(client.channel);
     } else {
       sessionMismatch(key);
     }
-    if (key.isValid()) {
-      key.interestOps(SelectionKey.OP_READ);
-    }
+    syncOps(key, IOOp.Write, bytes);
   }
 
   @Override public boolean matches(SNIServerName sn) {

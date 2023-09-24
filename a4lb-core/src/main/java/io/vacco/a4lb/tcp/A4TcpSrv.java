@@ -64,9 +64,9 @@ public class A4TcpSrv implements Callable<Void> {
         clientKey = sslChann.getWrappedSocketChannel().register(selector, SelectionKey.OP_READ);
       } else {
         clientChannel = this.channel.accept();
+        clientChannel.configureBlocking(false);
         clientKey = clientChannel.register(selector, SelectionKey.OP_READ);
       }
-      clientChannel.configureBlocking(false);
       sess.setClient(new A4TcpIo(clientKey, clientChannel));
     } catch (Exception ioe) {
       log.error("{} - Unable to initialize tcp session", channel.socket(), ioe);
