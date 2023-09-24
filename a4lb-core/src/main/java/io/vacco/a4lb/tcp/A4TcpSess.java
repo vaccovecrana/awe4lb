@@ -23,16 +23,17 @@ public class A4TcpSess extends SNIMatcher {
   public final ByteBuffer buffer;
 
   private A4TcpIo client, backend;
+  private String id;
 
-  private ExecutorService tlsExec;
   private String tlsSni;
-  private boolean isTls;
+  private final ExecutorService tlsExec;
+  private final boolean tlsClient;
 
-  public A4TcpSess(A4TcpSrv owner, int bufferSize, boolean isTls, ExecutorService tlsExec) {
+  public A4TcpSess(A4TcpSrv owner, int bufferSize, boolean tlsClient, ExecutorService tlsExec) {
     super(0); // TODO wat???
     this.owner = Objects.requireNonNull(owner);
     this.buffer = ByteBuffer.allocateDirect(bufferSize);
-    this.isTls = isTls;
+    this.tlsClient = tlsClient;
     this.tlsExec = tlsExec;
   }
 
@@ -44,12 +45,12 @@ public class A4TcpSess extends SNIMatcher {
     if (e != null) {
       var x = rootCauseOf(e);
       if (log.isDebugEnabled()) {
-        log.debug("!!!! [{}, {}] {} - {} - {}",
+        log.debug("!! [{}, {}] {} - {} - {}",
             client != null ? client.id : "?",
             backend != null ? backend.id : "?",
             e.getClass().getSimpleName(), x.getClass().getSimpleName(), x.getMessage());
       } else if (log.isTraceEnabled()) {
-        log.trace("!!!! [{}, {}] {} - {} - {}",
+        log.trace("!! [{}, {}] {} - {} - {}",
             client != null ? client.id : "?",
             backend != null ? backend.id : "?",
             e.getClass().getSimpleName(), x.getClass().getSimpleName(), x.getMessage(), x);
@@ -67,8 +68,9 @@ public class A4TcpSess extends SNIMatcher {
       var sck = c instanceof SSLSocketChannel
           ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
           : ((SocketChannel) c).socket();
-      log.debug("{} ({}, {}), c[{},{}] b[{},{}] {} {} {}",
-          op == IOOp.Read ? 'R' : 'W',
+      log.debug("{}: {} (i/o: {}, r: {}), c[{},{}] b[{},{}] {} {} {}",
+          this.id != null ? id : '?',
+          op == IOOp.Read ? 'r' : 'w',
           format("%06d", bytes),
           format("%06d", buffer.remaining()),
           format("%02d", client.channelKey.interestOps()),
@@ -76,7 +78,7 @@ public class A4TcpSess extends SNIMatcher {
           backend != null ? format("%02d", backend.channelKey.interestOps()) : "??",
           backend != null ? format("%02d", backend.channelKey.readyOps()) : "??",
           sck.getLocalSocketAddress(),
-          op == IOOp.Read ? "<<<<" : ">>>>",
+          op == IOOp.Read ? "<<" : ">>",
           sck.getRemoteSocketAddress()
       );
     }
@@ -168,11 +170,15 @@ public class A4TcpSess extends SNIMatcher {
   }
 
   private void initBackend(SelectionKey key) {
-    if (isTls && tlsSni == null) {
+    if (tlsClient && tlsSni == null) {
       return;
     }
     this.backend = owner.bkSelect.assign(key.selector(), client.channel, tlsSni, tlsExec);
     this.backend.channelKey.attach(this);
+    this.id = format("%x", format("%s-%s",
+        client.getRawChannel().socket(),
+        backend.getRawChannel().socket()
+    ).hashCode());
   }
 
   private void tcpUpdate(SelectionKey key) throws IOException {
