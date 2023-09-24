@@ -59,7 +59,10 @@ public class A4TcpSrv implements Callable<Void> {
       // TODO check for connection limits here.
       var sess = new A4TcpSess(this, srvConfig.bufferSize, sslContext != null, tlsExec);
       if (sslContext != null) {
-        clientChannel = new SSLServerSocketChannel(this.channel, sslContext, tlsExec, sess).accept();
+        clientChannel = new SSLServerSocketChannel(
+            this.channel, sslContext, tlsExec, sess,
+            srvConfig.tls.protocols, srvConfig.tls.ciphers
+        ).accept();
         var sslChann = (SSLSocketChannel) clientChannel;
         clientKey = sslChann.getWrappedSocketChannel().register(selector, SelectionKey.OP_READ);
       } else {

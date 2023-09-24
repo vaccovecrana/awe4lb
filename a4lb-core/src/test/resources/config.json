@@ -23,7 +23,8 @@
       "addr": {"host":"0.0.0.0", "port": 8443},
       "tls": {
         "certPath": "./src/test/resources/cert.pem",
-        "keyPath": "./src/test/resources/key.pem"
+        "keyPath": "./src/test/resources/key.pem",
+        "ciphers": ["AES_128"]
       },
       "match": [
         {
