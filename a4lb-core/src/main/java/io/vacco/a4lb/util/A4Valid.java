@@ -119,7 +119,7 @@ public class A4Valid {
   public static final Validator<A4Tls> A4TlsVld = ValidatorBuilder.<A4Tls>of()
       .constraint((ToCharSequence<A4Tls, String>) t -> t.certPath, "certPath", A4Valid::nnNeNb)
       .constraint((ToCharSequence<A4Tls, String>) t -> t.keyPath, "keyPath", A4Valid::nnNeNb)
-      .forEach(A4Tls::tlsVersionList, "tlsVersions.version",
+      .forEach(A4Tls::protocolList, "protocols.version",
           svb -> svb.constraint((ToCharSequence<String, String>) s -> s, "value", A4Valid::nnNeNb)
       )
       .forEach(A4Tls::cipherList, "ciphers.cipher",

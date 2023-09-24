@@ -9,8 +9,6 @@ import java.net.SocketAddress;
 import java.net.SocketOption;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -23,40 +21,13 @@ import java.util.concurrent.ExecutorService;
  */
 public class SSLServerSocketChannel extends ServerSocketChannel {
 
-  /**
-   * Should the SSLSocketChannels created from the accept method be put in blocking mode. Default is {@code false}.
-   */
-  public boolean blockingMode;
-
-  /**
-   * Should the SS server ask for client certificate authentication? Default is {@code false}.
-   */
+  /** Should the SS server ask for client certificate authentication? Default is {@code false}. */
   public boolean wantClientAuthentication;
 
-  /**
-   * Should the SSL server require client certificate authentication? Default is {@code false}.
-   */
+  /** Should the SSL server require client certificate authentication? Default is {@code false}. */
   public boolean needClientAuthentication;
 
-  /**
-   * The list of SSL protocols (TLSv1, TLSv1.1, etc.) supported for the SSL exchange. Default is the JVM default.
-   */
-  public List<String> includedProtocols;
-
-  /**
-   * A list of SSL protocols (SSLv2, SSLv3, etc.) to explicitly exclude for the SSL exchange. Default is none.
-   */
-  public List<String> excludedProtocols;
-
-  /**
-   * The list of ciphers allowed for the SSL exchange. Default is the JVM default.
-   */
-  public List<String> includedCipherSuites;
-
-  /**
-   * A list of ciphers to explicitly exclude for the SSL exchange. Default is none.
-   */
-  public List<String> excludedCipherSuites;
+  private final String[] protocols, ciphers;
 
   private final ServerSocketChannel serverSocketChannel;
   private final SSLContext sslContext;
@@ -70,12 +41,14 @@ public class SSLServerSocketChannel extends ServerSocketChannel {
    */
   public SSLServerSocketChannel(ServerSocketChannel serverSocketChannel,
                                 SSLContext sslContext, ExecutorService threadPool,
-                                SNIMatcher sniMatcher) {
+                                SNIMatcher sniMatcher, String[] protocols, String[] ciphers) {
     super(serverSocketChannel.provider());
     this.serverSocketChannel = serverSocketChannel;
     this.sslContext = sslContext;
     this.sniMatcher = sniMatcher;
     this.threadPool = threadPool;
+    this.protocols = protocols;
+    this.ciphers = ciphers;
   }
 
   /**
@@ -107,14 +80,19 @@ public class SSLServerSocketChannel extends ServerSocketChannel {
     if (channel == null) {
       return null;
     } else {
-      channel.configureBlocking(blockingMode);
+      channel.configureBlocking(false);
 
       SSLEngine sslEngine = sslContext.createSSLEngine();
       sslEngine.setUseClientMode(false);
       sslEngine.setWantClientAuth(wantClientAuthentication);
       sslEngine.setNeedClientAuth(needClientAuthentication);
-      sslEngine.setEnabledProtocols(filterArray(sslEngine.getEnabledProtocols(), includedProtocols, excludedProtocols));
-      sslEngine.setEnabledCipherSuites(filterArray(sslEngine.getEnabledCipherSuites(), includedCipherSuites, excludedCipherSuites));
+
+      if (protocols != null && protocols.length > 0) {
+        sslEngine.setEnabledProtocols(this.protocols);
+      }
+      if (ciphers != null && ciphers.length > 0) {
+        sslEngine.setEnabledCipherSuites(this.ciphers);
+      }
 
       var params = sslEngine.getSSLParameters();
       params.setSNIMatchers(List.of(sniMatcher));
@@ -164,30 +142,4 @@ public class SSLServerSocketChannel extends ServerSocketChannel {
     serverSocketChannel.configureBlocking(b);
   }
 
-  static String[] filterArray(String[] items, List<String> includedItems, List<String> excludedItems) {
-    List<String> filteredItems = items == null ? new ArrayList<>() : Arrays.asList(items);
-    if (includedItems != null) {
-      for (int i = filteredItems.size() - 1; i >= 0; i--) {
-        if (!includedItems.contains(filteredItems.get(i))) {
-          filteredItems.remove(i);
-        }
-      }
-
-      for (String includedProtocol : includedItems) {
-        if (!filteredItems.contains(includedProtocol)) {
-          filteredItems.add(includedProtocol);
-        }
-      }
-    }
-
-    if (excludedItems != null) {
-      for (int i = filteredItems.size() - 1; i >= 0; i--) {
-        if (excludedItems.contains(filteredItems.get(i))) {
-          filteredItems.remove(i);
-        }
-      }
-    }
-
-    return filteredItems.toArray(new String[filteredItems.size()]);
-  }
 }

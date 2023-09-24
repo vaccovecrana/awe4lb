@@ -22,7 +22,7 @@ public class A4ValidTest {
                   new A4Tls()
                       .certPath("/etc/momo/momo.pem")
                       .keyPath("/etc/momo/momo-key.pem")
-                      .tlsVersions(" ")
+                      .protocols(" ")
                       .ciphers("momo-cipher")
               )
               .match(

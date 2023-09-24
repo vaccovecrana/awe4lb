@@ -7,7 +7,7 @@ import java.util.List;
 public class A4Tls {
 
   public String certPath, keyPath;
-  public String[] tlsVersions, ciphers;
+  public String[] protocols, ciphers;
 
   public A4Tls certPath(String certPath) {
     this.certPath = certPath;
@@ -19,13 +19,13 @@ public class A4Tls {
     return this;
   }
 
-  public A4Tls tlsVersions(String ... tlsVersions) {
-    this.tlsVersions = tlsVersions;
+  public A4Tls protocols(String ... versions) {
+    this.protocols = versions;
     return this;
   }
 
-  public List<String> tlsVersionList() {
-    return tlsVersions == null ? Collections.emptyList() : Arrays.asList(tlsVersions);
+  public List<String> protocolList() {
+    return protocols == null ? Collections.emptyList() : Arrays.asList(protocols);
   }
 
   public A4Tls ciphers(String ... ciphers) {
