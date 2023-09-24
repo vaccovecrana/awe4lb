@@ -108,13 +108,13 @@ public class A4TcpSess extends SNIMatcher {
     if (op == IOOp.Read && bytes == 0) {
       buffer.limit(buffer.position());
     }
-    if (bytes == 0 && backend != null && key == backend.channelKey) { // TODO client TCP buffer full
-      System.out.println("client slow down??");
+    if (bytes == 0 && backend != null && key == backend.channelKey) { // TODO offload client TCP buffer full
+      log.warn("client slow down??");
       try { Thread.sleep(1000); }
       catch (InterruptedException e) { throw new RuntimeException(e); }
     }
-    if (bytes == 0 && key == client.channelKey && buffer.hasRemaining()) { // TODO backend TCP buffer full
-      System.out.println("backend slow down??");
+    if (bytes == 0 && key == client.channelKey && buffer.hasRemaining()) { // TODO offload backend TCP buffer full
+      log.warn("backend slow down??");
       try {
         Thread.sleep(1000);
         doTcpWrite(backend.channel);
