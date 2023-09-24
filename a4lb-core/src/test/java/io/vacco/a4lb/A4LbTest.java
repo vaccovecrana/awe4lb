@@ -14,7 +14,7 @@ public class A4LbTest {
   static {
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_DEVMODE, "true");
     ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
-    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_LOGLEVEL, "trace");
+    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_LOGLEVEL, "debug");
   }
 
   static {

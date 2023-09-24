@@ -11,6 +11,22 @@ import java.util.*;
 
 public class A4Ssl {
 
+  public static SSLContext trustAllContext() {
+    try {
+      var sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, new TrustManager[] {
+          new X509TrustManager() {
+            public X509Certificate[] getAcceptedIssuers() { return null; }
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+          }
+      }, new SecureRandom());
+      return sslContext;
+    } catch (Exception e) {
+      throw new IllegalStateException("Unable to initialize all-trust SSL context", e);
+    }
+  }
+
   private static X509Certificate parseCertificate(String pem) {
     try {
       var certificateFactory = CertificateFactory.getInstance("X.509");
@@ -90,20 +106,6 @@ public class A4Ssl {
       var msg = String.format("Unable to build SSL context: %s, %s", pemCert, pemKey);
       throw new IllegalStateException(msg, e);
     }
-  }
-
-  public static SSLEngine configureServer(SSLContext ctx, A4Tls tlsConfig) {
-    var eng = ctx.createSSLEngine();
-    eng.setUseClientMode(false);
-    if (tlsConfig != null) {
-      if (tlsConfig.tlsVersions != null && tlsConfig.tlsVersions.length > 0) {
-        eng.setEnabledProtocols(tlsConfig.tlsVersions);
-      }
-      if (tlsConfig.ciphers != null && tlsConfig.ciphers.length > 0) {
-        eng.setEnabledCipherSuites(tlsConfig.ciphers);
-      }
-    }
-    return eng;
   }
 
   public static Optional<String> sniOf(SNIServerName sni) {

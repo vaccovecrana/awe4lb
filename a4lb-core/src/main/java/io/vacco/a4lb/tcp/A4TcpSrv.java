@@ -1,15 +1,18 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Server;
+import io.vacco.a4lb.niossl.SSLServerSocketChannel;
+import io.vacco.a4lb.niossl.SSLSocketChannel;
 import io.vacco.a4lb.sel.A4Sel;
 import org.slf4j.*;
-import tlschannel.*;
+
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
 public class A4TcpSrv implements Callable<Void> {
 
@@ -19,11 +22,12 @@ public class A4TcpSrv implements Callable<Void> {
   private final Selector selector;
   private final SSLContext sslContext;
   private final ServerSocketChannel channel;
+  private final ExecutorService tlsExec;
 
   private final A4Server srvConfig;
   public  final A4Sel bkSelect;
 
-  public A4TcpSrv(Selector selector, String id, A4Server srv) {
+  public A4TcpSrv(Selector selector, String id, A4Server srv, ExecutorService tlsExec) {
     try {
       this.id = Objects.requireNonNull(id);
       this.selector = Objects.requireNonNull(selector);
@@ -36,8 +40,10 @@ public class A4TcpSrv implements Callable<Void> {
       if (srv.tls != null) {
         log.info("{} - initializing SSL context", id);
         this.sslContext = A4Ssl.contextFrom(srv.tls);
+        this.tlsExec = Objects.requireNonNull(tlsExec);
       } else {
         this.sslContext = null;
+        this.tlsExec = null;
       }
       log.info("{} - {} - Ingress open", this.id, this.channel.socket());
     } catch (IOException ioe) {
@@ -48,22 +54,20 @@ public class A4TcpSrv implements Callable<Void> {
 
   private void initSession() {
     SocketChannel clientChannel = null;
+    SelectionKey clientKey = null;
     try {
       // TODO check for connection limits here.
-      clientChannel = this.channel.accept();
-      clientChannel.configureBlocking(false);
-      var sess = new A4TcpSess(this, srvConfig.bufferSize);
-      var tlc = (TlsChannel) null;
+      var sess = new A4TcpSess(this, srvConfig.bufferSize, sslContext != null, tlsExec);
       if (sslContext != null) {
-        tlc = ServerTlsChannel
-            .newBuilder(clientChannel, osni -> {
-              osni.flatMap(A4Ssl::sniOf).ifPresent(sess::setTlsSni);
-              return Optional.of(sslContext);
-            })
-            .withEngineFactory(sslCtx -> A4Ssl.configureServer(sslCtx, srvConfig.tls))
-            .build();
+        clientChannel = new SSLServerSocketChannel(this.channel, sslContext, tlsExec, sess).accept();
+        var sslChann = (SSLSocketChannel) clientChannel;
+        clientKey = sslChann.getWrappedSocketChannel().register(selector, SelectionKey.OP_READ);
+      } else {
+        clientChannel = this.channel.accept();
+        clientKey = clientChannel.register(selector, SelectionKey.OP_READ);
       }
-      sess.setClient(new A4TcpIo(selector, clientChannel, tlc));
+      clientChannel.configureBlocking(false);
+      sess.setClient(new A4TcpIo(clientKey, clientChannel));
     } catch (Exception ioe) {
       log.error("{} - Unable to initialize tcp session", channel.socket(), ioe);
       if (clientChannel != null) {

@@ -37,7 +37,7 @@ public class A4Lb {
     log.info("Starting");
     var allTasks = concat(
         config.servers.entrySet().stream()
-            .map(srvE -> new A4TcpSrv(A4Io.newSelector(), srvE.getKey(), srvE.getValue())),
+            .map(srvE -> new A4TcpSrv(A4Io.newSelector(), srvE.getKey(), srvE.getValue(), tskEx)),
         config.servers.entrySet().stream()
             .map(srvE -> new A4TcpHealth(tskEx, srvE.getKey(), srvE.getValue()))
         // TODO spin a per-server discovery thread (in case the host list is not static). Provides new backend entries.

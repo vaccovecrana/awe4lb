@@ -1,17 +1,17 @@
 package io.vacco.a4lb.tcp;
 
 import org.slf4j.*;
-import tlschannel.*;
-import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 import static io.vacco.a4lb.tcp.A4Io.*;
 import static io.vacco.a4lb.util.A4Exceptions.rootCauseOf;
 
-public class A4TcpSess {
+public class A4TcpSess extends SNIMatcher {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
@@ -19,11 +19,17 @@ public class A4TcpSess {
   public final ByteBuffer buffer;
 
   private A4TcpIo client, backend;
-  private String tlsSni;
 
-  public A4TcpSess(A4TcpSrv owner, int bufferSize) {
+  private ExecutorService tlsExec;
+  private String tlsSni;
+  private boolean isTls;
+
+  public A4TcpSess(A4TcpSrv owner, int bufferSize, boolean isTls, ExecutorService tlsExec) {
+    super(0); // TODO wat???
     this.owner = Objects.requireNonNull(owner);
     this.buffer = ByteBuffer.allocateDirect(bufferSize);
+    this.isTls = isTls;
+    this.tlsExec = Objects.requireNonNull(tlsExec);
   }
 
   private void sessionMismatch(SelectionKey key) {
@@ -44,8 +50,8 @@ public class A4TcpSess {
 
   private void doTcpRead(String channelId, ByteChannel from, boolean updateStats) {
     var readBytes = eofRead(channelId, from, buffer);
-    if (log.isTraceEnabled()) {
-      log.trace("R [{}] <<<< {}", readBytes, from);
+    if (log.isDebugEnabled()) {
+      log.debug("R [{}] <<<< {}", readBytes, from);
     }
     if (updateStats) {
       backend.target.rxTx.updateTx(readBytes);
@@ -57,23 +63,18 @@ public class A4TcpSess {
 
   private void doTcpWrite(ByteChannel to, ByteBuffer b, boolean updateStats) throws IOException {
     var writtenBytes = to.write(b);
-    if (log.isTraceEnabled()) {
-      log.trace("W [{}] >>>> {}", writtenBytes, to);
+    if (log.isDebugEnabled()) {
+      log.debug("W [{}] >>>> {}", writtenBytes, to);
     }
     if (updateStats) {
       backend.target.rxTx.updateRx(writtenBytes);
     }
   }
 
-  private void onTcpRead(SelectionKey key, ByteChannel channel) {
-    if (channel == client.channel) {
-      if (client.tlsChannel != null) {
-        doTcpRead(client.id, client.tlsChannel, false);
-      } else {
-        doTcpRead(client.id, client.channel, false);
-      }
-    } else if (channel == backend.channel) {
-      // TODO add case for reading from TLS backend channel too.
+  private void onTcpRead(SelectionKey key) {
+    if (key == client.channelKey) {
+      doTcpRead(client.id, client.channel, false);
+    } else if (key == backend.channelKey) {
       doTcpRead(backend.id, backend.channel, true);
     } else {
       sessionMismatch(key);
@@ -83,19 +84,17 @@ public class A4TcpSess {
     }
   }
 
-  private void onTcpWrite(SelectionKey key, ByteChannel channel) throws IOException {
-    if (channel == client.channel) {
-      // TODO add case for writing from TLS backend channel too.
+  private void onTcpWrite(SelectionKey key) throws IOException {
+    if (key == client.channelKey) {
+      if (backend == null) {
+        initBackend(key);
+      }
       doTcpWrite(backend.channel, buffer, false);
       if (backend.channelKey.interestOps() == 0) {
         backend.channelKey.interestOps(SelectionKey.OP_WRITE);
       }
-    } else if (channel == backend.channel) {
-      if (client.tlsChannel != null) {
-        doTcpWrite(client.tlsChannel, buffer, true);
-      } else {
-        doTcpWrite(client.channel, buffer, true);
-      }
+    } else if (key == backend.channelKey) {
+      doTcpWrite(client.channel, buffer, true);
     } else {
       sessionMismatch(key);
     }
@@ -104,47 +103,38 @@ public class A4TcpSess {
     }
   }
 
+  @Override public boolean matches(SNIServerName sn) {
+    var sni = A4Ssl.sniOf(sn).orElseThrow();
+    var op = owner.bkSelect.matches(client.channel, sni);
+    if (op.isPresent()) {
+      this.tlsSni = sni;
+      return true;
+    }
+    return false;
+  }
+
   private void initBackend(SelectionKey key) {
-    if (client.tlsChannel == null) {
-      this.backend = owner.bkSelect.assign(key.selector(), client.channel, null);
-    } else if (client.tlsChannel.getSslEngine() != null) {
-      var hsStat = client.tlsChannel.getSslEngine().getHandshakeStatus();
-      if (hsStat == SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING) {
-        this.backend = owner.bkSelect.assign(key.selector(), client.channel, tlsSni);
-      }
+    if (isTls && tlsSni == null) {
+      return;
     }
-    if (this.backend != null) {
-      this.backend.channelKey.attach(this);
-    }
+    this.backend = owner.bkSelect.assign(key.selector(), client.channel, tlsSni, tlsExec);
+    this.backend.channelKey.attach(this);
   }
 
   private void tcpUpdate(SelectionKey key) throws IOException {
-    var channel = (SocketChannel) key.channel();
-    if (backend == null && channel == client.channel) {
-      initBackend(key);
-    }
     if (key.isReadable()) {
-      onTcpRead(key, channel);
+      onTcpRead(key);
     } else if (key.isWritable()) {
-      onTcpWrite(key, channel);
+      onTcpWrite(key);
     } else {
-      throw new IllegalStateException(channel.socket() + " - Unexpected channel key state");
+      throw new IllegalStateException(((SocketChannel) key.channel()).socket() + " - Unexpected channel key state");
     }
   }
 
   private void onSessionError(SelectionKey key, Exception e, Throwable x) {
-    if (x instanceof NeedsReadException) {
-      key.interestOps(SelectionKey.OP_READ); // TODO this code is likely not correct
-    } else if (x instanceof NeedsWriteException) {
-      if (key.channel() == backend.channel) {
-        key.interestOps(0); // delay backend channel ops until client channel is ready.
-        client.channelKey.interestOps(SelectionKey.OP_WRITE);
-      } else {
-        log.warn("Unknown client/backend state {}", key);
-      }
-    } else {
-      tearDown(e);
-    }
+    // TODO clean this up.
+    log.warn("!!! - {} - {}", e.getClass().getSimpleName(), x.getClass().getSimpleName());
+    tearDown(e);
   }
 
   public void update(SelectionKey key) {
@@ -157,10 +147,6 @@ public class A4TcpSess {
     } catch (Exception e) {
       onSessionError(key, e, rootCauseOf(e));
     }
-  }
-
-  public void setTlsSni(String tlsSni) {
-    this.tlsSni = Objects.requireNonNull(tlsSni);
   }
 
   public void setClient(A4TcpIo client) {

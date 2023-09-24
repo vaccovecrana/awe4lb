@@ -19,8 +19,9 @@ public class A4SelTest {
       var srv = cfg.servers.get("vacco-tls");
       srv.allBackends().forEach(bk -> bk.state = A4Backend.State.Up);
       var mat = new A4Sel(srv.match);
+      var pool = srv.match[0].pool;
       var host = "172.16.0.111";
-      var bk = mat.select(host, host.hashCode(), "momo.xio.vacco.li");
+      var bk = mat.select(pool, host.hashCode());
       System.out.println(bk);
     });
   }

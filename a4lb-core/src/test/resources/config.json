@@ -29,6 +29,13 @@
               {"addr": {"host": "websdr.ewi.utwente.nl", "port": 8901}, "weight": 1, "priority": 1}
             ]
           }
+        },
+        {
+          "and": [{"sni": {"equals": "idrac.xio.vacco.li"}}],
+          "pool": {
+            "openTls": true,
+            "hosts": [{"addr": {"host": "172.16.0.1", "port": 8443}}]
+          }
         }
       ],
       "healthCheck": {"intervalMs": 5000, "timeoutMs": 2500}
