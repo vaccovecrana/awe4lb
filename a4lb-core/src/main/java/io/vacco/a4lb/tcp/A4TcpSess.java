@@ -67,7 +67,7 @@ public class A4TcpSess extends SNIMatcher {
   }
 
   private void logState(int bytes, ByteChannel c, IOOp op) {
-    if (log.isDebugEnabled()) {
+    if (log.isDebugEnabled() && bytes != 0) {
       var sck = c instanceof SSLSocketChannel
           ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
           : ((SocketChannel) c).socket();
