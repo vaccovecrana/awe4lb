@@ -5,7 +5,10 @@ import io.vacco.a4lb.cfg.A4Match;
 
 public class A4Exceptions {
 
+  public static final long ver = 1;
+
   public static class A4ConfigException extends RuntimeException {
+    public static final long serialVersionUID = ver;
     public final ConstraintViolations violations;
     public A4ConfigException(ConstraintViolations violations) {
       this.violations = violations;
@@ -16,6 +19,7 @@ public class A4Exceptions {
   }
 
   public static class A4SelectException extends RuntimeException {
+    public static final long serialVersionUID = ver;
     public final String clientHost;
     public final String tlsSni;
     public final A4Match[] cfg;
