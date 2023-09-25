@@ -131,11 +131,10 @@ public class A4TcpSess extends SNIMatcher {
     if (bytes == -1) {
       if (client.channelKey == key) {
         client.channelKey.interestOps(0);
-        return;
       } else if (backend != null && backend.channelKey == key) {
         backend.channelKey.interestOps(0);
-        return;
       }
+      return;
     }
     if (!cltQ.isEmpty()) {
       client.channelKey.interestOps(SelectionKey.OP_WRITE);
