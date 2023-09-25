@@ -34,11 +34,6 @@ public class SSLServerSocketChannel extends ServerSocketChannel {
   private final SNIMatcher sniMatcher;
   private final ExecutorService threadPool;
 
-  /**
-   * @param serverSocketChannel The real server socket channel that accepts network requests.
-   * @param sslContext          The SSL context used to create the {@link SSLEngine} for incoming requests.
-   * @param threadPool          The thread pool passed to SSLSocketChannel used to execute long-running, blocking SSL operations such as certificate validation with a CA (<a href="http://docs.oracle.com/javase/7/docs/api/javax/net/ssl/SSLEngineResult.HandshakeStatus.html#NEED_TASK">NEED_TASK</a>)
-   */
   public SSLServerSocketChannel(ServerSocketChannel serverSocketChannel,
                                 SSLContext sslContext, ExecutorService threadPool,
                                 SNIMatcher sniMatcher, String[] protocols, String[] ciphers) {
@@ -51,11 +46,9 @@ public class SSLServerSocketChannel extends ServerSocketChannel {
     this.ciphers = ciphers;
   }
 
-  /**
-   * Convenience call to keep from having to cast {@code SocketChannel} into {@link SSLSocketChannel} when calling {@link #accept()}.
-   *
-   * @return An SSLSocketChannel or {@code null} if this channel is in non-blocking mode and no connection is available to be accepted.
-   * @see #accept()
+  /*
+   * Convenience call to keep from having to cast {@code SocketChannel} into {@link SSLSocketChannel}
+   * when calling {@link #accept()}.
    */
   public SSLSocketChannel acceptOverSSL() throws IOException {
     return (SSLSocketChannel) accept();

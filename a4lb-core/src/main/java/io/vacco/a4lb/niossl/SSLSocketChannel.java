@@ -42,8 +42,8 @@ public class SSLSocketChannel extends SocketChannel {
   /**
    * <p>Reads a sequence of bytes from this channel into the given buffer.</p>
    * <p>An attempt is made to read up to r bytes from the channel, where r is the number of bytes remaining in the buffer, that is, dst.remaining(), at the moment this method is invoked.</p>
-   * <p>Suppose that a byte sequence of length n is read, where 0 <= n <= r. This byte sequence will be transferred into the buffer so that the first byte in the sequence is at index p and the last byte is at index p + n - 1, where p is the buffer's position at the moment this method is invoked. Upon return the buffer's position will be equal to p + n; its limit will not have changed.</p>
-   * <p>A read operation might not fill the buffer, and in fact it might not read any bytes at all. Whether or not it does so depends upon the nature and state of the channel. A socket channel in non-blocking mode, for example, cannot read any more bytes than are immediately available from the socket's input buffer; similarly, a file channel cannot read any more bytes than remain in the file. It is guaranteed, however, that if a channel is in blocking mode and there is at least one byte remaining in the buffer then this method will block until at least one byte is read.</
+   * <p>Suppose that a byte sequence of length n is read, where 0 &le; n &le; r. This byte sequence will be transferred into the buffer so that the first byte in the sequence is at index p and the last byte is at index p + n - 1, where p is the buffer's position at the moment this method is invoked. Upon return the buffer's position will be equal to p + n; its limit will not have changed.</p>
+   * <p>A read operation might not fill the buffer, and in fact it might not read any bytes at all. Whether or not it does so depends upon the nature and state of the channel. A socket channel in non-blocking mode, for example, cannot read any more bytes than are immediately available from the socket's input buffer; similarly, a file channel cannot read any more bytes than remain in the file. It is guaranteed, however, that if a channel is in blocking mode and there is at least one byte remaining in the buffer then this method will block until at least one byte is read.</p>
    * <p>This method may be invoked at any time. If another thread has already initiated a read operation upon this channel, however, then an invocation of this method will block until the first operation is complete.</p>
    *
    * @param applicationBuffer The buffer into which bytes are to be transferred
@@ -82,7 +82,7 @@ public class SSLSocketChannel extends SocketChannel {
   /**
    * <p>Writes a sequence of bytes to this channel from the given buffer.</p>
    * <p>An attempt is made to write up to r bytes to the channel, where r is the number of bytes remaining in the buffer, that is, src.remaining(), at the moment this method is invoked.</p>
-   * <p>Suppose that a byte sequence of length n is written, where 0 <= n <= r. This byte sequence will be transferred from the buffer starting at index p, where p is the buffer's position at the moment this method is invoked; the index of the last byte written will be p + n - 1. Upon return the buffer's position will be equal to p + n; its limit will not have changed.</p>
+   * <p>Suppose that a byte sequence of length n is written, where 0 &le; n &le; r. This byte sequence will be transferred from the buffer starting at index p, where p is the buffer's position at the moment this method is invoked; the index of the last byte written will be p + n - 1. Upon return the buffer's position will be equal to p + n; its limit will not have changed.</p>
    * <p>Unless otherwise specified, a write operation will return only after writing all of the r requested bytes. Some types of channels, depending upon their state, may write only some of the bytes or possibly none at all. A socket channel in non-blocking mode, for example, cannot write any more bytes than are free in the socket's output buffer.</p>
    * <p>This method may be invoked at any time. If another thread has already initiated a write operation upon this channel, however, then an invocation of this method will block until the first operation is complete.</p>
    *
@@ -129,7 +129,7 @@ public class SSLSocketChannel extends SocketChannel {
    * </pre>
    * <p>at the moment that this method is invoked.</p>
    *
-   * <p>Suppose that a byte sequence of length n is read, where 0 <= n <= r. Up to the first dsts[offset].remaining() bytes of this sequence are transferred into buffer dsts[offset], up to the next dsts[offset+1].remaining() bytes are transferred into buffer dsts[offset+1], and so forth, until the entire byte sequence is transferred into the given buffers. As many bytes as possible are transferred into each buffer, hence the final position of each updated buffer, except the last updated buffer, is guaranteed to be equal to that buffer's limit.</p>
+   * <p>Suppose that a byte sequence of length n is read, where 0 &le; n &le; r. Up to the first dsts[offset].remaining() bytes of this sequence are transferred into buffer dsts[offset], up to the next dsts[offset+1].remaining() bytes are transferred into buffer dsts[offset+1], and so forth, until the entire byte sequence is transferred into the given buffers. As many bytes as possible are transferred into each buffer, hence the final position of each updated buffer, except the last updated buffer, is guaranteed to be equal to that buffer's limit.</p>
    *
    * <p>This method may be invoked at any time. If another thread has already initiated a read operation upon this channel, however, then an invocation of this method will block until the first operation is complete.</p>
    *
@@ -180,7 +180,7 @@ public class SSLSocketChannel extends SocketChannel {
    * </pre>
    * <p>at the moment that this method is invoked.</p>
    *
-   * <p>Suppose that a byte sequence of length n is written, where 0 <= n <= r. Up to the first srcs[offset].remaining() bytes of this sequence are written from buffer srcs[offset], up to the next srcs[offset+1].remaining() bytes are written from buffer srcs[offset+1], and so forth, until the entire byte sequence is written. As many bytes as possible are written from each buffer, hence the final position of each updated buffer, except the last updated buffer, is guaranteed to be equal to that buffer's limit.</p>
+   * <p>Suppose that a byte sequence of length n is written, where 0 &le; n &le; r. Up to the first srcs[offset].remaining() bytes of this sequence are written from buffer srcs[offset], up to the next srcs[offset+1].remaining() bytes are written from buffer srcs[offset+1], and so forth, until the entire byte sequence is written. As many bytes as possible are written from each buffer, hence the final position of each updated buffer, except the last updated buffer, is guaranteed to be equal to that buffer's limit.</p>
    *
    * <p>Unless otherwise specified, a write operation will return only after writing all of the r requested bytes. Some types of channels, depending upon their state, may write only some of the bytes or possibly none at all. A socket channel in non-blocking mode, for example, cannot write any more bytes than are free in the socket's output buffer.</p>
    *
