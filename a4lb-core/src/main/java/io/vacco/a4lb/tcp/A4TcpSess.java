@@ -51,12 +51,17 @@ public class A4TcpSess extends SNIMatcher {
         log.debug("!! [{}, {}] {} - {} - {}",
             client != null ? client.id : "?",
             backend != null ? backend.id : "?",
-            e.getClass().getSimpleName(), x.getClass().getSimpleName(), x.getMessage());
+            e.getClass().getSimpleName(), x.getClass().getSimpleName(),
+            e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
+        );
       } else if (log.isTraceEnabled()) {
         log.trace("!! [{}, {}] {} - {} - {}",
             client != null ? client.id : "?",
             backend != null ? backend.id : "?",
-            e.getClass().getSimpleName(), x.getClass().getSimpleName(), x.getMessage(), x);
+            e.getClass().getSimpleName(), x.getClass().getSimpleName(),
+            e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage()),
+            x
+        );
       }
     }
     if (client != null) { client.close(); }
