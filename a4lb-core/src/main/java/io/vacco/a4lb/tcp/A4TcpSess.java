@@ -19,7 +19,7 @@ public class A4TcpSess extends SNIMatcher {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
-  public final A4TcpSrv owner;
+  public A4TcpSrv owner;
 
   private A4TcpIo client, backend;
   private String id;
@@ -68,6 +68,7 @@ public class A4TcpSess extends SNIMatcher {
     if (backend != null) { backend.close(); }
     cltQ.clear();
     bckQ.clear();
+    this.owner = null;
     if (log.isDebugEnabled()) {
       log.debug("------------------------------");
     }
