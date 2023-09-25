@@ -6,7 +6,7 @@ import javax.net.ssl.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 import static io.vacco.a4lb.tcp.A4Io.*;
@@ -20,7 +20,6 @@ public class A4TcpSess extends SNIMatcher {
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
   public final A4TcpSrv owner;
-  public final ByteBuffer buffer;
 
   private A4TcpIo client, backend;
   private String id;
@@ -29,10 +28,14 @@ public class A4TcpSess extends SNIMatcher {
   private final ExecutorService tlsExec;
   private final boolean tlsClient;
 
+  private final int bufferSize;
+  private final Queue<ByteBuffer> cltQ = new ArrayDeque<>();
+  private final Queue<ByteBuffer> bckQ = new ArrayDeque<>();
+
   public A4TcpSess(A4TcpSrv owner, int bufferSize, boolean tlsClient, ExecutorService tlsExec) {
-    super(0); // TODO wat???
+    super(0);
     this.owner = Objects.requireNonNull(owner);
-    this.buffer = ByteBuffer.allocateDirect(bufferSize);
+    this.bufferSize = bufferSize;
     this.tlsClient = tlsClient;
     this.tlsExec = tlsExec;
   }
@@ -68,15 +71,16 @@ public class A4TcpSess extends SNIMatcher {
       var sck = c instanceof SSLSocketChannel
           ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
           : ((SocketChannel) c).socket();
-      log.debug("{}: {} (i/o: {}, r: {}), c[{},{}] b[{},{}] {} {} {}",
+      log.debug("{}: {} (i/o: {}), c[{},{},{}] b[{},{},{}] {} {} {}",
           this.id != null ? id : '?',
           op == IOOp.Read ? 'r' : 'w',
           format("%06d", bytes),
-          format("%06d", buffer.remaining()),
           format("%02d", client.channelKey.interestOps()),
           format("%02d", client.channelKey.readyOps()),
+          format("%02d", cltQ.size()),
           backend != null ? format("%02d", backend.channelKey.interestOps()) : "??",
           backend != null ? format("%02d", backend.channelKey.readyOps()) : "??",
+          format("%02d", bckQ.size()),
           sck.getLocalSocketAddress(),
           op == IOOp.Read ? "<<" : ">>",
           sck.getRemoteSocketAddress()
@@ -84,60 +88,68 @@ public class A4TcpSess extends SNIMatcher {
     }
   }
 
-  private int doTcpRead(String channelId, ByteChannel from) {
-    var readBytes = eofRead(channelId, from, buffer);
-    logState(readBytes, from, IOOp.Read);
-    return readBytes;
+  private int doTcpRead(String channelId, ByteChannel from, Queue<ByteBuffer> target) {
+    var bb = ByteBuffer.allocateDirect(bufferSize);
+    var bytes = eofRead(channelId, from, bb);
+    logState(bytes, from, IOOp.Read);
+    if (bytes > 0) {
+      target.add(bb);
+    }
+    return bytes;
   }
 
-  private int doTcpWrite(ByteChannel to) throws IOException {
-    var writtenBytes = to.write(buffer);
-    logState(writtenBytes, to, IOOp.Write);
-    return writtenBytes;
+  private int doTcpWrite(ByteChannel to, Queue<ByteBuffer> source) throws IOException {
+    var bb = source.peek();
+    if (bb != null) {
+      var bytes = to.write(bb);
+      logState(bytes, to, IOOp.Write);
+      if (!bb.hasRemaining()) {
+        source.remove();
+      }
+      return bytes;
+    }
+    throw new IllegalStateException(to + " - no data available for writing");
   }
 
   private void syncOps(SelectionKey key, IOOp op, int bytes) {
-    if (bytes == -1) {
-      tearDown(null);
-      return;
-    }
     if (op == IOOp.Read && backend != null && key == backend.channelKey && bytes > 0) {
       backend.target.rxTx.updateTx(bytes);
     }
     if (op == IOOp.Write && backend != null && key == backend.channelKey && bytes > 0) {
       backend.target.rxTx.updateRx(bytes);
     }
-    if (op == IOOp.Read && bytes == 0) {
-      buffer.limit(buffer.position());
+    if (op == IOOp.Read && key == client.channelKey && bytes > 0 && backend == null) {
+      initBackend(key);
     }
-    if (bytes == 0 && backend != null && key == backend.channelKey) { // TODO offload client TCP buffer full
-      log.warn("client slow down??");
-      try { Thread.sleep(1000); }
-      catch (InterruptedException e) { throw new RuntimeException(e); }
-    }
-    if (bytes == 0 && key == client.channelKey && buffer.hasRemaining()) { // TODO offload backend TCP buffer full
-      log.warn("backend slow down??");
-      try {
-        Thread.sleep(1000);
-        doTcpWrite(backend.channel);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
+    if (bytes == -1) {
+      if (client.channelKey == key) {
+        client.channelKey.interestOps(0);
+        return;
+      } else if (backend != null && backend.channelKey == key) {
+        backend.channelKey.interestOps(0);
+        return;
       }
     }
-    if (op == IOOp.Read && buffer.hasRemaining()) {
-      key.interestOps(SelectionKey.OP_WRITE);
+    if (!cltQ.isEmpty()) {
+      client.channelKey.interestOps(SelectionKey.OP_WRITE);
+    } else if (client.channelKey.interestOps() != 0) {
+      client.channelKey.interestOps(SelectionKey.OP_READ);
     }
-    if (op == IOOp.Write && !buffer.hasRemaining()) {
-      key.interestOps(SelectionKey.OP_READ);
+    if (backend != null) {
+      if (!bckQ.isEmpty()) {
+        backend.channelKey.interestOps(SelectionKey.OP_WRITE);
+      } else if (backend.channelKey.interestOps() != 0) {
+        backend.channelKey.interestOps(SelectionKey.OP_READ);
+      }
     }
   }
 
   private void onTcpRead(SelectionKey key) {
-    int bytes = -1;
+    var bytes = -1;
     if (key == client.channelKey) {
-      bytes = doTcpRead(client.id, client.channel);
+      bytes = doTcpRead(client.id, client.channel, bckQ); // reverse targets, this is intentional
     } else if (key == backend.channelKey) {
-      bytes = doTcpRead(backend.id, backend.channel);
+      bytes = doTcpRead(backend.id, backend.channel, cltQ);
     } else {
       sessionMismatch(key);
     }
@@ -147,12 +159,9 @@ public class A4TcpSess extends SNIMatcher {
   private void onTcpWrite(SelectionKey key) throws IOException {
     int bytes = -1;
     if (key == client.channelKey) {
-      if (backend == null) {
-        initBackend(key);
-      }
-      bytes = doTcpWrite(backend.channel);
+      bytes = doTcpWrite(client.channel, cltQ);
     } else if (key == backend.channelKey) {
-      bytes = doTcpWrite(client.channel);
+      bytes = doTcpWrite(backend.channel, bckQ);
     } else {
       sessionMismatch(key);
     }
@@ -188,6 +197,9 @@ public class A4TcpSess extends SNIMatcher {
       onTcpWrite(key);
     } else {
       throw new IllegalStateException(((SocketChannel) key.channel()).socket() + " - Unexpected channel key state");
+    }
+    if (client.channelKey.interestOps() == 0 && backend != null && backend.channelKey.interestOps() == 0) {
+      tearDown(null);
     }
   }
 

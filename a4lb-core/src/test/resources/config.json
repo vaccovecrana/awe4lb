@@ -24,7 +24,7 @@
       "tls": {
         "certPath": "./src/test/resources/cert.pem",
         "keyPath": "./src/test/resources/key.pem",
-        "ciphers": ["AES_128"]
+        "ciphers": ["TLS_AES_128_GCM_SHA256"]
       },
       "match": [
         {

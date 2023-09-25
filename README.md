@@ -10,6 +10,7 @@
 
 ## Resources
 
+- https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#jsse-cipher-suite-names
 - https://stackoverflow.com/questions/53323855/sslserversocket-and-certificate-setup
 - https://stackoverflow.com/a/62263402/491160
 - https://github.com/raell2/SSLAsynchronousSocketChannel/tree/master
