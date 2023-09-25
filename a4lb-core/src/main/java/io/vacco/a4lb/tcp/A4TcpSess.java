@@ -61,6 +61,8 @@ public class A4TcpSess extends SNIMatcher {
     }
     if (client != null) { client.close(); }
     if (backend != null) { backend.close(); }
+    cltQ.clear();
+    bckQ.clear();
     if (log.isDebugEnabled()) {
       log.debug("------------------------------");
     }
