@@ -15,7 +15,7 @@ public class A4TcpIo implements Closeable {
   public final SelectionKey channelKey;
   public final SocketChannel channel;
 
-  public A4Backend target;
+  public A4Backend backend;
 
   public A4TcpIo(SelectionKey channelKey, SocketChannel rawChannel) {
     try {
@@ -48,8 +48,8 @@ public class A4TcpIo implements Closeable {
   }
 
   public A4TcpIo backend(A4Backend backend) {
-    this.target = Objects.requireNonNull(backend);
-    this.target.trackConnOpen();
+    this.backend = Objects.requireNonNull(backend);
+    this.backend.trackConnOpen();
     return this;
   }
 
@@ -63,9 +63,9 @@ public class A4TcpIo implements Closeable {
     channelKey.attach(null);
     channelKey.cancel();
     A4Io.close(channel);
-    if (target != null) {
-      this.target.trackConnClose();
-      this.target = null;
+    if (backend != null) {
+      this.backend.trackConnClose();
+      this.backend = null;
     }
   }
 

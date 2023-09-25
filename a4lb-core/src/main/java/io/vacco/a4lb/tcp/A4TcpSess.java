@@ -120,10 +120,10 @@ public class A4TcpSess extends SNIMatcher {
 
   private void syncOps(SelectionKey key, IOOp op, int bytes) {
     if (op == IOOp.Read && backend != null && key == backend.channelKey && bytes > 0) {
-      backend.target.rxTx.updateTx(bytes);
+      backend.backend.rxTx.updateTx(bytes);
     }
     if (op == IOOp.Write && backend != null && key == backend.channelKey && bytes > 0) {
-      backend.target.rxTx.updateRx(bytes);
+      backend.backend.rxTx.updateRx(bytes);
     }
     if (op == IOOp.Read && key == client.channelKey && bytes > 0 && backend == null) {
       initBackend(key);
