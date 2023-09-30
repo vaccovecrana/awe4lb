@@ -25,7 +25,7 @@ public class A4Sel {
       case RoundRobin: return A4SelRRobin.select(pool);
       case IpHash: return A4SelIpHash.select(pool, clientIpHash);
       case LeastConn: return A4SelLConn.select(pool);
-      default: throw new IllegalStateException();
+      default: throw new IllegalStateException("Invalid pool type: " + pool.type);
     }
   }
 
