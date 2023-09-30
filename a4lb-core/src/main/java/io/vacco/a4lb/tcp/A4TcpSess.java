@@ -29,7 +29,7 @@ public class A4TcpSess extends SNIMatcher {
   private final boolean tlsClient;
 
   private final int bufferSize;
-  private final Queue<ByteBuffer> cltQ = new ArrayDeque<>();
+  private final Queue<ByteBuffer> cltQ = new ArrayDeque<>(); // TODO check if buffer pooling could increase performance after running initial benchmarks.
   private final Queue<ByteBuffer> bckQ = new ArrayDeque<>();
 
   public A4TcpSess(A4TcpSrv owner, int bufferSize, boolean tlsClient, ExecutorService tlsExec) {

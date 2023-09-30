@@ -2,12 +2,11 @@ package io.vacco.a4lb.util;
 
 import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.constraint.*;
+import am.ik.yavi.core.Constraint;
 import am.ik.yavi.core.Validator;
 import io.vacco.a4lb.cfg.*;
 import java.util.Arrays;
 import java.util.Objects;
-
-import static am.ik.yavi.builder.ValidatorBuilder.*;
 
 public class A4Valid {
 
@@ -28,14 +27,14 @@ public class A4Valid {
   }
 
   public static final Validator<A4Exec> A4ExecVld = ValidatorBuilder.<A4Exec>of()
-      .constraint((ToCharSequence<A4Exec, String>) ex -> ex.command, "command", A4Valid::nnNeNb)
-      .constraint((ToCharSequence<A4Exec, String>) ex -> ex.passOutput, "passOutput", A4Valid::nnNeNb)
-      .constraint((ToCharSequence<A4Exec, String>) ex -> ex.failOutput, "failOutput", A4Valid::nnNeNb)
+      ._string(ex -> ex.command, "command", A4Valid::nnNeNb)
+      ._string(ex -> ex.passOutput, "passOutput", A4Valid::nnNeNb)
+      ._string(ex -> ex.failOutput, "failOutput", A4Valid::nnNeNb)
       .build();
 
   public static final Validator<A4HealthCheck> A4HealthCheckVld = ValidatorBuilder.<A4HealthCheck>of()
-      .constraint((ToInteger<A4HealthCheck>) hc -> hc.intervalMs, "intervalMs", A4Valid::gt0I)
-      .constraint((ToInteger<A4HealthCheck>) hc -> hc.timeoutMs, "timeoutMs", A4Valid::gt0I)
+      ._integer(hc -> hc.intervalMs, "intervalMs", A4Valid::gt0I)
+      ._integer(hc -> hc.timeoutMs, "timeoutMs", A4Valid::gt0I)
       .constraintOnTarget(
           hc -> hc.timeoutMs < hc.intervalMs, "timeoutMs",
           "timeoutMs.isLessThanInterval",
@@ -44,13 +43,13 @@ public class A4Valid {
       .build();
 
   public static final Validator<A4Sock> A4SockVld = ValidatorBuilder.<A4Sock>of()
-      .constraint((ToInteger<A4Sock>) s -> s.port, "port", c -> gtLtEq(c, 0, 65535))
-      .constraint((ToCharSequence<A4Sock, String>) s -> s.host, "host", A4Valid::nnNeNb)
+      ._integer(s -> s.port, "port", c -> gtLtEq(c, 0, 65535))
+      ._string(s -> s.host, "host", A4Valid::nnNeNb)
       .build();
 
   public static final Validator<A4Backend> A4BackendVld = ValidatorBuilder.<A4Backend>of()
-      .constraint((ToInteger<A4Backend>) b -> b.weight, "weight", c -> gtLtEq(c, 0, 100))
-      .constraint((ToInteger<A4Backend>) b -> b.priority, "priority", c -> gtLtEq(c, 0, 100))
+      ._integer(b -> b.weight, "weight", c -> gtLtEq(c, 0, 100))
+      ._integer(b -> b.priority, "priority", c -> gtLtEq(c, 0, 100))
       .constraintOnCondition(
           (b, cg) -> b.weight != null || b.priority != null,
           b -> b.constraintOnTarget(
@@ -64,16 +63,16 @@ public class A4Valid {
   public static final Validator<A4StringOp> A4StringOpVld = ValidatorBuilder.<A4StringOp>of()
       .constraintOnCondition(
           (op, cg) -> op.equals != null,
-          b -> b.constraint((ToCharSequence<A4StringOp, String>) op -> op.equals, "equals", A4Valid::nnNeNb)
+          b -> b._string(op -> op.equals, "equals", A4Valid::nnNeNb)
       ).constraintOnCondition(
           (op, cg) -> op.contains != null,
-          b -> b.constraint((ToCharSequence<A4StringOp, String>) op -> op.contains, "contains", A4Valid::nnNeNb)
+          b -> b._string(op -> op.contains, "contains", A4Valid::nnNeNb)
       ).constraintOnCondition(
           (op, cg) -> op.startsWith != null,
-          b -> b.constraint((ToCharSequence<A4StringOp, String>) op -> op.startsWith, "startsWith", A4Valid::nnNeNb)
+          b -> b._string(op -> op.startsWith, "startsWith", A4Valid::nnNeNb)
       ).constraintOnCondition(
           (op, cg) -> op.endsWith != null,
-          b -> b.constraint((ToCharSequence<A4StringOp, String>) op -> op.endsWith, "endsWith", A4Valid::nnNeNb)
+          b -> b._string(op -> op.endsWith, "endsWith", A4Valid::nnNeNb)
       ).constraintOnTarget(
           op -> op.equals != null || op.contains != null || op.startsWith != null || op.endsWith != null,
           "stringOp", "stringOp.anyOf",
@@ -96,9 +95,19 @@ public class A4Valid {
           "\"{0}\" only one of [host, sni] allowed"
       ).build();
 
+  public static final Validator<A4DiscHttp> A4DiscHttpVld = ValidatorBuilder.<A4DiscHttp>of()
+      ._string(h -> h.endpoint, "endpoint", c -> nnNeNb(c).url())
+      ._object(h -> h.format, "format", Constraint::notNull)
+      .build();
+
+  public static final Validator<A4Disc> A4DiscVld = ValidatorBuilder.<A4Disc>of()
+      .nest(d -> d.http, "http", A4DiscHttpVld)
+      .build();
+
   public static final Validator<A4Pool> A4PoolVld = ValidatorBuilder.<A4Pool>of()
       .constraint(A4Pool::hostList, "hosts", c -> c.notNull().notEmpty())
       .forEach(A4Pool::hostList, "hosts", A4BackendVld)
+      .nestIfPresent(p -> p.discover, "discover", A4DiscVld)
       .build();
 
   public static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
@@ -117,13 +126,13 @@ public class A4Valid {
       ).build();
 
   public static final Validator<A4Tls> A4TlsVld = ValidatorBuilder.<A4Tls>of()
-      .constraint((ToCharSequence<A4Tls, String>) t -> t.certPath, "certPath", A4Valid::nnNeNb)
-      .constraint((ToCharSequence<A4Tls, String>) t -> t.keyPath, "keyPath", A4Valid::nnNeNb)
+      ._string(t -> t.certPath, "certPath", A4Valid::nnNeNb)
+      ._string(t -> t.keyPath, "keyPath", A4Valid::nnNeNb)
       .forEach(A4Tls::protocolList, "protocols.version",
-          svb -> svb.constraint((ToCharSequence<String, String>) s -> s, "value", A4Valid::nnNeNb)
+          svb -> svb._string(s -> s, "value", A4Valid::nnNeNb)
       )
       .forEach(A4Tls::cipherList, "ciphers.cipher",
-          svb -> svb.constraint((ToCharSequence<String, String>) s -> s, "value", A4Valid::nnNeNb)
+          svb -> svb._string(s -> s, "value", A4Valid::nnNeNb)
       )
       .build();
 
@@ -132,7 +141,7 @@ public class A4Valid {
       .nest(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
       .nestIfPresent(s -> s.tls, "tls", A4TlsVld)
       .constraint(A4Server::matchList, "match", c -> c.notNull().notEmpty())
-      .constraint((ToInteger<A4Server>) s -> s.bufferSize, "bufferSize", c -> c.greaterThan(0))
+      ._integer(s -> s.bufferSize, "bufferSize", c -> c.greaterThan(0))
       .forEach(A4Server::matchList, "match", A4MatchVld)
       .build();
 
