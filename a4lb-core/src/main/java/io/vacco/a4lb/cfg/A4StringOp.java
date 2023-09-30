@@ -24,18 +24,28 @@ public class A4StringOp {
     return this;
   }
 
-  @Override public String toString() {
-    return String.format("%s %s",
-        equals != null ? "=="
-            : contains != null ? "contains"
-            : startsWith != null ? "startsWith"
-            : endsWith != null ? "endsWith"
-            : "?",
-        equals != null ? equals
-            : contains != null ? contains
-            : startsWith != null ? startsWith
-            : endsWith != null ? endsWith
-            : "?"
-    );
+  public String opId() {
+    return equals != null ? "equals"
+        : contains != null ? "contains"
+        : startsWith != null ? "startsWith"
+        : endsWith != null ? "endsWith"
+        : "?";
   }
+
+  public String opVal() {
+    return equals != null ? equals
+        : contains != null ? contains
+        : startsWith != null ? startsWith
+        : endsWith != null ? endsWith
+        : "?";
+  }
+
+  @Override public String toString() {
+    return String.format("%s(%s)", opId(), opVal());
+  }
+
+  @Override public int hashCode() {
+    return String.format("%s:%s", opId(), opVal()).hashCode();
+  }
+
 }

@@ -11,7 +11,6 @@ public class A4Pool {
 
   public Type type;
   public List<A4Backend> hosts = new ArrayList<>();
-  public A4Disc discover;
   public boolean openTls = false;
 
   public transient Random rnd = new Random(A4Config.Seed);
@@ -19,11 +18,6 @@ public class A4Pool {
 
   public A4Pool type(Type type) {
     this.type = type;
-    return this;
-  }
-
-  public A4Pool discover(A4Disc discover) {
-    this.discover = discover;
     return this;
   }
 
@@ -51,7 +45,7 @@ public class A4Pool {
       return 0;
     }
      var hlCodes = hosts.stream()
-        .map(h -> String.format("%x", h.hashCode()))
+        .map(h -> String.format("%x", h.hashCode())).sorted()
         .collect(Collectors.joining(":"));
     return hlCodes.hashCode();
   }

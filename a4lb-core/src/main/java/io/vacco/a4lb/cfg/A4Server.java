@@ -3,16 +3,20 @@ package io.vacco.a4lb.cfg;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class A4Server {
 
+  public String id;
   public A4Sock addr;
   public A4Tls tls;
   public A4Match[] match;
-  public A4HealthCheck healthCheck;
 
   public int bufferSize = 32768;
+
+  public A4Server id(String id) {
+    this.id = id;
+    return this;
+  }
 
   public A4Server addr(A4Sock addr) {
     this.addr = addr;
@@ -31,15 +35,6 @@ public class A4Server {
 
   public List<A4Match> matchList() {
     return match == null ? Collections.emptyList() : Arrays.asList(match);
-  }
-
-  public Stream<A4Backend> allBackends() {
-    return Arrays.stream(match).flatMap(m -> m.pool.hosts.stream());
-  }
-
-  public A4Server healthCheck(A4HealthCheck healthCheck) {
-    this.healthCheck = healthCheck;
-    return this;
   }
 
   /*

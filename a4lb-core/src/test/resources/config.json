@@ -7,19 +7,21 @@
     "enabled": true,
     "bind": {"host":"0.0.0.0", "port": 9284}
   },
-  "servers": {
-    "vacco-http": {
+  "servers": [
+    {
+      "id": "vacco-http",
       "addr": {"host":"0.0.0.0", "port": 8080},
       "match": [
         {
           "pool": {
             "hosts": [{"addr": {"host": "0.0.0.0", "port": 6900}}]
-          }
+          },
+          "healthCheck": {"intervalMs": 2000, "timeoutMs": 1000}
         }
-      ],
-      "healthCheck": {"intervalMs": 5000, "timeoutMs": 2500}
+      ]
     },
-    "vacco-tls": {
+    {
+      "id": "vacco-tls",
       "addr": {"host":"0.0.0.0", "port": 8443},
       "tls": {
         "certPath": "./src/test/resources/cert.pem",
@@ -49,10 +51,10 @@
             "hosts": [{"addr": {"host": "172.16.0.1", "port": 8443}}]
           }
         }
-      ],
-      "healthCheck": {"intervalMs": 5000, "timeoutMs": 2500}
+      ]
     },
-    "vacco-ssh": {
+    {
+      "id": "vacco-ssh",
       "addr": {"host": "0.0.0.0", "port": 8022},
       "match": [
         {
@@ -60,8 +62,7 @@
             "hosts": [{"addr": {"host": "172.16.0.1", "port": 10022}}]
           }
         }
-      ],
-      "healthCheck": {"intervalMs": 5000, "timeoutMs": 2500}
+      ]
     }
-  }
+  ]
 }

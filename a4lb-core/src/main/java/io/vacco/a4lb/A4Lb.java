@@ -10,9 +10,6 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static java.util.stream.Stream.concat;
-import static java.util.stream.Collectors.toList;
-
 public class A4Lb {
 
   static {
@@ -35,15 +32,16 @@ public class A4Lb {
 
   public void start() throws InterruptedException {
     log.info("Starting");
-    var allTasks = concat(
-        config.servers.entrySet().stream()
-            .map(srvE -> new A4TcpSrv(A4Io.newSelector(), srvE.getKey(), srvE.getValue(), tskEx)),
-        config.servers.entrySet().stream()
-            .map(srvE -> new A4TcpHealth(tskEx, srvE.getKey(), srvE.getValue()))
-        // TODO spin a per-server discovery thread (in case the host list is not static). Provides new backend entries.
-    ).collect(toList());
+    var tasks = new ArrayList<Callable<Void>>();
+    for (var srv : config.servers) {
+      tasks.add(new A4TcpSrv(A4Io.newSelector(), srv, tskEx));
+      for (var match : srv.match) {
+        tasks.add(new A4TcpHealth(tskEx, srv.id, match));
+        // TODO spin a per match pool discovery thread (in case the host list is not static). Provides new backend entries.
+      }
+    }
     log.info("Started");
-    tskEx.invokeAll(allTasks);
+    tskEx.invokeAll(tasks);
   }
 
   public void stop() {

@@ -2,6 +2,7 @@ package io.vacco.a4lb.util;
 
 import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.constraint.*;
+import am.ik.yavi.constraint.base.ContainerConstraintBase;
 import am.ik.yavi.core.Constraint;
 import am.ik.yavi.core.Validator;
 import io.vacco.a4lb.cfg.*;
@@ -105,9 +106,8 @@ public class A4Valid {
       .build();
 
   public static final Validator<A4Pool> A4PoolVld = ValidatorBuilder.<A4Pool>of()
-      .constraint(A4Pool::hostList, "hosts", c -> c.notNull().notEmpty())
+      .constraint(A4Pool::hostList, "hosts", Constraint::notNull)
       .forEach(A4Pool::hostList, "hosts", A4BackendVld)
-      .nestIfPresent(p -> p.discover, "discover", A4DiscVld)
       .build();
 
   public static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
@@ -121,9 +121,17 @@ public class A4Valid {
           m -> arrayValsNnLtEq(1, m.and, m.or),
           "matchOps.andOr", "matchOps.andOr.oneOf",
           "\"{0}\" only one of [and, or] allowed"
-      ).nest(
-          m -> m.pool, "pool", A4PoolVld
-      ).build();
+      )
+      .nest(m -> m.pool, "pool", A4PoolVld)
+      .constraintOnCondition(
+          (m, cg) -> m.discover == null,
+          b -> b.nest(m -> m.pool, "pool.hosts",
+              b0 -> b0.constraint(A4Pool::hostList, "list", ContainerConstraintBase::notEmpty)
+          )
+      )
+      .nestIfPresent(p -> p.discover, "discover", A4DiscVld)
+      .nestIfPresent(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
+      .build();
 
   public static final Validator<A4Tls> A4TlsVld = ValidatorBuilder.<A4Tls>of()
       ._string(t -> t.certPath, "certPath", A4Valid::nnNeNb)
@@ -137,11 +145,11 @@ public class A4Valid {
       .build();
 
   public static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
+      ._integer(s -> s.bufferSize, "bufferSize", c -> c.greaterThan(0))
+      ._string(s -> s.id, "id", A4Valid::nnNeNb)
       .nest(s -> s.addr, "addr", A4SockVld)
-      .nest(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
       .nestIfPresent(s -> s.tls, "tls", A4TlsVld)
       .constraint(A4Server::matchList, "match", c -> c.notNull().notEmpty())
-      ._integer(s -> s.bufferSize, "bufferSize", c -> c.greaterThan(0))
       .forEach(A4Server::matchList, "match", A4MatchVld)
       .build();
 
@@ -152,8 +160,8 @@ public class A4Valid {
   public static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
       .nest(c -> c.api, "api", A4ProbeVld)
       .nest(c -> c.metrics, "metrics", A4ProbeVld)
-      .constraint(A4Config::serverIdx, "servers", c -> c.notNull().notEmpty())
-      .forEach(A4Config::serverIdx, "servers", A4ServerVld)
+      .constraint(A4Config::serverList, "servers", c -> c.notNull().notEmpty())
+      .forEach(A4Config::serverList, "servers", A4ServerVld)
       .build();
 
   /*

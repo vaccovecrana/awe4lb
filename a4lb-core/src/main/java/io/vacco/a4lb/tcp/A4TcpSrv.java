@@ -18,7 +18,6 @@ public class A4TcpSrv implements Callable<Void> {
 
   public static final Logger log = LoggerFactory.getLogger(A4TcpSrv.class);
 
-  private final String id;
   private final Selector selector;
   private final SSLContext sslContext;
   private final ServerSocketChannel channel;
@@ -27,9 +26,8 @@ public class A4TcpSrv implements Callable<Void> {
   private final A4Server srvConfig;
   public  final A4Sel bkSelect;
 
-  public A4TcpSrv(Selector selector, String id, A4Server srv, ExecutorService tlsExec) {
+  public A4TcpSrv(Selector selector, A4Server srv, ExecutorService tlsExec) {
     try {
-      this.id = Objects.requireNonNull(id);
       this.selector = Objects.requireNonNull(selector);
       this.channel = ServerSocketChannel.open();
       this.channel.bind(new InetSocketAddress(srv.addr.host, srv.addr.port));
@@ -38,14 +36,14 @@ public class A4TcpSrv implements Callable<Void> {
       this.bkSelect = new A4Sel(srv.match);
       this.srvConfig = Objects.requireNonNull(srv);
       if (srv.tls != null) {
-        log.info("{} - initializing SSL context", id);
+        log.info("{} - initializing SSL context", srv.id);
         this.sslContext = A4Ssl.contextFrom(srv.tls);
         this.tlsExec = Objects.requireNonNull(tlsExec);
       } else {
         this.sslContext = null;
         this.tlsExec = null;
       }
-      log.info("{} - {} - Ingress open", this.id, this.channel.socket());
+      log.info("{} - {} - Ingress open", srv.id, this.channel.socket());
     } catch (IOException ioe) {
       log.error("Unable to open server socket channel {}", srv.addr, ioe);
       throw new IllegalStateException(ioe);

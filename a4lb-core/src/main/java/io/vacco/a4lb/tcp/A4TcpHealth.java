@@ -13,13 +13,13 @@ public class A4TcpHealth implements Callable<Void> {
   private static final Logger log = LoggerFactory.getLogger(A4TcpHealth.class);
 
   private final ExecutorService hltEx;
-  private final A4Server srv;
-  private final String srvId;
+  private final String serverId;
+  private final A4Match match;
 
-  public A4TcpHealth(ExecutorService hltEx, String srvId, A4Server srv) {
+  public A4TcpHealth(ExecutorService hltEx, String serverId, A4Match match) {
     this.hltEx = Objects.requireNonNull(hltEx);
-    this.srv = Objects.requireNonNull(srv);
-    this.srvId = Objects.requireNonNull(srvId);
+    this.serverId = Objects.requireNonNull(serverId);
+    this.match = Objects.requireNonNull(match);
   }
 
   public A4Backend.State stateOf(A4Backend bk, int timeOutMs) {
@@ -41,15 +41,15 @@ public class A4TcpHealth implements Callable<Void> {
     while (true) {
       try {
         hltEx.invokeAll(
-            srv.allBackends()
+            match.pool.hosts.stream()
                 .map(bk -> (Callable<Void>) () -> {
-                  bk.state = stateOf(bk, srv.healthCheck.timeoutMs);
+                  bk.state = stateOf(bk, match.healthCheck.timeoutMs);
                   return null;
                 }).collect(Collectors.toList())
         );
-        Thread.sleep(srv.healthCheck.intervalMs);
+        Thread.sleep(match.healthCheck.intervalMs);
       } catch (Exception e) {
-        log.warn("Health check failed for server " + srvId, e);
+        log.warn("Health check failed for server pool {} {}", serverId, match.pool.hosts, e);
       }
     }
   }

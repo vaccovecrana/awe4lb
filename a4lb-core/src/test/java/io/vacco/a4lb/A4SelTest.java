@@ -7,6 +7,7 @@ import io.vacco.a4lb.util.A4Configs;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
+import java.util.Arrays;
 
 import static j8spec.J8Spec.*;
 
@@ -16,12 +17,14 @@ public class A4SelTest {
   static {
     it("Selects backend matches", () -> {
       var cfg = A4Configs.loadFrom(A4ValidTest.class.getResource("/config.json"), new Gson());
-      var srv = cfg.servers.get("vacco-tls");
-      srv.allBackends().forEach(bk -> bk.state = A4Backend.State.Up);
-      var mat = new A4Sel(srv.match);
-      var pool = srv.match[0].pool;
+      cfg.servers.stream()
+          .flatMap(srv -> Arrays.stream(srv.match))
+          .flatMap(m -> m.pool.hosts.stream())
+          .forEach(bk -> bk.state = A4Backend.State.Up);
+      var matches = cfg.servers.get(1).match;
+      var sel = new A4Sel(matches);
       var host = "172.16.0.111";
-      var bk = mat.select(pool, host.hashCode());
+      var bk = sel.select(matches[0].pool, host.hashCode());
       System.out.println(bk);
     });
   }
