@@ -76,11 +76,11 @@ public class A4Valid {
           b -> b._string(op -> op.endsWith, "endsWith", A4Valid::nnNeNb)
       ).constraintOnTarget(
           op -> op.equals != null || op.contains != null || op.startsWith != null || op.endsWith != null,
-          "stringOp", "stringOp.anyOf",
+          "anyOf", "anyOf",
           "\"{0}\" missing any of [equals, contains, startsWith, endsWith]"
       ).constraintOnTarget(
           op -> arrayValsNnLtEq(1, op.equals, op.contains, op.startsWith, op.endsWith),
-          "stringOp", "stringOp.oneOf",
+          "oneOf", "oneOf",
           "\"{0}\" only one of [equals, contains, startsWith, endsWith] allowed"
       ).build();
 
@@ -89,20 +89,37 @@ public class A4Valid {
       .nestIfPresent(mo -> mo.sni, "sni", A4StringOpVld)
       .constraintOnTarget(
           mo -> mo.host != null || mo.sni != null,
-          "matchOp", "matchOp.anyOf", "\"{0}\" missing any of [host, sni]"
+          "anyOf", "anyOf",
+          "\"{0}\" missing any of [host, sni]"
       ).constraintOnTarget(
           mo -> arrayValsNnLtEq(1, mo.host, mo.sni),
-          "matchOp", "matchOp.oneOf",
+          "oneOf", "oneOf",
           "\"{0}\" only one of [host, sni] allowed"
       ).build();
 
   public static final Validator<A4DiscHttp> A4DiscHttpVld = ValidatorBuilder.<A4DiscHttp>of()
-      ._string(h -> h.endpoint, "endpoint", c -> nnNeNb(c).url())
       ._object(h -> h.format, "format", Constraint::notNull)
+      ._string(h -> h.endpoint, "endpoint", c -> nnNeNb(c).url())
+      .build();
+
+  public static final Validator<A4DiscExec> A4DiscExecVld = ValidatorBuilder.<A4DiscExec>of()
+      ._object(e -> e.format, "format", Constraint::notNull)
+      ._string(e -> e.command, "command", A4Valid::nnNeNb)
+      .forEach(A4DiscExec::argList, "args", b -> b._string(s -> s, "arg", A4Valid::nnNeNb))
       .build();
 
   public static final Validator<A4Disc> A4DiscVld = ValidatorBuilder.<A4Disc>of()
-      .nest(d -> d.http, "http", A4DiscHttpVld)
+      .nestIfPresent(d -> d.http, "http", A4DiscHttpVld)
+      .nestIfPresent(d -> d.exec, "exec", A4DiscExecVld)
+      .constraintOnTarget(
+          d -> d.http != null || d.exec != null,
+          "anyOf", "anyOf",
+          "\"{0}\" missing any of [http, exec]"
+      ).constraintOnTarget(
+          d -> arrayValsNnLtEq(1, d.http, d.exec),
+          "oneOf", "oneOf",
+          "\"{0}\" only one of [http, exec] allowed"
+      )
       .build();
 
   public static final Validator<A4Pool> A4PoolVld = ValidatorBuilder.<A4Pool>of()
@@ -119,7 +136,7 @@ public class A4Valid {
           b -> b.forEach(A4Match::orOps, "match.orOps", A4MatchOpVld)
       ).constraintOnTarget(
           m -> arrayValsNnLtEq(1, m.and, m.or),
-          "matchOps.andOr", "matchOps.andOr.oneOf",
+          "oneOf", "oneOf",
           "\"{0}\" only one of [and, or] allowed"
       )
       .nest(m -> m.pool, "pool", A4PoolVld)
