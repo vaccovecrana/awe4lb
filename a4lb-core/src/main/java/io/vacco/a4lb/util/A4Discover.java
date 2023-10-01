@@ -142,7 +142,10 @@ public class A4Discover implements Callable<Void> {
       if (log.isDebugEnabled()) {
         log.debug("{} - backend update error", serverId, e);
       } else {
-        log.warn("{} - backend update error - {}", serverId, e.getMessage());
+        log.warn(
+            "{} - backend update error - {}", serverId,
+            e.getMessage()  != null ? e.getMessage() : e.getClass().getSimpleName()
+        );
       }
       return null;
     }

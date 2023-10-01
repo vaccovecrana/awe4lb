@@ -23,6 +23,11 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ## Resources
 
+Test audio:
+
+- https://archive.org/details/MusopenCollectionAsFlac/Bach_GoldbergVariations/JohannSebastianBach-16-GoldbergVariationsBwv.988-Variation15.CanonOnTheFifth.flac
+- https://ia800307.us.archive.org/34/items/MusopenCollectionAsFlac/Bach_GoldbergVariations/JohannSebastianBach-16-GoldbergVariationsBwv.988-Variation15.CanonOnTheFifth.flac
+
 - https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#jsse-cipher-suite-names
 - https://stackoverflow.com/questions/53323855/sslserversocket-and-certificate-setup
 - https://stackoverflow.com/a/62263402/491160
