@@ -13,10 +13,13 @@
       "addr": {"host":"0.0.0.0", "port": 8080},
       "match": [
         {
-          "pool": {
-            "hosts": [{"addr": {"host": "0.0.0.0", "port": 6900}}]
-          },
-          "healthCheck": {"intervalMs": 2000, "timeoutMs": 1000}
+          "discover": {
+            "exec": {
+              "command": "cat",
+              "args": ["./src/test/resources/momo-hosts.txt"],
+              "format": "PlainText"
+            }
+          }
         }
       ]
     },

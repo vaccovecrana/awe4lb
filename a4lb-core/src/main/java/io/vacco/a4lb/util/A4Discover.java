@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.sel.A4Sel;
+import io.vacco.a4lb.tcp.A4Io;
 import org.buildobjects.process.ProcBuilder;
 import org.slf4j.*;
 import java.lang.reflect.Type;
@@ -29,17 +30,34 @@ public class A4Discover implements Callable<Void> {
     Objects.requireNonNull(match.discover);
   }
 
+  private List<A4Backend> parsePlainText(String out) {
+    return Arrays.stream(out.split("\\R"))
+        .map(String::trim)
+        .filter(line -> line.length() > 0)
+        .map(line -> {
+          var parts = line.split(" ");
+          return new A4Backend()
+              .addr(new A4Sock().host(parts[0]).port(Integer.parseInt(parts[1])))
+              .weight(Integer.parseInt(parts[2]))
+              .priority(Integer.parseInt(parts[3]));
+        }).collect(Collectors.toList());
+  }
+
+  private List<A4Backend> execDiscover() {
+    var d = match.discover;
+    var x = match.discover.exec;
+    var result = new ProcBuilder(x.command, x.args).withTimeoutMillis(d.timeoutMs).run();
+    var out = result.getOutputString();
+    if (x.format == A4Format.Json) {
+      return new ArrayList<>(gson.fromJson(out, TBkList));
+    } else {
+      return parsePlainText(out);
+    }
+  }
+
   private List<A4Backend> discover() {
     if (match.discover.exec != null) {
-      var d = match.discover;
-      var x = match.discover.exec;
-      var result = new ProcBuilder(x.command, x.args).withTimeoutMillis(d.timeoutMs).run();
-      if (x.format == A4Format.Json) {
-        var out = result.getOutputString();
-        return new ArrayList<>(gson.fromJson(out, TBkList));
-      } else {
-        // TODO implement plaintext parsing
-      }
+      return execDiscover();
     } else if (match.discover.http != null) {
       // TODO implement this
     }
@@ -48,6 +66,7 @@ public class A4Discover implements Callable<Void> {
 
   private List<A4Backend> validate(List<A4Backend> backends) {
     for (var bk : backends) {
+      bk.state = A4Io.stateOf(bk, match.discover.timeoutMs);
       var errors = A4Valid.A4BackendVld.validate(bk);
       if (!errors.isEmpty()) {
         throw new A4Exceptions.A4ConfigException(errors);

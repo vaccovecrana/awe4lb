@@ -2,6 +2,7 @@ package io.vacco.a4lb.cfg;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class A4Match {
@@ -46,15 +47,15 @@ public class A4Match {
 
   public String toStringOp(String opLabel, A4MatchOp[] ops) {
     return Arrays.stream(ops)
+        .filter(Objects::nonNull)
         .map(A4MatchOp::toString)
         .collect(Collectors.joining(String.format(" %s ", opLabel)));
   }
 
   @Override public String toString() {
-    return toStringOp(
-        and != null ? "and" : "or",
-        and != null ? and : or
-    );
+    return (and == null && or == null)
+        ? "any"
+        : toStringOp(and != null ? "and" : "or", and != null ? and : or);
   }
 
 }

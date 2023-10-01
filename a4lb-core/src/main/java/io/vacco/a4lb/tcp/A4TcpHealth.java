@@ -2,9 +2,7 @@ package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.sel.A4Sel;
-import io.vacco.a4lb.util.A4Exceptions;
 import org.slf4j.*;
-import java.net.*;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -25,26 +23,13 @@ public class A4TcpHealth implements Callable<Void> {
     this.bkSel = Objects.requireNonNull(bkSel);
   }
 
-  public A4Backend.State stateOf(A4Backend bk, int timeOutMs) {
-    try (var socket = new Socket()) {
-      socket.connect(new InetSocketAddress(bk.addr.host, bk.addr.port), timeOutMs);
-      return A4Backend.State.Up;
-    } catch (Exception e) {
-      if (log.isDebugEnabled()) {
-        var x = A4Exceptions.rootCauseOf(e);
-        log.debug("{} - TCP health check failed - {} - {}", bk, x.getClass().getSimpleName(), x.getMessage());
-      }
-      return A4Backend.State.Down;
-    }
-  }
-
   @Override public Void call() {
     while (true) {
       try {
         var tasks = bkSel.lockPoolAnd(match.pool,
             () -> match.pool.hosts.stream()
                 .map(bk -> (Callable<Void>) () -> {
-                  bk.state = stateOf(bk, match.healthCheck.timeoutMs);
+                  bk.state = A4Io.stateOf(bk, match.healthCheck.timeoutMs);
                   return null;
                 }).collect(Collectors.toList())
         );
