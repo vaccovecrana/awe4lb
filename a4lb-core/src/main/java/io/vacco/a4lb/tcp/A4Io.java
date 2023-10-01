@@ -3,11 +3,16 @@ package io.vacco.a4lb.tcp;
 import io.vacco.a4lb.cfg.A4Backend;
 import io.vacco.a4lb.util.A4Exceptions;
 import org.slf4j.*;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class A4Io {
 
@@ -84,6 +89,15 @@ public class A4Io {
         log.debug("{} - TCP health check failed - {} - {}", bk, x.getClass().getSimpleName(), x.getMessage());
       }
       return A4Backend.State.Down;
+    }
+  }
+
+  public static String loadContent(URL u) {
+    try (var in = u.openStream()) {
+      var reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+      return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+    } catch (Exception e) {
+      throw new IllegalStateException("Unable to load content from " + u, e);
     }
   }
 

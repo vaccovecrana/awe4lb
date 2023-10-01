@@ -8,9 +8,11 @@ import io.vacco.a4lb.tcp.A4Io;
 import org.buildobjects.process.ProcBuilder;
 import org.slf4j.*;
 import java.lang.reflect.Type;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class A4Discover implements Callable<Void> {
 
@@ -30,28 +32,48 @@ public class A4Discover implements Callable<Void> {
     Objects.requireNonNull(match.discover);
   }
 
-  private List<A4Backend> parsePlainText(String out) {
-    return Arrays.stream(out.split("\\R"))
-        .map(String::trim)
+  private A4Backend parseLine(String line) {
+    var parts = line.split(" ");
+    var sck = new A4Sock().host(parts[0]).port(Integer.parseInt(parts[1]));
+    var bk = new A4Backend().addr(sck);
+    if (parts.length == 4) {
+      bk = bk.weight(Integer.parseInt(parts[2])).priority(Integer.parseInt(parts[3]));
+    }
+    return bk;
+  }
+
+  private List<A4Backend> parseLines(Stream<String> lines) {
+    return lines.map(String::trim)
         .filter(line -> line.length() > 0)
-        .map(line -> {
-          var parts = line.split(" ");
-          return new A4Backend()
-              .addr(new A4Sock().host(parts[0]).port(Integer.parseInt(parts[1])))
-              .weight(Integer.parseInt(parts[2]))
-              .priority(Integer.parseInt(parts[3]));
-        }).collect(Collectors.toList());
+        .map(this::parseLine)
+        .collect(Collectors.toList());
+  }
+
+  private List<A4Backend> parsePlainText(String out) {
+    return parseLines(Arrays.stream(out.split("\\R")));
+  }
+
+  private List<A4Backend> parseOutput(String out, A4Format format) {
+    if (format == A4Format.Json) {
+      return new ArrayList<>(gson.fromJson(out, TBkList));
+    } else {
+      return parsePlainText(out);
+    }
   }
 
   private List<A4Backend> execDiscover() {
     var d = match.discover;
     var x = match.discover.exec;
     var result = new ProcBuilder(x.command, x.args).withTimeoutMillis(d.timeoutMs).run();
-    var out = result.getOutputString();
-    if (x.format == A4Format.Json) {
-      return new ArrayList<>(gson.fromJson(out, TBkList));
-    } else {
-      return parsePlainText(out);
+    return parseOutput(result.getOutputString(), x.format);
+  }
+
+  private List<A4Backend> httpDiscover() {
+    try {
+      var content = A4Io.loadContent(new URL(match.discover.http.endpoint));
+      return parseOutput(content, match.discover.http.format);
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -59,7 +81,7 @@ public class A4Discover implements Callable<Void> {
     if (match.discover.exec != null) {
       return execDiscover();
     } else if (match.discover.http != null) {
-      // TODO implement this
+      return httpDiscover();
     }
     return Collections.emptyList();
   }
@@ -70,6 +92,12 @@ public class A4Discover implements Callable<Void> {
       var errors = A4Valid.A4BackendVld.validate(bk);
       if (!errors.isEmpty()) {
         throw new A4Exceptions.A4ConfigException(errors);
+      }
+      if (match.pool.type == A4Pool.Type.Weight) {
+        if (bk.weight == null || bk.priority == null) {
+          bk = bk.weight(1).priority(1);
+          log.warn("Backend entry missing weight/priority, assigned defaults - {}", bk);
+        }
       }
     }
     return backends;

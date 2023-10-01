@@ -45,10 +45,13 @@
         {
           "and": [{"sni": {"equals": "sdr.xio.vacco.li"}}],
           "pool": {
-            "type": "Weight",
-            "hosts": [
-              {"addr": {"host": "websdr.ewi.utwente.nl", "port": 8901}, "weight": 1, "priority": 1}
-            ]
+            "type": "Weight"
+          },
+          "discover": {
+            "http": {
+              "endpoint": "http://localhost:8081/a4lb-core/src/test/resources/sdr-hosts.json",
+              "format": "Json"
+            }
           }
         },
         {
