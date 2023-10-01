@@ -5,6 +5,7 @@ import io.vacco.a4lb.sel.A4Sel;
 import org.slf4j.*;
 import javax.net.ssl.*;
 import java.io.IOException;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
@@ -30,15 +31,13 @@ public class A4TcpSess extends SNIMatcher {
   private final ExecutorService tlsExec;
   private final boolean tlsClient;
 
-  private final int bufferSize;
   private final Queue<ByteBuffer> cltQ = new ArrayDeque<>(); // TODO check if buffer pooling could increase performance after running initial benchmarks.
   private final Queue<ByteBuffer> bckQ = new ArrayDeque<>();
 
-  public A4TcpSess(A4TcpSrv owner, A4Sel bkSel, int bufferSize, boolean tlsClient, ExecutorService tlsExec) {
+  public A4TcpSess(A4TcpSrv owner, A4Sel bkSel, boolean tlsClient, ExecutorService tlsExec) {
     super(0);
     this.owner = Objects.requireNonNull(owner);
     this.bkSel = Objects.requireNonNull(bkSel);
-    this.bufferSize = bufferSize;
     this.tlsClient = tlsClient;
     this.tlsExec = tlsExec;
   }
@@ -99,7 +98,7 @@ public class A4TcpSess extends SNIMatcher {
     }
   }
 
-  private int doTcpRead(String channelId, ByteChannel from, Queue<ByteBuffer> target) {
+  private int doTcpRead(String channelId, ByteChannel from, Queue<ByteBuffer> target, int bufferSize) {
     var bb = ByteBuffer.allocateDirect(bufferSize);
     var bytes = eofRead(channelId, from, bb);
     logState(bytes, from, IOOp.Read);
@@ -154,12 +153,14 @@ public class A4TcpSess extends SNIMatcher {
     }
   }
 
-  private void onTcpRead(SelectionKey key) {
+  private void onTcpRead(SelectionKey key) throws SocketException {
     var bytes = -1;
     if (key == client.channelKey) {
-      bytes = doTcpRead(client.id, client.channel, bckQ); // reverse targets, this is intentional
+      int rcv = client.channel.socket().getReceiveBufferSize();
+      bytes = doTcpRead(client.id, client.channel, bckQ, rcv); // reverse targets, this is intentional
     } else if (key == backend.channelKey) {
-      bytes = doTcpRead(backend.id, backend.channel, cltQ);
+      int rcv = backend.channel.socket().getReceiveBufferSize();
+      bytes = doTcpRead(backend.id, backend.channel, cltQ, rcv);
     } else {
       sessionMismatch(key);
     }

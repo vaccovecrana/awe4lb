@@ -2,8 +2,7 @@ package io.vacco.a4lb.cfg;
 
 public class A4HealthCheck {
 
-  public int intervalMs = 5000;
-  public int timeoutMs = 2500;
+  public int intervalMs = 5000, timeoutMs = 4900;
   public A4Exec exec;
 
   public A4HealthCheck intervalMs(int intervalMs) {

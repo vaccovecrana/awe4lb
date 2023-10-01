@@ -10,7 +10,8 @@ public class A4SelStd {
     if (up.size() == 1) {
       return up.get(0);
     }
-    return up.get(pool.rnd.nextInt(up.size()));
+    int idx = pool.rnd.nextInt(up.size());
+    return up.get(idx);
   }
 
 }

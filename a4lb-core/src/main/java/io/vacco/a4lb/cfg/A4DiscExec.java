@@ -5,7 +5,6 @@ import java.util.List;
 
 public class A4DiscExec {
 
-  public int timeoutMs;
   public String command;
   public String[] args;
   public A4Format format;
@@ -17,11 +16,6 @@ public class A4DiscExec {
 
   public A4DiscExec args(String ... args) {
     this.args = args;
-    return this;
-  }
-
-  public A4DiscExec timeoutMs(int timeoutMs) {
-    this.timeoutMs = timeoutMs;
     return this;
   }
 

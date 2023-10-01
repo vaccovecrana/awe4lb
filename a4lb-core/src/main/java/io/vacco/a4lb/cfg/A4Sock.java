@@ -23,4 +23,8 @@ public class A4Sock {
     return id();
   }
 
+  @Override public int hashCode() {
+    return id().hashCode();
+  }
+
 }

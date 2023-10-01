@@ -8,6 +8,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 public class A4Sel {
 
@@ -16,6 +17,9 @@ public class A4Sel {
 
   public A4Sel(A4Match[] cfg) {
     this.cfg = Objects.requireNonNull(cfg);
+    Arrays.stream(cfg)
+        .map(m -> m.pool)
+        .forEach(p -> poolLockIdx.put(p, new ReentrantLock()));
   }
 
   public A4Backend select(A4Pool pool, int clientIpHash) {
@@ -41,7 +45,7 @@ public class A4Sel {
     var clientIp = clientAddr.getHostAddress();
     try {
       var pool = matches(client, tlsSni).orElseThrow();
-      var bk = select(pool, clientIp.hashCode());
+      var bk = lockPoolAnd(pool, () -> select(pool, clientIp.hashCode()));
       var io = new A4TcpIo(new InetSocketAddress(bk.addr.host, bk.addr.port), selector, pool.openTls, tlsExec);
       return io.backend(bk);
     } catch (Exception e) {
@@ -49,11 +53,11 @@ public class A4Sel {
     }
   }
 
-  public void lockPoolAnd(A4Pool pool, Runnable then) {
+  public <T> T lockPoolAnd(A4Pool pool, Supplier<T> then) {
     var pl = poolLockIdx.get(pool);
     pl.lock();
     try {
-      then.run();
+      return then.get();
     } finally {
       pl.unlock();
     }

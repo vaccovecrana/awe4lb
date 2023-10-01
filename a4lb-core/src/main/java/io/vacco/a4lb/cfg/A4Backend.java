@@ -2,14 +2,12 @@ package io.vacco.a4lb.cfg;
 
 public class A4Backend {
 
-  public enum State {
-    Up, Down, Unknown
-  }
+  public enum State { Up, Down }
 
   public A4Sock addr;
   public Integer weight, priority;
 
-  public State state = State.Unknown;
+  public State state = State.Up;
   public A4RxTx rxTx = new A4RxTx();
   public int connections = 0;
 

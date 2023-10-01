@@ -11,8 +11,6 @@ public class A4Server {
   public A4Tls tls;
   public A4Match[] match;
 
-  public int bufferSize = 32768;
-
   public A4Server id(String id) {
     this.id = id;
     return this;

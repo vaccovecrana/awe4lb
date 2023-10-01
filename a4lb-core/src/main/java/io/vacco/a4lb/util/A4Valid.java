@@ -111,6 +111,13 @@ public class A4Valid {
   public static final Validator<A4Disc> A4DiscVld = ValidatorBuilder.<A4Disc>of()
       .nestIfPresent(d -> d.http, "http", A4DiscHttpVld)
       .nestIfPresent(d -> d.exec, "exec", A4DiscExecVld)
+      ._integer(d -> d.intervalMs, "intervalMs", A4Valid::gt0I)
+      ._integer(d -> d.timeoutMs, "timeoutMs", A4Valid::gt0I)
+      .constraintOnTarget(
+          d -> d.timeoutMs < d.intervalMs, "timeoutMs",
+          "timeoutMs.isLessThanInterval",
+          "\"{0}\" \"timeoutMs\" must be less than \"intervalMs\""
+      )
       .constraintOnTarget(
           d -> d.http != null || d.exec != null,
           "anyOf", "anyOf",
@@ -162,7 +169,6 @@ public class A4Valid {
       .build();
 
   public static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
-      ._integer(s -> s.bufferSize, "bufferSize", c -> c.greaterThan(0))
       ._string(s -> s.id, "id", A4Valid::nnNeNb)
       .nest(s -> s.addr, "addr", A4SockVld)
       .nestIfPresent(s -> s.tls, "tls", A4TlsVld)

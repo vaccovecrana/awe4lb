@@ -19,10 +19,12 @@ public class A4Lb {
 
   private static final Logger log = LoggerFactory.getLogger(A4Lb.class);
 
+  private final Gson gson;
   private final A4Config config;
-  private final ExecutorService tskEx = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb"));
+  private final ExecutorService exSvc = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb"));
 
-  public A4Lb(A4Config config) {
+  public A4Lb(A4Config config, Gson gson) {
+    this.gson = Objects.requireNonNull(gson);
     this.config = Objects.requireNonNull(config);
     var configErrors = A4Valid.A4ConfigVld.validate(config);
     if (!configErrors.isEmpty()) {
@@ -34,25 +36,26 @@ public class A4Lb {
     log.info("Starting");
     var tasks = new ArrayList<Callable<Void>>();
     for (var srv : config.servers) {
-      var srvImpl = new A4TcpSrv(A4Io.newSelector(), srv, tskEx); // TODO this will need to accommodate UDP servers too.
+      var srvImpl = new A4TcpSrv(A4Io.newSelector(), srv, exSvc); // TODO this will need to accommodate UDP servers too.
       tasks.add(srvImpl);
       for (var match : srv.match) {
-        tasks.add(new A4TcpHealth(tskEx, srv.id, match));
-
-        // TODO spin a per match pool discovery thread (in case the host list is not static). Provides new backend entries.
+        tasks.add(new A4TcpHealth(exSvc, srv.id, match, srvImpl.bkSel));
+        if (match.discover != null) {
+          tasks.add(new A4Discover(match, srvImpl.bkSel, gson, exSvc));
+        }
       }
     }
     log.info("Started");
-    tskEx.invokeAll(tasks);
+    exSvc.invokeAll(tasks);
   }
 
   public void stop() {
     log.info("Stopping");
-    tskEx.shutdownNow();
+    exSvc.shutdownNow();
     log.info("Stopped");
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) { // TODO this needs to move to a higher level class (for API/UI functionality)
     A4Lb a4lb = null;
     try {
       if (args == null || args.length != 1) {
@@ -73,7 +76,7 @@ public class A4Lb {
       );
       var g = new Gson();
       var cfg = A4Configs.loadFrom(cfgFile.toURI().toURL(), g);
-      a4lb = new A4Lb(cfg);
+      a4lb = new A4Lb(cfg, g);
       a4lb.start();
     } catch (Exception e) {
       log.error("Unable to initialize load balancer", e);

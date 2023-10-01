@@ -31,8 +31,12 @@
       "match": [
         {
           "and": [{"sni": {"equals": "momo.xio.vacco.li"}}, {"host": {"equals": "172.16.0.111"}}],
-          "pool": {
-            "hosts": [{"addr": {"host": "0.0.0.0", "port": 6900}}]
+          "discover": {
+            "exec": {
+              "command": "cat",
+              "args": ["./src/test/resources/momo-hosts.json"],
+              "format": "Json"
+            }
           }
         },
         {
