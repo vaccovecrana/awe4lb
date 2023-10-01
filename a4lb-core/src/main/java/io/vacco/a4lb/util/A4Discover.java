@@ -3,7 +3,7 @@ package io.vacco.a4lb.util;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.sel.A4Sel;
+import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.tcp.A4Io;
 import org.buildobjects.process.ProcBuilder;
 import org.slf4j.*;
@@ -19,12 +19,14 @@ public class A4Discover implements Callable<Void> {
   private static final Logger log = LoggerFactory.getLogger(A4Discover.class);
   private static final Type TBkList = new TypeToken<ArrayList<A4Backend>>(){}.getType();
 
+  private final String serverId;
   private final ExecutorService bkExec;
   private final A4Match match;
-  private final A4Sel bkSel;
+  private final A4Selector bkSel;
   private final Gson gson;
 
-  public A4Discover(A4Match match, A4Sel bkSel, Gson gson, ExecutorService bkExec) {
+  public A4Discover(String serverId, A4Match match, A4Selector bkSel, Gson gson, ExecutorService bkExec) {
+    this.serverId = Objects.requireNonNull(serverId);
     this.bkExec = Objects.requireNonNull(bkExec);
     this.match = Objects.requireNonNull(match);
     this.bkSel = Objects.requireNonNull(bkSel);
@@ -54,11 +56,12 @@ public class A4Discover implements Callable<Void> {
   }
 
   private List<A4Backend> parseOutput(String out, A4Format format) {
-    if (format == A4Format.Json) {
+    if (format == A4Format.json) {
       return new ArrayList<>(gson.fromJson(out, TBkList));
-    } else {
+    } else if (format == A4Format.text) {
       return parsePlainText(out);
     }
+    throw new IllegalArgumentException("Invalid output format " + format);
   }
 
   private List<A4Backend> execDiscover() {
@@ -96,7 +99,7 @@ public class A4Discover implements Callable<Void> {
       if (match.pool.type == A4Pool.Type.Weight) {
         if (bk.weight == null || bk.priority == null) {
           bk = bk.weight(1).priority(1);
-          log.warn("Backend entry missing weight/priority, assigned defaults - {}", bk);
+          log.warn("{} - backend entry missing weight/priority, assigned defaults - {}", serverId, bk);
         }
       }
     }
@@ -121,14 +124,16 @@ public class A4Discover implements Callable<Void> {
         int h1 = hashOf(match.pool.hosts);
         if (h0 != h1) {
           match.pool.hosts = bkl;
-          if (log.isDebugEnabled()) {
-            log.debug("Updated backend list for match [{}] - {}", match, bkl);
-          }
+          log.info("{} - updated backend list for match [{}] - {}", serverId, match, bkl);
         }
         return null;
       });
     } catch (Exception e) {
-      log.error("Backend update error", e);
+      if (log.isDebugEnabled()) {
+        log.debug("{} - backend update error", serverId, e);
+      } else {
+        log.warn("{} - backend update error - {}", serverId, e.getMessage());
+      }
       return null;
     }
   }
@@ -140,9 +145,9 @@ public class A4Discover implements Callable<Void> {
         Thread.sleep(match.discover.intervalMs);
       } catch (Exception e) {
         if (log.isDebugEnabled()) {
-          log.error("Backend discovery failed for match [{}]", match, e);
+          log.error("{} - backend discovery failed for match [{}]", serverId, match, e);
         } else {
-          log.warn("Backend discovery failed for match [{}] - {}", match, e.getMessage());
+          log.warn("{} - backend discovery failed for match [{}] - {}", serverId, match, e.getMessage());
         }
       }
     }

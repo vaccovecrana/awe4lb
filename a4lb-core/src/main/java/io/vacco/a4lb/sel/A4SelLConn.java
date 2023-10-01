@@ -6,11 +6,11 @@ import java.util.Comparator;
 
 public class A4SelLConn {
 
-  public static A4Backend select(A4Pool pool) {
+  public static A4Backend select(A4Pool pool, A4Selector bkSel) {
     var up = pool.upHosts();
     return up
         .stream()
-        .min(Comparator.comparingInt(bk -> bk.connections))
+        .min(Comparator.comparingInt(bkSel::connCountOf))
         .orElseThrow();
   }
 

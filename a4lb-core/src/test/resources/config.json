@@ -9,68 +9,39 @@
   },
   "servers": [
     {
-      "id": "vacco-http",
+      "id": "momo-http-json",
       "addr": {"host":"0.0.0.0", "port": 8080},
       "match": [
+        {"discover": {"http": {"endpoint": "http://10.89.0.1:4010", "format": "json"}}}
+      ]
+    },
+    {
+      "id": "sdr-http-json",
+      "addr": {"host": "0.0.0.0", "port": 8090},
+      "match": [
         {
-          "discover": {
-            "exec": {
-              "command": "cat",
-              "args": ["./src/test/resources/momo-hosts.txt"],
-              "format": "PlainText"
-            }
-          }
+          "and": [{"host": {"equals": "127.0.0.1"}}],
+          "discover": {"exec": {"command": "cat", "args": ["./src/test/resources/sdr-hosts.json"], "format": "json"}}
         }
       ]
     },
     {
-      "id": "vacco-tls",
+      "id": "https-txt",
       "addr": {"host":"0.0.0.0", "port": 8443},
       "tls": {
-        "certPath": "./src/test/resources/cert.pem",
-        "keyPath": "./src/test/resources/key.pem",
+        "certPath": "./src/test/resources/certs/awe4lb.pem",
+        "keyPath": "./src/test/resources/certs/awe4lb.key",
         "ciphers": ["TLS_AES_128_GCM_SHA256"]
       },
       "match": [
         {
-          "and": [{"sni": {"equals": "momo.xio.vacco.li"}}, {"host": {"equals": "172.16.0.111"}}],
-          "discover": {
-            "exec": {
-              "command": "cat",
-              "args": ["./src/test/resources/momo-hosts.json"],
-              "format": "Json"
-            }
-          }
+          "and": [{"sni": {"equals": "momo.localhost"}}],
+          "discover": {"http": {"endpoint": "http://10.89.0.1:4011", "format": "text"}}
         },
         {
-          "and": [{"sni": {"equals": "sdr.xio.vacco.li"}}],
-          "pool": {
-            "type": "Weight"
-          },
-          "discover": {
-            "http": {
-              "endpoint": "http://localhost:8081/a4lb-core/src/test/resources/sdr-hosts.json",
-              "format": "Json"
-            }
-          }
-        },
-        {
-          "and": [{"sni": {"equals": "idrac.xio.vacco.li"}}],
-          "pool": {
-            "openTls": true,
-            "hosts": [{"addr": {"host": "172.16.0.1", "port": 8443}}]
-          }
-        }
-      ]
-    },
-    {
-      "id": "vacco-ssh",
-      "addr": {"host": "0.0.0.0", "port": 8022},
-      "match": [
-        {
-          "pool": {
-            "hosts": [{"addr": {"host": "172.16.0.1", "port": 10022}}]
-          }
+          "and": [{"sni": {"equals": "sdr.localhost"}}],
+          "pool": {"type": "Weight"},
+          "discover": {"exec": {"command": "cat", "args": ["./src/test/resources/sdr-hosts.txt"], "format": "text"}}
         }
       ]
     }

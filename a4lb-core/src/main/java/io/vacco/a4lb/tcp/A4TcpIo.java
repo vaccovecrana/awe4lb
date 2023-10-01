@@ -49,7 +49,6 @@ public class A4TcpIo implements Closeable {
 
   public A4TcpIo backend(A4Backend backend) {
     this.backend = Objects.requireNonNull(backend);
-    this.backend.trackConnOpen();
     return this;
   }
 
@@ -64,7 +63,6 @@ public class A4TcpIo implements Closeable {
     channelKey.cancel();
     A4Io.close(channel);
     if (backend != null) {
-      this.backend.trackConnClose();
       this.backend = null;
     }
   }

@@ -3,7 +3,7 @@ package io.vacco.a4lb.tcp;
 import io.vacco.a4lb.cfg.A4Server;
 import io.vacco.a4lb.niossl.SSLServerSocketChannel;
 import io.vacco.a4lb.niossl.SSLSocketChannel;
-import io.vacco.a4lb.sel.A4Sel;
+import io.vacco.a4lb.sel.A4Selector;
 import org.slf4j.*;
 
 import javax.net.ssl.SSLContext;
@@ -24,7 +24,7 @@ public class A4TcpSrv implements Callable<Void> {
   private final ExecutorService tlsExec;
 
   private final A4Server srvConfig;
-  public  final A4Sel bkSel;
+  public  final A4Selector bkSel;
 
   public A4TcpSrv(Selector selector, A4Server srv, ExecutorService tlsExec) {
     try {
@@ -33,7 +33,7 @@ public class A4TcpSrv implements Callable<Void> {
       this.channel.bind(new InetSocketAddress(srv.addr.host, srv.addr.port));
       this.channel.configureBlocking(false);
       this.channel.register(selector, SelectionKey.OP_ACCEPT);
-      this.bkSel = new A4Sel(srv.match);
+      this.bkSel = new A4Selector(srv.match);
       this.srvConfig = Objects.requireNonNull(srv);
       if (srv.tls != null) {
         log.info("{} - initializing SSL context", srv.id);

@@ -1,7 +1,7 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.niossl.SSLSocketChannel;
-import io.vacco.a4lb.sel.A4Sel;
+import io.vacco.a4lb.sel.A4Selector;
 import org.slf4j.*;
 import javax.net.ssl.*;
 import java.io.IOException;
@@ -22,7 +22,7 @@ public class A4TcpSess extends SNIMatcher {
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
   public  A4TcpSrv owner;
-  private final A4Sel bkSel;
+  private final A4Selector bkSel;
 
   private A4TcpIo client, backend;
   private String id;
@@ -34,7 +34,7 @@ public class A4TcpSess extends SNIMatcher {
   private final Queue<ByteBuffer> cltQ = new ArrayDeque<>(); // TODO check if buffer pooling could increase performance after running initial benchmarks.
   private final Queue<ByteBuffer> bckQ = new ArrayDeque<>();
 
-  public A4TcpSess(A4TcpSrv owner, A4Sel bkSel, boolean tlsClient, ExecutorService tlsExec) {
+  public A4TcpSess(A4TcpSrv owner, A4Selector bkSel, boolean tlsClient, ExecutorService tlsExec) {
     super(0);
     this.owner = Objects.requireNonNull(owner);
     this.bkSel = Objects.requireNonNull(bkSel);
@@ -67,7 +67,10 @@ public class A4TcpSess extends SNIMatcher {
       }
     }
     if (client != null) { client.close(); }
-    if (backend != null) { backend.close(); }
+    if (backend != null) {
+      backend.close();
+      bkSel.trackConn(backend.backend, false);
+    }
     cltQ.clear();
     bckQ.clear();
     this.owner = null;
@@ -123,10 +126,10 @@ public class A4TcpSess extends SNIMatcher {
 
   private void syncOps(SelectionKey key, IOOp op, int bytes) {
     if (op == IOOp.Read && backend != null && key == backend.channelKey && bytes > 0) {
-      backend.backend.rxTx.updateTx(bytes);
+      bkSel.trackRxTx(backend.backend, false, bytes);
     }
     if (op == IOOp.Write && backend != null && key == backend.channelKey && bytes > 0) {
-      backend.backend.rxTx.updateRx(bytes);
+      bkSel.trackRxTx(backend.backend, true, bytes);
     }
     if (op == IOOp.Read && key == client.channelKey && bytes > 0 && backend == null) {
       initBackend(key);
@@ -199,6 +202,7 @@ public class A4TcpSess extends SNIMatcher {
         client.getRawChannel().socket(),
         backend.getRawChannel().socket()
     ).hashCode());
+    this.bkSel.trackConn(backend.backend, true);
   }
 
   private void tcpUpdate(SelectionKey key) throws IOException {
@@ -210,6 +214,8 @@ public class A4TcpSess extends SNIMatcher {
       throw new IllegalStateException(((SocketChannel) key.channel()).socket() + " - Unexpected channel key state");
     }
     if (client.channelKey.interestOps() == 0 && backend != null && backend.channelKey.interestOps() == 0) {
+      tearDown(null);
+    } else if (client.channelKey.interestOps() == 0 && cltQ.isEmpty()) {
       tearDown(null);
     }
   }

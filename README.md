@@ -11,6 +11,16 @@
 - Do not allow public access to the REST api, since it allows for full management. Expose it only within a trusted network perimeter.
 - Most applications and use cases should work fine with the default TCP buffer size. However, applications which stream large amounts of data should make sure that the underlying hardware has enough memory capacity to handle backpressure from either clients or backends.
 
+## Testing
+
+Generate a self-signed SSL certificate for local subdomains:
+
+```
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -addext "subjectAltName = DNS:*.localhost" \
+  -keyout ./awe4lb.key -out ./awe4lb.pem
+```
+
 ## Resources
 
 - https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#jsse-cipher-suite-names

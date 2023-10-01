@@ -41,7 +41,7 @@ public class A4Lb {
       for (var match : srv.match) {
         tasks.add(new A4TcpHealth(exSvc, srv.id, match, srvImpl.bkSel));
         if (match.discover != null) {
-          tasks.add(new A4Discover(match, srvImpl.bkSel, gson, exSvc));
+          tasks.add(new A4Discover(srv.id, match, srvImpl.bkSel, gson, exSvc));
         }
       }
     }

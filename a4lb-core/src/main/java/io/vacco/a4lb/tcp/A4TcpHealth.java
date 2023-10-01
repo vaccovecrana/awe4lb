@@ -1,7 +1,7 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.sel.A4Sel;
+import io.vacco.a4lb.sel.A4Selector;
 import org.slf4j.*;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -14,9 +14,9 @@ public class A4TcpHealth implements Callable<Void> {
   private final ExecutorService hltEx;
   private final String serverId;
   private final A4Match match;
-  private final A4Sel bkSel;
+  private final A4Selector bkSel;
 
-  public A4TcpHealth(ExecutorService hltEx, String serverId, A4Match match, A4Sel bkSel) {
+  public A4TcpHealth(ExecutorService hltEx, String serverId, A4Match match, A4Selector bkSel) {
     this.hltEx = Objects.requireNonNull(hltEx);
     this.serverId = Objects.requireNonNull(serverId);
     this.match = Objects.requireNonNull(match);

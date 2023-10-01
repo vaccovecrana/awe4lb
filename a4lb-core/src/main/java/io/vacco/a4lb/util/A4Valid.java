@@ -149,7 +149,8 @@ public class A4Valid {
       .nest(m -> m.pool, "pool", A4PoolVld)
       .constraintOnCondition(
           (m, cg) -> m.discover == null,
-          b -> b.nest(m -> m.pool, "pool.hosts",
+          b -> b.nest(
+              m -> m.pool, "pool.hosts",
               b0 -> b0.constraint(A4Pool::hostList, "list", ContainerConstraintBase::notEmpty)
           )
       )

@@ -6,10 +6,7 @@ public class A4Backend {
 
   public A4Sock addr;
   public Integer weight, priority;
-
   public State state = State.Up;
-  public A4RxTx rxTx = new A4RxTx();
-  public int connections = 0;
 
   public A4Backend addr(A4Sock addr) {
     this.addr = addr;
@@ -31,22 +28,22 @@ public class A4Backend {
     return this;
   }
 
-  public void trackConnOpen() {
-    this.connections = this.connections + 1;
-  }
-
-  public void trackConnClose() {
-    this.connections = this.connections - 1;
-    if (this.connections < 0) {
-      this.connections = 0; // TODO check that this doesn't happen
-    }
-  }
-
   @Override public String toString() {
     return String.format(
-        "%s[w: %d, p: %d, s: %s, c: %d]",
-        addr, weight, priority, state, connections
+        "%s[w: %d, p: %d, s: %s]",
+        addr, weight, priority, state
     );
+  }
+
+  @Override public boolean equals(Object obj) {
+    if (obj instanceof A4Backend) {
+      return obj.hashCode() == this.hashCode();
+    }
+    return false;
+  }
+
+  @Override public int hashCode() {
+    return addr != null ? addr.hashCode() : 0;
   }
 
   /*

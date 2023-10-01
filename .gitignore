@@ -8,5 +8,5 @@ bin/
 gradle/
 gradlew*
 
-*.pem
 java_pid*.hprof
+echo
