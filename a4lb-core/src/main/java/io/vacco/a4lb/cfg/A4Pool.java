@@ -40,16 +40,6 @@ public class A4Pool {
         .collect(Collectors.toList());
   }
 
-  @Override public int hashCode() {
-    if (hosts == null || hosts.isEmpty()) {
-      return 0;
-    }
-     var hlCodes = hosts.stream()
-        .map(h -> String.format("%x", h.hashCode())).sorted()
-        .collect(Collectors.joining(":"));
-    return hlCodes.hashCode();
-  }
-
   /*
    * < We are at War/Hostile Takeover >
    * < The Hiss is the Opposing Force/Foreign Power >

@@ -6,11 +6,13 @@ import io.vacco.a4lb.util.*;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class A4Sel {
 
   private final A4Match[] cfg;
+  private final Map<A4Pool, ReentrantLock> poolLockIdx = new ConcurrentHashMap<>();
 
   public A4Sel(A4Match[] cfg) {
     this.cfg = Objects.requireNonNull(cfg);
@@ -44,6 +46,16 @@ public class A4Sel {
       return io.backend(bk);
     } catch (Exception e) {
       throw new A4Exceptions.A4SelectException(clientIp, tlsSni, this.cfg, e);
+    }
+  }
+
+  public void lockPoolAnd(A4Pool pool, Runnable then) {
+    var pl = poolLockIdx.get(pool);
+    pl.lock();
+    try {
+      then.run();
+    } finally {
+      pl.unlock();
     }
   }
 

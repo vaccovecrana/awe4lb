@@ -34,9 +34,11 @@ public class A4Lb {
     log.info("Starting");
     var tasks = new ArrayList<Callable<Void>>();
     for (var srv : config.servers) {
-      tasks.add(new A4TcpSrv(A4Io.newSelector(), srv, tskEx));
+      var srvImpl = new A4TcpSrv(A4Io.newSelector(), srv, tskEx); // TODO this will need to accommodate UDP servers too.
+      tasks.add(srvImpl);
       for (var match : srv.match) {
         tasks.add(new A4TcpHealth(tskEx, srv.id, match));
+
         // TODO spin a per match pool discovery thread (in case the host list is not static). Provides new backend entries.
       }
     }

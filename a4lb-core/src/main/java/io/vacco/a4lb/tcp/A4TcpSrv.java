@@ -24,7 +24,7 @@ public class A4TcpSrv implements Callable<Void> {
   private final ExecutorService tlsExec;
 
   private final A4Server srvConfig;
-  public  final A4Sel bkSelect;
+  public  final A4Sel bkSel;
 
   public A4TcpSrv(Selector selector, A4Server srv, ExecutorService tlsExec) {
     try {
@@ -33,7 +33,7 @@ public class A4TcpSrv implements Callable<Void> {
       this.channel.bind(new InetSocketAddress(srv.addr.host, srv.addr.port));
       this.channel.configureBlocking(false);
       this.channel.register(selector, SelectionKey.OP_ACCEPT);
-      this.bkSelect = new A4Sel(srv.match);
+      this.bkSel = new A4Sel(srv.match);
       this.srvConfig = Objects.requireNonNull(srv);
       if (srv.tls != null) {
         log.info("{} - initializing SSL context", srv.id);
@@ -55,7 +55,7 @@ public class A4TcpSrv implements Callable<Void> {
     SelectionKey clientKey = null;
     try {
       // TODO check for connection limits here.
-      var sess = new A4TcpSess(this, srvConfig.bufferSize, sslContext != null, tlsExec);
+      var sess = new A4TcpSess(this, this.bkSel, srvConfig.bufferSize, sslContext != null, tlsExec);
       if (sslContext != null) {
         clientChannel = new SSLServerSocketChannel(
             this.channel, sslContext, tlsExec, sess,

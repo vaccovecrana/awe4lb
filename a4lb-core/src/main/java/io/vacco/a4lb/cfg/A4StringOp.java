@@ -44,8 +44,4 @@ public class A4StringOp {
     return String.format("%s(%s)", opId(), opVal());
   }
 
-  @Override public int hashCode() {
-    return String.format("%s:%s", opId(), opVal()).hashCode();
-  }
-
 }

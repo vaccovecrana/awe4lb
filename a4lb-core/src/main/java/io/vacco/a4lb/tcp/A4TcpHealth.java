@@ -1,9 +1,11 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.sel.A4Sel;
 import io.vacco.a4lb.util.A4Exceptions;
 import org.slf4j.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -15,11 +17,13 @@ public class A4TcpHealth implements Callable<Void> {
   private final ExecutorService hltEx;
   private final String serverId;
   private final A4Match match;
+  private final A4Sel bkSel;
 
-  public A4TcpHealth(ExecutorService hltEx, String serverId, A4Match match) {
+  public A4TcpHealth(ExecutorService hltEx, String serverId, A4Match match, A4Sel bkSel) {
     this.hltEx = Objects.requireNonNull(hltEx);
     this.serverId = Objects.requireNonNull(serverId);
     this.match = Objects.requireNonNull(match);
+    this.bkSel = Objects.requireNonNull(bkSel);
   }
 
   public A4Backend.State stateOf(A4Backend bk, int timeOutMs) {
@@ -40,13 +44,16 @@ public class A4TcpHealth implements Callable<Void> {
   @Override public Void call() {
     while (true) {
       try {
-        hltEx.invokeAll(
-            match.pool.hosts.stream()
-                .map(bk -> (Callable<Void>) () -> {
-                  bk.state = stateOf(bk, match.healthCheck.timeoutMs);
-                  return null;
-                }).collect(Collectors.toList())
-        );
+        var hcTasks = new ArrayList<Callable<Void>>();
+        bkSel.lockPoolAnd(match.pool, () -> {
+          for (var bk : match.pool.hosts) {
+            hcTasks.add(() -> {
+              bk.state = stateOf(bk, match.healthCheck.timeoutMs);
+              return null;
+            });
+          }
+        });
+        hltEx.invokeAll(hcTasks);
         Thread.sleep(match.healthCheck.intervalMs);
       } catch (Exception e) {
         log.warn("Health check failed for server pool {} {}", serverId, match.pool.hosts, e);

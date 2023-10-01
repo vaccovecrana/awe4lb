@@ -57,11 +57,6 @@ public class A4ValidTest {
       for (var cnt : constraints) {
         System.out.println(cnt.message());
       }
-      for (var srv : cfg.servers) {
-        for (var match : srv.match) {
-          System.out.printf("%x%n", match.pool.hashCode());
-        }
-      }
     });
   }
 }

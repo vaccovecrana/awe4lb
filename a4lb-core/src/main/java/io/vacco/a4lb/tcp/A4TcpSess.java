@@ -1,6 +1,7 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.niossl.SSLSocketChannel;
+import io.vacco.a4lb.sel.A4Sel;
 import org.slf4j.*;
 import javax.net.ssl.*;
 import java.io.IOException;
@@ -19,7 +20,8 @@ public class A4TcpSess extends SNIMatcher {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
-  public A4TcpSrv owner;
+  public  A4TcpSrv owner;
+  private final A4Sel bkSel;
 
   private A4TcpIo client, backend;
   private String id;
@@ -32,9 +34,10 @@ public class A4TcpSess extends SNIMatcher {
   private final Queue<ByteBuffer> cltQ = new ArrayDeque<>(); // TODO check if buffer pooling could increase performance after running initial benchmarks.
   private final Queue<ByteBuffer> bckQ = new ArrayDeque<>();
 
-  public A4TcpSess(A4TcpSrv owner, int bufferSize, boolean tlsClient, ExecutorService tlsExec) {
+  public A4TcpSess(A4TcpSrv owner, A4Sel bkSel, int bufferSize, boolean tlsClient, ExecutorService tlsExec) {
     super(0);
     this.owner = Objects.requireNonNull(owner);
+    this.bkSel = Objects.requireNonNull(bkSel);
     this.bufferSize = bufferSize;
     this.tlsClient = tlsClient;
     this.tlsExec = tlsExec;
@@ -177,7 +180,7 @@ public class A4TcpSess extends SNIMatcher {
 
   @Override public boolean matches(SNIServerName sn) {
     var sni = A4Ssl.sniOf(sn).orElseThrow();
-    var op = owner.bkSelect.matches(client.channel, sni);
+    var op = bkSel.matches(client.channel, sni);
     if (op.isPresent()) {
       this.tlsSni = sni;
       return true;
@@ -189,7 +192,7 @@ public class A4TcpSess extends SNIMatcher {
     if (tlsClient && tlsSni == null) {
       return;
     }
-    this.backend = owner.bkSelect.assign(key.selector(), client.channel, tlsSni, tlsExec);
+    this.backend = bkSel.assign(key.selector(), client.channel, tlsSni, tlsExec);
     this.backend.channelKey.attach(this);
     this.id = format("%x", format("%s-%s",
         client.getRawChannel().socket(),

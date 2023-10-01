@@ -51,10 +51,6 @@ public class A4Backend {
     );
   }
 
-  @Override public int hashCode() {
-    return addr.id().hashCode();
-  }
-
   /*
    * < Objects of Power are Holders/665 >
    * < to the Other/Blessing >
