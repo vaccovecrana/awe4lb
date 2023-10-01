@@ -28,10 +28,9 @@ public class A4TcpHealth implements Callable<Void> {
       try {
         var tasks = bkSel.lockPoolAnd(match.pool,
             () -> match.pool.hosts.stream()
-                .map(bk -> (Callable<Void>) () -> {
-                  bk.state = A4Io.stateOf(bk, match.healthCheck.timeoutMs);
-                  return null;
-                }).collect(Collectors.toList())
+                .map(bk -> (Callable<A4Backend>) () -> bk.state(
+                    A4Io.stateOf(bk, match.healthCheck.timeoutMs)
+                )).collect(Collectors.toList())
         );
         hltEx.invokeAll(tasks);
         Thread.sleep(match.healthCheck.intervalMs);
