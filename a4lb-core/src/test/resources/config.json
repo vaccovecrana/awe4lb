@@ -21,6 +21,7 @@
       "match": [
         {
           "and": [{"host": {"equals": "127.0.0.1"}}],
+          "pool": {"type": "roundRobin"},
           "discover": {"exec": {"command": "cat", "args": ["./src/test/resources/sdr-hosts.json"], "format": "json"}}
         }
       ]
@@ -40,7 +41,7 @@
         },
         {
           "and": [{"sni": {"equals": "sdr.localhost"}}],
-          "pool": {"type": "Weight"},
+          "pool": {"type": "weight"},
           "discover": {"exec": {"command": "cat", "args": ["./src/test/resources/sdr-hosts.txt"], "format": "text"}}
         }
       ]

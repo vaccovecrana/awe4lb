@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 public class A4Pool {
 
   public enum Type {
-    RoundRobin, LeastConn, IpHash, Weight
+    roundRobin, leastConn, ipHash, weight
   }
 
   public Type type;

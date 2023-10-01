@@ -29,10 +29,10 @@ public class A4Selector {
       return A4SelStd.select(pool);
     }
     switch (pool.type) {
-      case Weight: return A4SelWeight.select(pool);
-      case RoundRobin: return A4SelRRobin.select(pool);
-      case IpHash: return A4SelIpHash.select(pool, clientIpHash);
-      case LeastConn: return A4SelLConn.select(pool, this);
+      case weight: return A4SelWeight.select(pool);
+      case roundRobin: return A4SelRRobin.select(pool);
+      case ipHash: return A4SelIpHash.select(pool, clientIpHash);
+      case leastConn: return A4SelLConn.select(pool, this);
       default: throw new IllegalStateException("Invalid pool type: " + pool.type);
     }
   }

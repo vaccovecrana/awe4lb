@@ -11,13 +11,13 @@ public class A4TcpHealth implements Callable<Void> {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpHealth.class);
 
-  private final ExecutorService hltEx;
+  private final ExecutorService exSvc;
   private final String serverId;
   private final A4Match match;
   private final A4Selector bkSel;
 
-  public A4TcpHealth(ExecutorService hltEx, String serverId, A4Match match, A4Selector bkSel) {
-    this.hltEx = Objects.requireNonNull(hltEx);
+  public A4TcpHealth(ExecutorService exSvc, String serverId, A4Match match, A4Selector bkSel) {
+    this.exSvc = Objects.requireNonNull(exSvc);
     this.serverId = Objects.requireNonNull(serverId);
     this.match = Objects.requireNonNull(match);
     this.bkSel = Objects.requireNonNull(bkSel);
@@ -35,7 +35,7 @@ public class A4TcpHealth implements Callable<Void> {
                   return bk.state(A4Io.stateOf(bk, match.healthCheck.timeoutMs));
                 }).collect(Collectors.toList())
         );
-        hltEx.invokeAll(tasks);
+        exSvc.invokeAll(tasks);
         Thread.sleep(match.healthCheck.intervalMs);
       } catch (Exception e) {
         log.warn("Health check failed for server pool {} {}", serverId, match.pool.hosts, e);

@@ -7,6 +7,7 @@ public class A4Config {
 
   public static final long Seed = 1984;
 
+  public String id, description; // TODO validate these.
   public A4Probe api, metrics;
   public List<A4Server> servers = new ArrayList<>();
 

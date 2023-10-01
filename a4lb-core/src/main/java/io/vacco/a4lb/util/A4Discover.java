@@ -94,7 +94,7 @@ public class A4Discover implements Callable<Void> {
       if (log.isDebugEnabled()) {
         log.debug("{} - validating backend {}", serverId, bk.addr);
       }
-      if (match.pool.type == A4Pool.Type.Weight) {
+      if (match.pool.type == A4Pool.Type.weight) {
         if (bk.weight == null || bk.priority == null) {
           bk.weight(1).priority(1);
           log.warn("{} - backend entry missing weight/priority, assigned defaults - {}", serverId, bk);

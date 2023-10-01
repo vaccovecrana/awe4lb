@@ -11,7 +11,8 @@ public class A4SelRRobin {
       pool.rrVal = 0;
     }
     var up = pool.upHosts();
-    return up.get(pool.rrVal % (up.size() - 1));
+    var idx = pool.rrVal % up.size();
+    return up.get(idx);
   }
 
 }
