@@ -86,7 +86,7 @@ public class A4Io {
     } catch (Exception e) {
       if (log.isDebugEnabled()) {
         var x = A4Exceptions.rootCauseOf(e);
-        log.debug("{} - TCP health check failed - {} - {}", bk, x.getClass().getSimpleName(), x.getMessage());
+        log.debug("{} - TCP probe failed - {} - {}", bk, x.getClass().getSimpleName(), x.getMessage());
       }
       return A4Backend.State.Down;
     }

@@ -20,14 +20,14 @@ public class A4Discover implements Callable<Void> {
   private static final Type TBkList = new TypeToken<ArrayList<A4Backend>>(){}.getType();
 
   private final String serverId;
-  private final ExecutorService bkExec;
+  private final ExecutorService exSvc;
   private final A4Match match;
   private final A4Selector bkSel;
   private final Gson gson;
 
-  public A4Discover(String serverId, A4Match match, A4Selector bkSel, Gson gson, ExecutorService bkExec) {
+  public A4Discover(String serverId, A4Match match, A4Selector bkSel, Gson gson, ExecutorService exSvc) {
     this.serverId = Objects.requireNonNull(serverId);
-    this.bkExec = Objects.requireNonNull(bkExec);
+    this.exSvc = Objects.requireNonNull(exSvc);
     this.match = Objects.requireNonNull(match);
     this.bkSel = Objects.requireNonNull(bkSel);
     this.gson = Objects.requireNonNull(gson);
@@ -89,20 +89,30 @@ public class A4Discover implements Callable<Void> {
     return Collections.emptyList();
   }
 
-  private List<A4Backend> validate(List<A4Backend> backends) {
-    for (var bk : backends) {
-      bk.state = A4Io.stateOf(bk, match.discover.timeoutMs);
+  public Callable<A4Backend> validateTask(final A4Backend bk, int timeoutMs) {
+    return () -> {
+      if (log.isDebugEnabled()) {
+        log.debug("{} - validating backend {}", serverId, bk);
+      }
+      if (match.pool.type == A4Pool.Type.Weight) {
+        if (bk.weight == null || bk.priority == null) {
+          bk.weight(1).priority(1);
+          log.warn("{} - backend entry missing weight/priority, assigned defaults - {}", serverId, bk);
+        }
+      }
       var errors = A4Valid.A4BackendVld.validate(bk);
       if (!errors.isEmpty()) {
         throw new A4Exceptions.A4ConfigException(errors);
       }
-      if (match.pool.type == A4Pool.Type.Weight) {
-        if (bk.weight == null || bk.priority == null) {
-          bk = bk.weight(1).priority(1);
-          log.warn("{} - backend entry missing weight/priority, assigned defaults - {}", serverId, bk);
-        }
-      }
-    }
+      return bk.state(A4Io.stateOf(bk, timeoutMs));
+    };
+  }
+
+  private List<A4Backend> validate(List<A4Backend> backends) throws InterruptedException {
+    var tasks = backends.stream()
+        .map(bk -> validateTask(bk, match.discover.timeoutMs))
+        .collect(Collectors.toList());
+    exSvc.invokeAll(tasks);
     return backends;
   }
 
@@ -141,7 +151,7 @@ public class A4Discover implements Callable<Void> {
   @Override public Void call() {
     while (true) {
       try {
-        bkExec.invokeAll(List.of(this::update), match.discover.timeoutMs, TimeUnit.MILLISECONDS);
+        exSvc.invokeAll(List.of(this::update), match.discover.timeoutMs, TimeUnit.MILLISECONDS);
         Thread.sleep(match.discover.intervalMs);
       } catch (Exception e) {
         if (log.isDebugEnabled()) {
