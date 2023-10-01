@@ -87,6 +87,8 @@ public class A4Io {
       if (log.isDebugEnabled()) {
         var x = A4Exceptions.rootCauseOf(e);
         log.debug("{} - TCP probe failed - {} - {}", bk, x.getClass().getSimpleName(), x.getMessage());
+      } else {
+        log.warn("{} - TCP host down", bk.addr);
       }
       return A4Backend.State.Down;
     }

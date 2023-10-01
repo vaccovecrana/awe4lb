@@ -92,7 +92,7 @@ public class A4Discover implements Callable<Void> {
   public Callable<A4Backend> validateTask(final A4Backend bk, int timeoutMs) {
     return () -> {
       if (log.isDebugEnabled()) {
-        log.debug("{} - validating backend {}", serverId, bk);
+        log.debug("{} - validating backend {}", serverId, bk.addr);
       }
       if (match.pool.type == A4Pool.Type.Weight) {
         if (bk.weight == null || bk.priority == null) {
