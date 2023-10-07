@@ -1,5 +1,6 @@
 package io.vacco.a4lb.util;
 
+import am.ik.yavi.core.ConstraintViolations;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.vacco.a4lb.cfg.*;
@@ -24,6 +25,17 @@ public class A4Discover implements Callable<Void> {
   private final A4Match match;
   private final A4Selector bkSel;
   private final Gson gson;
+
+  public static class A4BkEntry {
+    public A4Backend backend;
+    public ConstraintViolations errors;
+    public static A4BkEntry of(A4Backend backend, ConstraintViolations errors) {
+      var e = new A4BkEntry();
+      e.backend = backend;
+      e.errors = errors;
+      return e;
+    }
+  }
 
   public A4Discover(String serverId, A4Match match, A4Selector bkSel, Gson gson, ExecutorService exSvc) {
     this.serverId = Objects.requireNonNull(serverId);
@@ -89,7 +101,7 @@ public class A4Discover implements Callable<Void> {
     return Collections.emptyList();
   }
 
-  public Callable<A4Backend> validateTask(final A4Backend bk, int timeoutMs) {
+  public Callable<A4BkEntry> validateEntry(final A4Backend bk, int timeoutMs) {
     return () -> {
       if (log.isDebugEnabled()) {
         log.debug("{} - validating backend {}", serverId, bk.addr);
@@ -101,19 +113,15 @@ public class A4Discover implements Callable<Void> {
         }
       }
       var errors = A4Valid.A4BackendVld.validate(bk);
-      if (!errors.isEmpty()) {
-        throw new A4Exceptions.A4ConfigException(errors);
-      }
-      return bk.state(A4Io.stateOf(bk, timeoutMs));
+      return A4BkEntry.of(bk.state(A4Io.stateOf(bk, timeoutMs)), errors);
     };
   }
 
-  private List<A4Backend> validate(List<A4Backend> backends) throws InterruptedException {
+  private List<Future<A4BkEntry>> validate(List<A4Backend> backends) throws InterruptedException {
     var tasks = backends.stream()
-        .map(bk -> validateTask(bk, match.discover.timeoutMs))
+        .map(bk -> validateEntry(bk, match.discover.timeoutMs))
         .collect(Collectors.toList());
-    exSvc.invokeAll(tasks);
-    return backends;
+    return exSvc.invokeAll(tasks);
   }
 
   private int hashOf(List<A4Backend> backends) {
@@ -128,7 +136,14 @@ public class A4Discover implements Callable<Void> {
 
   private Void update() {
     try {
-      var bkl = validate(discover());
+      var bkl = new ArrayList<A4Backend>();
+      for (var bkf : validate(discover())) {
+        if (bkf.get().errors.isEmpty()) {
+          bkl.add(bkf.get().backend);
+        } else {
+          log.warn("{} - {} - backend validation error - {}", serverId, bkf.get().backend, bkf.get().errors);
+        }
+      }
       return bkSel.lockPoolAnd(match.pool, () -> {
         int h0 = hashOf(bkl);
         int h1 = hashOf(match.pool.hosts);

@@ -55,8 +55,8 @@ public class A4Valid {
           (b, cg) -> b.weight != null || b.priority != null,
           b -> b.constraintOnTarget(
               b0 -> b0.weight != null && b0.priority != null,
-              "weightPriotity", "weightPriority.allOf",
-              "\"{0}\" must specify [weight, priority]"
+              "weightPriority", "weightPriority.allOf",
+              "\"{0}\" must specify all of [weight, priority]"
           )
       ).nest(b -> b.addr, "addr", A4SockVld)
       .build();
@@ -182,6 +182,8 @@ public class A4Valid {
       .build();
 
   public static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
+      ._string(c -> c.id, "id", A4Valid::nnNeNb)
+      ._string(c -> c.description, "description", A4Valid::nnNeNb)
       .nest(c -> c.api, "api", A4ProbeVld)
       .nest(c -> c.metrics, "metrics", A4ProbeVld)
       .constraint(A4Config::serverList, "servers", c -> c.notNull().notEmpty())
