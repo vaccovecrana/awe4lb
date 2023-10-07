@@ -27,4 +27,13 @@ public class A4Sock {
     return id().hashCode();
   }
 
+  /*
+   * < You have seen the Foundation/Base >
+   * < of the Building/Tree >
+   * < The House grew there/here/everywhere >
+   * < We are there/everywhere >
+   * < We have a Socket/Door there >
+   * < It is a direct link >
+   */
+
 }

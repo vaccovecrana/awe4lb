@@ -1,10 +1,7 @@
 {
   "id": "test-config-00",
   "description": "Test configuration",
-  "api": {
-    "enabled": true,
-    "bind": {"host":"0.0.0.0", "port": 8888}
-  },
+  "api": {"host":"0.0.0.0", "port": 8888},
   "metrics": {
     "enabled": true,
     "bind": {"host":"0.0.0.0", "port": 9284}

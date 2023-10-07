@@ -181,15 +181,10 @@ public class A4Valid {
       .forEach(A4Server::matchList, "match", A4MatchVld)
       .build();
 
-  public static final Validator<A4Probe> A4ProbeVld = ValidatorBuilder.<A4Probe>of()
-      .nest(p -> p.bind, "bind", A4SockVld)
-      .build();
-
   public static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
       ._string(c -> c.id, "id", A4Valid::nnNeNb)
       ._string(c -> c.description, "description", A4Valid::nnNeNb)
-      .nest(c -> c.api, "api", A4ProbeVld)
-      .nest(c -> c.metrics, "metrics", A4ProbeVld)
+      .nestIfPresent(c -> c.api, "api", A4SockVld)
       .constraint(A4Config::serverList, "servers", c -> c.notNull().notEmpty())
       .forEach(A4Config::serverList, "servers", A4ServerVld)
       .build();
