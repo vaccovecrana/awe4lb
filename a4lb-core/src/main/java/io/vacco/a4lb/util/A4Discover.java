@@ -85,7 +85,7 @@ public class A4Discover implements Callable<Void> {
 
   private List<A4Backend> httpDiscover() {
     try {
-      var content = A4Io.loadContent(new URL(match.discover.http.endpoint));
+      var content = A4Io.loadContent(new URL(match.discover.http.endpoint), match.discover.timeoutMs);
       return parseOutput(content, match.discover.http.format);
     } catch (MalformedURLException e) {
       throw new IllegalStateException(e);
@@ -101,11 +101,8 @@ public class A4Discover implements Callable<Void> {
     return Collections.emptyList();
   }
 
-  public Callable<A4BkEntry> validateEntry(final A4Backend bk, int timeoutMs) {
+  public Callable<A4BkEntry> validateEntry(final A4Backend bk, A4HealthCheck hlt) {
     return () -> {
-      if (log.isDebugEnabled()) {
-        log.debug("{} - validating backend {}", serverId, bk.addr);
-      }
       if (match.pool.type == A4Pool.Type.weight) {
         if (bk.weight == null || bk.priority == null) {
           bk.weight(1).priority(1);
@@ -113,13 +110,13 @@ public class A4Discover implements Callable<Void> {
         }
       }
       var errors = A4Valid.A4BackendVld.validate(bk);
-      return A4BkEntry.of(bk.state(A4Io.stateOf(bk, timeoutMs)), errors);
+      return A4BkEntry.of(bk.state(A4Health.stateOf(serverId, bk, hlt)), errors);
     };
   }
 
   private List<Future<A4BkEntry>> validate(List<A4Backend> backends) throws InterruptedException {
     var tasks = backends.stream()
-        .map(bk -> validateEntry(bk, match.discover.timeoutMs))
+        .map(bk -> validateEntry(bk, match.healthCheck))
         .collect(Collectors.toList());
     return exSvc.invokeAll(tasks);
   }
@@ -157,10 +154,7 @@ public class A4Discover implements Callable<Void> {
       if (log.isDebugEnabled()) {
         log.debug("{} - backend update error", serverId, e);
       } else {
-        log.warn(
-            "{} - backend update error - {}", serverId,
-            e.getMessage()  != null ? e.getMessage() : e.getClass().getSimpleName()
-        );
+        log.warn("{} - backend update error - {}", serverId, A4Exceptions.messageFor(e));
       }
       return null;
     }
@@ -175,7 +169,7 @@ public class A4Discover implements Callable<Void> {
         if (log.isDebugEnabled()) {
           log.error("{} - backend discovery failed for match [{}]", serverId, match, e);
         } else {
-          log.warn("{} - backend discovery failed for match [{}] - {}", serverId, match, e.getMessage());
+          log.warn("{} - backend discovery failed for match [{}] - {}", serverId, match, A4Exceptions.messageFor(e));
         }
       }
     }
