@@ -1,12 +1,7 @@
 package io.vacco.a4lb.tcp;
 
-import io.vacco.a4lb.cfg.A4Backend;
-import io.vacco.a4lb.util.A4Exceptions;
 import org.slf4j.*;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -79,23 +74,15 @@ public class A4Io {
     }
   }
 
-  public static A4Backend.State stateOf(A4Backend bk, int timeOutMs) {
-    try (var socket = new Socket()) {
-      socket.connect(new InetSocketAddress(bk.addr.host, bk.addr.port), timeOutMs);
-      return A4Backend.State.Up;
-    } catch (Exception e) {
-      if (log.isDebugEnabled()) {
-        var x = A4Exceptions.rootCauseOf(e);
-        log.debug("{} - TCP probe failed - {} - {}", bk, x.getClass().getSimpleName(), x.getMessage());
-      } else {
-        log.warn("{} - TCP host down", bk.addr);
-      }
-      return A4Backend.State.Down;
-    }
+  public static InputStream openStream(URL url, int timeoutMs) throws IOException {
+    var conn = url.openConnection();
+    conn.setConnectTimeout(timeoutMs);
+    conn.setReadTimeout(timeoutMs);
+    return conn.getInputStream();
   }
 
-  public static String loadContent(URL u) {
-    try (var in = u.openStream()) {
+  public static String loadContent(URL u, int timeoutMs) {
+    try (var in = openStream(u, timeoutMs)) {
       var reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
       return reader.lines().collect(Collectors.joining(System.lineSeparator()));
     } catch (Exception e) {

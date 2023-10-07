@@ -40,4 +40,11 @@ public class A4Exceptions {
     return root;
   }
 
+  public static String messageFor(Throwable t) {
+    var x = A4Exceptions.rootCauseOf(t);
+    return x.getMessage() != null && !x.getMessage().isEmpty()
+        ? x.getMessage()
+        : x.getClass().getSimpleName();
+  }
+
 }

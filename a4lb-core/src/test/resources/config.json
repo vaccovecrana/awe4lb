@@ -13,20 +13,17 @@
     {
       "id": "momo-http-json",
       "addr": {"host":"0.0.0.0", "port": 8080},
-      "match": [
-        {"discover": {"http": {"endpoint": "http://10.89.0.1:4010", "format": "json"}}}
-      ]
+      "match": [{"discover": {"http": {"endpoint": "http://10.89.0.1:4010", "format": "json"}}}]
     },
     {
       "id": "sdr-http-json",
       "addr": {"host": "0.0.0.0", "port": 8090},
-      "match": [
-        {
-          "and": [{"host": {"equals": "127.0.0.1"}}],
-          "pool": {"type": "roundRobin"},
-          "discover": {"exec": {"command": "cat", "args": ["./src/test/resources/sdr-hosts.json"], "format": "json"}}
-        }
-      ]
+      "match": [{
+        "and": [{"host": {"equals": "127.0.0.1"}}],
+        "pool": {"type": "roundRobin"},
+        "discover": {"exec": {"command": "cat", "args": ["./src/test/resources/sdr-hosts.json"], "format": "json"}},
+        "healthCheck": {"exec": {"command": "nc", "args": ["-z", "-v"]}}
+      }]
     },
     {
       "id": "https-txt",

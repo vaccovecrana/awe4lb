@@ -23,14 +23,13 @@ public class A4Valid {
     return c.notNull().notBlank().notEmpty();
   }
 
-  public static boolean arrayValsNnLtEq(int ltEq, Object ... vals) {
+  public static boolean allNoNullLtEq(int ltEq, Object ... vals) {
     return Arrays.stream(vals).filter(Objects::nonNull).count() <= ltEq;
   }
 
-  public static final Validator<A4Exec> A4ExecVld = ValidatorBuilder.<A4Exec>of()
+  public static final Validator<A4HealthExec> A4HealthExecVld = ValidatorBuilder.<A4HealthExec>of()
       ._string(ex -> ex.command, "command", A4Valid::nnNeNb)
-      ._string(ex -> ex.passOutput, "passOutput", A4Valid::nnNeNb)
-      ._string(ex -> ex.failOutput, "failOutput", A4Valid::nnNeNb)
+      .forEach(A4HealthExec::argList, "args", b -> b._string(s -> s, "arg", A4Valid::nnNeNb))
       .build();
 
   public static final Validator<A4HealthCheck> A4HealthCheckVld = ValidatorBuilder.<A4HealthCheck>of()
@@ -40,7 +39,7 @@ public class A4Valid {
           hc -> hc.timeoutMs < hc.intervalMs, "timeoutMs",
           "timeoutMs.isLessThanInterval",
           "\"{0}\" \"timeoutMs\" must be less than \"intervalMs\""
-      ).nestIfPresent(hc -> hc.exec, "exec", A4ExecVld)
+      ).nestIfPresent(hc -> hc.exec, "exec", A4HealthExecVld)
       .build();
 
   public static final Validator<A4Sock> A4SockVld = ValidatorBuilder.<A4Sock>of()
@@ -79,7 +78,7 @@ public class A4Valid {
           "anyOf", "anyOf",
           "\"{0}\" missing any of [equals, contains, startsWith, endsWith]"
       ).constraintOnTarget(
-          op -> arrayValsNnLtEq(1, op.equals, op.contains, op.startsWith, op.endsWith),
+          op -> allNoNullLtEq(1, op.equals, op.contains, op.startsWith, op.endsWith),
           "oneOf", "oneOf",
           "\"{0}\" only one of [equals, contains, startsWith, endsWith] allowed"
       ).build();
@@ -92,7 +91,7 @@ public class A4Valid {
           "anyOf", "anyOf",
           "\"{0}\" missing any of [host, sni]"
       ).constraintOnTarget(
-          mo -> arrayValsNnLtEq(1, mo.host, mo.sni),
+          mo -> allNoNullLtEq(1, mo.host, mo.sni),
           "oneOf", "oneOf",
           "\"{0}\" only one of [host, sni] allowed"
       ).build();
@@ -123,7 +122,7 @@ public class A4Valid {
           "anyOf", "anyOf",
           "\"{0}\" missing any of [http, exec]"
       ).constraintOnTarget(
-          d -> arrayValsNnLtEq(1, d.http, d.exec),
+          d -> allNoNullLtEq(1, d.http, d.exec),
           "oneOf", "oneOf",
           "\"{0}\" only one of [http, exec] allowed"
       )
@@ -142,11 +141,15 @@ public class A4Valid {
           (m, cg) -> m.or != null,
           b -> b.forEach(A4Match::orOps, "match.orOps", A4MatchOpVld)
       ).constraintOnTarget(
-          m -> arrayValsNnLtEq(1, m.and, m.or),
+          m -> allNoNullLtEq(1, m.and, m.or),
           "oneOf", "oneOf",
           "\"{0}\" only one of [and, or] allowed"
       )
-      .nest(m -> m.pool, "pool", A4PoolVld)
+      .constraintOnTarget(
+          m -> m.discover.intervalMs >= m.healthCheck.intervalMs, "intervalMs",
+          "discover.intervalMs.isGreaterThan.healthCheck.intervalMs",
+          "\"{0}\" \"discover.intervalMs\" must be greater than \"healthCheck.intervalMs\""
+      )
       .constraintOnCondition(
           (m, cg) -> m.discover == null,
           b -> b.nest(
@@ -154,6 +157,7 @@ public class A4Valid {
               b0 -> b0.constraint(A4Pool::hostList, "list", ContainerConstraintBase::notEmpty)
           )
       )
+      .nest(m -> m.pool, "pool", A4PoolVld)
       .nestIfPresent(p -> p.discover, "discover", A4DiscVld)
       .nestIfPresent(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
       .build();

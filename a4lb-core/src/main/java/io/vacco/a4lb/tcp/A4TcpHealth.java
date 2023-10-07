@@ -2,8 +2,9 @@ package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.sel.A4Selector;
+import io.vacco.a4lb.util.*;
 import org.slf4j.*;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -28,17 +29,18 @@ public class A4TcpHealth implements Callable<Void> {
       try {
         var tasks = bkSel.lockPoolAnd(match.pool,
             () -> match.pool.hosts.stream()
-                .map(bk -> (Callable<A4Backend>) () -> {
-                  if (match.healthCheck.exec != null) {
-                    return bk.state(A4Backend.State.Unknown); // TODO implement this
-                  }
-                  return bk.state(A4Io.stateOf(bk, match.healthCheck.timeoutMs));
-                }).collect(Collectors.toList())
+                .map(bk -> (Callable<A4Backend>) () -> bk.state(A4Health.stateOf(serverId, bk, match.healthCheck)))
+                .collect(Collectors.toList())
         );
         exSvc.invokeAll(tasks);
         Thread.sleep(match.healthCheck.intervalMs);
       } catch (Exception e) {
-        log.warn("Health check failed for server pool {} {}", serverId, match.pool.hosts, e);
+        if (log.isDebugEnabled()) {
+          log.debug("{} - healthcheck failed - {}", serverId, match.pool.hosts, e);
+        } else {
+          var msg = A4Exceptions.messageFor(e);
+          log.warn("{} - health check failed - {} - {}", serverId, match.pool.hosts, msg);
+        }
       }
     }
   }
