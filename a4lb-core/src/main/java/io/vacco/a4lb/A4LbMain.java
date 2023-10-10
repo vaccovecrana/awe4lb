@@ -4,15 +4,9 @@ import com.google.gson.Gson;
 import io.vacco.a4lb.util.A4Configs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 import java.io.File;
 
 public class A4LbMain {
-
-  static {
-    SLF4JBridgeHandler.removeHandlersForRootLogger();
-    SLF4JBridgeHandler.install();
-  }
 
   private static final Logger log = LoggerFactory.getLogger(A4LbMain.class);
 

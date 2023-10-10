@@ -1,5 +1,6 @@
 plugins {
   application
+  id("io.vacco.ronove") version "1.2.1"
 }
 
 configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
@@ -14,7 +15,12 @@ dependencies {
   api("am.ik.yavi:yavi:0.13.1")
   api("org.buildobjects:jproc:2.8.2")
   api("com.google.code.gson:gson:2.10.1")
-  api("org.slf4j:jul-to-slf4j:2.0.6")
+  api("io.vacco.ronove:rv-kit-murmux:1.2.1")
+}
+
+configure<io.vacco.ronove.plugin.RvPluginExtension> {
+  controllerClasses = arrayOf("io.vacco.a4lb.api.A4Controller")
+  outFile.set(file("../a4lb-ui/@a4-ui/rpc.ts"))
 }
 
 application {

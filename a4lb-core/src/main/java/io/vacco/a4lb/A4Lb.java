@@ -27,19 +27,18 @@ public class A4Lb {
 
   public void start() throws InterruptedException {
     log.info("Starting");
-    var tasks = new ArrayList<Callable<Void>>();
     for (var srv : config.servers) {
-      var srvImpl = new A4TcpSrv(A4Io.newSelector(), srv, exSvc); // TODO this will need to accommodate UDP servers too.
-      tasks.add(srvImpl);
+      var srvImpl = new A4TcpSrv(A4Io.newSelector(), srv, exSvc);
+      // TODO this will need to accommodate UDP servers too.
+      exSvc.submit(srvImpl);
       for (var match : srv.match) {
-        tasks.add(new A4TcpHealth(exSvc, srv.id, match, srvImpl.bkSel));
+        exSvc.submit(new A4TcpHealth(exSvc, srv.id, match, srvImpl.bkSel));
         if (match.discover != null) {
-          tasks.add(new A4Discover(srv.id, match, srvImpl.bkSel, gson, exSvc));
+          exSvc.submit(new A4Discover(srv.id, match, srvImpl.bkSel, gson, exSvc));
         }
       }
     }
     log.info("Started");
-    exSvc.invokeAll(tasks);
   }
 
   public void stop() {

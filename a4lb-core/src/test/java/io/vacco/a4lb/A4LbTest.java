@@ -22,6 +22,7 @@ public class A4LbTest {
       // https://gobetween.io/documentation.html#Balancing
       // InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
       A4LbMain.main(new String[] {"./src/test/resources/config.json"});
+      Thread.sleep(10000);
     });
   }
 
