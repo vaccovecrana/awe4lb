@@ -1,6 +1,6 @@
 plugins {
   application
-  id("io.vacco.ronove") version "1.2.1"
+  id("io.vacco.ronove") version "1.2.2"
 }
 
 configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
@@ -15,7 +15,7 @@ dependencies {
   api("am.ik.yavi:yavi:0.13.1")
   api("org.buildobjects:jproc:2.8.2")
   api("com.google.code.gson:gson:2.10.1")
-  api("io.vacco.ronove:rv-kit-murmux:1.2.1")
+  api("io.vacco.ronove:rv-kit-murmux:2.2.2")
 }
 
 configure<io.vacco.ronove.plugin.RvPluginExtension> {

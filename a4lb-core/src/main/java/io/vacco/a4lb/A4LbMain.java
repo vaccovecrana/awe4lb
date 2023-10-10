@@ -9,9 +9,8 @@ import java.net.URL;
 public class A4LbMain {
 
   private static final Logger log = LoggerFactory.getLogger(A4LbMain.class);
-  private static final Gson g = new Gson();
 
-  public static A4Lb init(URL cfgUrl) {
+  public static A4Lb init(URL cfgUrl, Gson g) {
     var cfg = A4Configs.loadFrom(cfgUrl, g);
     return new A4Lb(cfg, g).start();
   }
@@ -35,7 +34,7 @@ public class A4LbMain {
               "\\__,_/ |__/|__/\\___/  /_/ /_/_.___/ "
           )
       );
-      a4lb = init(cfgFile.toURI().toURL());
+      a4lb = init(cfgFile.toURI().toURL(), new Gson());
     } catch (Exception e) {
       log.error("Unable to initialize load balancer", e);
       if (a4lb != null) {
