@@ -2,6 +2,7 @@ package io.vacco.a4lb;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.A4Config;
+import io.vacco.a4lb.cfg.A4Server;
 import io.vacco.a4lb.tcp.*;
 import io.vacco.a4lb.util.*;
 import org.slf4j.*;
@@ -15,6 +16,7 @@ public class A4Lb {
   private final Gson gson;
   private final A4Config config;
   private final ExecutorService exSvc = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb"));
+  private final List<A4TcpSrv> servers = new ArrayList<>();
 
   public A4Lb(A4Config config, Gson gson) {
     this.gson = Objects.requireNonNull(gson);
@@ -30,6 +32,7 @@ public class A4Lb {
     for (var srv : config.servers) {
       var srvImpl = new A4TcpSrv(A4Io.newSelector(), srv, exSvc);
       // TODO this will need to accommodate UDP servers too.
+      servers.add(srvImpl);
       exSvc.submit(srvImpl);
       for (var match : srv.match) {
         exSvc.submit(new A4TcpHealth(exSvc, srv.id, match, srvImpl.bkSel));
@@ -44,6 +47,7 @@ public class A4Lb {
 
   public void stop() {
     exSvc.shutdownNow();
+    servers.forEach(A4TcpSrv::close); // TODO accommodate UDP servers too
     log.info("{} - stopped", config.id);
   }
 

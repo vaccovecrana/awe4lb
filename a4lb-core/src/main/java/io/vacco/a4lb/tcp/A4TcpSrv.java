@@ -1,12 +1,11 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Server;
-import io.vacco.a4lb.niossl.SSLServerSocketChannel;
-import io.vacco.a4lb.niossl.SSLSocketChannel;
+import io.vacco.a4lb.niossl.*;
 import io.vacco.a4lb.sel.A4Selector;
 import org.slf4j.*;
-
 import javax.net.ssl.SSLContext;
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
@@ -14,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
-public class A4TcpSrv implements Callable<Void> {
+public class A4TcpSrv implements Callable<Void>, Closeable {
 
   public static final Logger log = LoggerFactory.getLogger(A4TcpSrv.class);
 
@@ -43,7 +42,7 @@ public class A4TcpSrv implements Callable<Void> {
         this.sslContext = null;
         this.tlsExec = null;
       }
-      log.info("{} - {} - Ingress open", srv.id, this.channel.socket());
+      log.info("{} - {} - ingress open", srv.id, this.channel.socket());
     } catch (IOException ioe) {
       log.error("Unable to open server socket channel {}", srv.addr, ioe);
       throw new IllegalStateException(ioe);
@@ -94,6 +93,12 @@ public class A4TcpSrv implements Callable<Void> {
     while (true) {
       update();
     }
+  }
+
+  @Override public void close() {
+    A4Io.close(channel);
+    A4Io.close(selector);
+    log.info("{} - {} - ingress closed", srvConfig.id, this.channel.socket());
   }
 
 }

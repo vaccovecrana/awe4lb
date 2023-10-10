@@ -21,7 +21,7 @@ public class A4LbTest {
     it("Forwards socket data", () -> {
       var cfgUrl = A4LbTest.class.getResource("/config.json");
       var a4lb = A4LbMain.init(cfgUrl);
-      Thread.sleep(30000);
+      Thread.sleep(15000);
       a4lb.stop();
     });
   }

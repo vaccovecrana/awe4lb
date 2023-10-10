@@ -13,14 +13,14 @@ public class A4Io {
 
   public static final Logger log = LoggerFactory.getLogger(A4Io.class);
 
-  public static void close(SocketChannel sc) {
+  public static void close(Closeable c) {
     try {
-      if (sc != null) {
-        sc.close();
+      if (c != null) {
+        c.close();
       }
-    } catch (IOException ioe) {
+    } catch (IOException e) {
       if (log.isDebugEnabled()) {
-        log.debug("Unable to close socket channel {}", sc.socket(), ioe);
+        log.debug("Unable to close {}", c, e);
       }
     }
   }
