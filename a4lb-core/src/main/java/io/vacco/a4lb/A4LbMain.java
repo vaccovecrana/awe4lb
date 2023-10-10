@@ -2,13 +2,19 @@ package io.vacco.a4lb;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.util.A4Configs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 import java.io.File;
+import java.net.URL;
 
 public class A4LbMain {
 
   private static final Logger log = LoggerFactory.getLogger(A4LbMain.class);
+  private static final Gson g = new Gson();
+
+  public static A4Lb init(URL cfgUrl) {
+    var cfg = A4Configs.loadFrom(cfgUrl, g);
+    return new A4Lb(cfg, g).start();
+  }
 
   public static void main(String[] args) {
     A4Lb a4lb = null;
@@ -29,10 +35,7 @@ public class A4LbMain {
               "\\__,_/ |__/|__/\\___/  /_/ /_/_.___/ "
           )
       );
-      var g = new Gson();
-      var cfg = A4Configs.loadFrom(cfgFile.toURI().toURL(), g);
-      a4lb = new A4Lb(cfg, g);
-      a4lb.start();
+      a4lb = init(cfgFile.toURI().toURL());
     } catch (Exception e) {
       log.error("Unable to initialize load balancer", e);
       if (a4lb != null) {

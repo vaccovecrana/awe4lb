@@ -25,8 +25,8 @@ public class A4Lb {
     }
   }
 
-  public void start() throws InterruptedException {
-    log.info("Starting");
+  public A4Lb start() {
+    log.info("{} - starting", config.id);
     for (var srv : config.servers) {
       var srvImpl = new A4TcpSrv(A4Io.newSelector(), srv, exSvc);
       // TODO this will need to accommodate UDP servers too.
@@ -38,13 +38,13 @@ public class A4Lb {
         }
       }
     }
-    log.info("Started");
+    log.info("{} - started", config.id);
+    return this;
   }
 
   public void stop() {
-    log.info("Stopping");
     exSvc.shutdownNow();
-    log.info("Stopped");
+    log.info("{} - stopped", config.id);
   }
 
 }

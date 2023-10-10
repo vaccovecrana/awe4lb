@@ -19,10 +19,10 @@ public class A4LbTest {
 
   static {
     it("Forwards socket data", () -> {
-      // https://gobetween.io/documentation.html#Balancing
-      // InetSocketAddress dummy = new InetSocketAddress("172.16.3.233", 9096);
-      A4LbMain.main(new String[] {"./src/test/resources/config.json"});
-      Thread.sleep(10000);
+      var cfgUrl = A4LbTest.class.getResource("/config.json");
+      var a4lb = A4LbMain.init(cfgUrl);
+      Thread.sleep(30000);
+      a4lb.stop();
     });
   }
 

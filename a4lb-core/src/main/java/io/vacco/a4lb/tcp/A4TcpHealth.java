@@ -34,6 +34,10 @@ public class A4TcpHealth implements Callable<Void> {
         );
         exSvc.invokeAll(tasks);
         Thread.sleep(match.healthCheck.intervalMs);
+      } catch (RejectedExecutionException | InterruptedException e) {
+        if (log.isTraceEnabled()) {
+          log.trace("{} - healthcheck task stopped", serverId, e);
+        }
       } catch (Exception e) {
         if (log.isDebugEnabled()) {
           log.debug("{} - healthcheck failed - {}", serverId, match.pool.hosts, e);

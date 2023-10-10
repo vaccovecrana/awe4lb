@@ -165,6 +165,10 @@ public class A4Discover implements Callable<Void> {
       try {
         exSvc.invokeAll(List.of(this::update), match.discover.timeoutMs, TimeUnit.MILLISECONDS);
         Thread.sleep(match.discover.intervalMs);
+      } catch (RejectedExecutionException | InterruptedException e) {
+        if (log.isTraceEnabled()) {
+          log.trace("{} - discovery task stopped", serverId, e);
+        }
       } catch (Exception e) {
         if (log.isDebugEnabled()) {
           log.error("{} - backend discovery failed for match [{}]", serverId, match, e);
