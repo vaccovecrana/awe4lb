@@ -1,7 +1,6 @@
 package io.vacco.a4lb;
 
-import com.google.gson.Gson;
-import io.vacco.shax.logging.ShOption;
+import io.vacco.a4lb.util.A4Flags;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
@@ -13,20 +12,14 @@ import static j8spec.J8Spec.*;
 public class A4LbTest {
 
   static {
-    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_DEVMODE, "true");
-    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_PRETTYPRINT, "true");
-    ShOption.setSysProp(ShOption.IO_VACCO_SHAX_LOGLEVEL, "debug");
-  }
-
-  static {
     it("Forwards socket data", () -> {
-      var g = new Gson();
-      var cfgUrl = A4LbTest.class.getResource("/config.json");
-      var a4lb = A4LbMain.init(cfgUrl, g);
-      var a4Api = new A4Api(g).start();
+      var fl = A4Flags.from(new String[]{
+          "--log-level=debug",
+          "--config=./src/test/resources"
+      });
+      var svc = new A4Service().init(fl);
       Thread.sleep(15000);
-      a4lb.stop();
-      a4Api.stop();
+      svc.instance.stop();
     });
   }
 

@@ -2,7 +2,6 @@ package io.vacco.a4lb;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.A4Config;
-import io.vacco.a4lb.cfg.A4Server;
 import io.vacco.a4lb.tcp.*;
 import io.vacco.a4lb.util.*;
 import org.slf4j.*;
