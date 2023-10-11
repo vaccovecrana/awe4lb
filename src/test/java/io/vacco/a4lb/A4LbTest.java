@@ -1,5 +1,7 @@
 package io.vacco.a4lb;
 
+import com.google.gson.Gson;
+import io.vacco.a4lb.util.A4Configs;
 import io.vacco.a4lb.util.A4Flags;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
@@ -18,8 +20,13 @@ public class A4LbTest {
           "--config=./src/test/resources"
       });
       var svc = new A4Service().init(fl);
-      Thread.sleep(15000);
-      svc.instance.stop();
+
+      var g = new Gson();
+      svc.config = A4Configs.loadFrom(A4LbTest.class.getResource("/config.json"), g);
+      svc.instance = new A4Lb(svc.config, g).open();
+      Thread.sleep(35000);
+
+      svc.close();
     });
   }
 

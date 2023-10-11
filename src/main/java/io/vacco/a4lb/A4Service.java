@@ -2,6 +2,7 @@ package io.vacco.a4lb;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.tcp.A4Io;
 import io.vacco.a4lb.util.*;
 import java.io.Closeable;
 
@@ -32,11 +33,11 @@ public class A4Service implements Closeable {
 
     try {
       if (fl.root.isDirectory()) {
-        this.api = new A4Api(this, fl, gson).start();
+        this.api = new A4Api(this, fl, gson).open();
       } else {
         log.info("Starting static load balancer instance");
         this.config = A4Configs.loadFrom(fl.root.toURI().toURL(), gson);
-        this.instance = new A4Lb(config, gson).start();
+        this.instance = new A4Lb(config, gson).open();
       }
     } catch (Exception e) {
       log.error("Unable to initialize load balancer", e);
@@ -47,10 +48,10 @@ public class A4Service implements Closeable {
 
   @Override public void close() {
     if (api != null) {
-      api.stop();
+      A4Io.close(api);
     }
     if (instance != null) {
-      instance.stop();
+      A4Io.close(instance);
     }
   }
 

@@ -8,9 +8,10 @@ import io.vacco.murmux.http.MxStatus;
 import io.vacco.murmux.middleware.MxRouter;
 import io.vacco.ronove.murmux.RvMxAdapter;
 import org.slf4j.*;
+import java.io.*;
 import java.util.Objects;
 
-public class A4Api {
+public class A4Api implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(A4Api.class);
 
@@ -30,14 +31,15 @@ public class A4Api {
     );
   }
 
-  public A4Api start() {
+  public A4Api open() {
     mx.listen(fl.api.port);
     log.info("Management API/UI ready at http://{}:{}/ui", fl.api.host, fl.api.port);
     return this;
   }
 
-  public void stop() {
+  @Override public void close() {
     mx.stop();
+    log.info("Management API/UI stopped");
   }
 
 }

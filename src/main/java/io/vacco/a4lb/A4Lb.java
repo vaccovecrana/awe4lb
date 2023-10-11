@@ -5,10 +5,13 @@ import io.vacco.a4lb.cfg.A4Config;
 import io.vacco.a4lb.tcp.*;
 import io.vacco.a4lb.util.*;
 import org.slf4j.*;
+
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class A4Lb {
+public class A4Lb implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(A4Lb.class);
 
@@ -26,7 +29,7 @@ public class A4Lb {
     }
   }
 
-  public A4Lb start() {
+  public A4Lb open() {
     log.info("{} - starting", config.id);
     for (var srv : config.servers) {
       var srvImpl = new A4TcpSrv(A4Io.newSelector(), srv, exSvc);
@@ -44,7 +47,7 @@ public class A4Lb {
     return this;
   }
 
-  public void stop() {
+  @Override public void close() {
     exSvc.shutdownNow();
     servers.forEach(A4TcpSrv::close); // TODO accommodate UDP servers too
     log.info("{} - stopped", config.id);
