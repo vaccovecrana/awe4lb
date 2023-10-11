@@ -189,6 +189,15 @@ public class A4Valid {
       .forEach(A4Config::serverList, "servers", A4ServerVld)
       .build();
 
+  public static final Validator<A4Flags> A4FlagsVld = ValidatorBuilder.<A4Flags>of()
+      ._object(fl -> fl.root, "--config", Constraint::notNull)
+      .constraintOnTarget(
+          fl -> fl.root.exists(), "--config", "exists",
+          "\"{0}\" does not exist"
+      )
+      .nest(fl -> fl.api, "--api-*", A4SockVld)
+      .build();
+
   /*
    * A director needs a team. My management team. These people know the secrets of the Bureau
    * as well as I do, some even better.

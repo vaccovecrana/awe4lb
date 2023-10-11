@@ -11,7 +11,7 @@ public class A4Exceptions {
     public static final long serialVersionUID = ver;
     public final ConstraintViolations violations;
     public A4ConfigException(ConstraintViolations violations) {
-      super("invalid configuration data");
+      super("invalid configuration");
       this.violations = violations;
     }
     @Override public String toString() {

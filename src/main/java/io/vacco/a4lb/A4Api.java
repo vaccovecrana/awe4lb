@@ -1,20 +1,26 @@
-package io.vacco.a4lb.api;
+package io.vacco.a4lb;
 
 import com.google.gson.Gson;
+import io.vacco.a4lb.api.A4Controller;
+import io.vacco.a4lb.util.A4Flags;
 import io.vacco.murmux.Murmux;
 import io.vacco.murmux.http.MxStatus;
 import io.vacco.murmux.middleware.MxRouter;
 import io.vacco.ronove.murmux.RvMxAdapter;
 import org.slf4j.*;
 
+import java.util.Objects;
+
 public class A4Api {
 
   private static final Logger log = LoggerFactory.getLogger(A4Api.class);
 
   private final Murmux mx;
+  private final A4Flags fl;
 
-  public A4Api(Gson g) {
-    this.mx = new Murmux();
+  public A4Api(Gson g, A4Flags fl) {
+    this.fl = Objects.requireNonNull(fl);
+    this.mx = new Murmux(fl.api.host);
     var rpc = new RvMxAdapter<>(
         new A4Controller(), (xc, e) -> log.error("momo?", e),
         g::fromJson, g::toJson
@@ -27,7 +33,7 @@ public class A4Api {
   }
 
   public A4Api start() {
-    mx.listen(7070);
+    mx.listen(fl.api.port);
     return this;
   }
 

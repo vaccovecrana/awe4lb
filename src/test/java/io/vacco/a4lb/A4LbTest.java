@@ -1,7 +1,6 @@
 package io.vacco.a4lb;
 
 import com.google.gson.Gson;
-import io.vacco.a4lb.api.A4Api;
 import io.vacco.shax.logging.ShOption;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
