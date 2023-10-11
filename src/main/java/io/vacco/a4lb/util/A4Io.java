@@ -1,4 +1,4 @@
-package io.vacco.a4lb.tcp;
+package io.vacco.a4lb.util;
 
 import org.slf4j.*;
 import java.io.*;

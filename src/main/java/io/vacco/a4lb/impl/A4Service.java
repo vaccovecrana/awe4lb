@@ -3,7 +3,7 @@ package io.vacco.a4lb.impl;
 import com.google.gson.Gson;
 import io.vacco.a4lb.api.A4Api;
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.tcp.A4Io;
+import io.vacco.a4lb.util.A4Io;
 import io.vacco.a4lb.util.*;
 import java.io.Closeable;
 
@@ -48,12 +48,8 @@ public class A4Service implements Closeable {
   }
 
   @Override public void close() {
-    if (api != null) {
-      A4Io.close(api);
-    }
-    if (instance != null) {
-      A4Io.close(instance);
-    }
+    A4Io.close(api);
+    A4Io.close(instance);
   }
 
 }

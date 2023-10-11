@@ -1,6 +1,7 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.impl.A4Health;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.*;
 import org.slf4j.*;

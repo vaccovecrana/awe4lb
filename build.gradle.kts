@@ -28,11 +28,11 @@ dependencies {
 }
 
 configure<io.vacco.ronove.plugin.RvPluginExtension> {
-  controllerClasses = arrayOf("io.vacco.a4lb.api.A4Controller")
-  outFile.set(file("../a4lb-ui/@a4-ui/rpc.ts"))
+  controllerClasses = arrayOf("io.vacco.a4lb.api.A4Hdl")
+  outFile.set(file("./src/main/resources/@ui/rpc.ts"))
 }
 
 application {
-  mainClass.set("io.vacco.a4lb.A4Lb")
+  mainClass.set("io.vacco.a4lb.A4LbMain")
 }
 
