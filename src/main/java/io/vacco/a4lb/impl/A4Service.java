@@ -1,6 +1,7 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.impl;
 
 import com.google.gson.Gson;
+import io.vacco.a4lb.api.A4Api;
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.tcp.A4Io;
 import io.vacco.a4lb.util.*;
@@ -10,9 +11,9 @@ import static io.vacco.shax.logging.ShOption.*;
 
 public class A4Service implements Closeable {
 
-  public A4Api    api;
+  public A4Api api;
   public A4Config config;
-  public A4Lb     instance;
+  public A4Lb instance;
   public Gson     gson = new Gson();
 
   public A4Service init(A4Flags fl) {

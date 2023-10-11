@@ -1,6 +1,6 @@
 package io.vacco.a4lb.api;
 
-import io.vacco.a4lb.A4Service;
+import io.vacco.a4lb.impl.A4Service;
 import io.vacco.a4lb.cfg.A4Config;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

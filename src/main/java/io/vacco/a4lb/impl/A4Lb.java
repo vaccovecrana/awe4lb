@@ -1,13 +1,11 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.impl;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.A4Config;
 import io.vacco.a4lb.tcp.*;
 import io.vacco.a4lb.util.*;
 import org.slf4j.*;
-
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
