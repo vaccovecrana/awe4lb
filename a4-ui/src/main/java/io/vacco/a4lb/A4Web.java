@@ -1,7 +1,6 @@
-package io.vacco.a4lb.api;
+package io.vacco.a4lb;
 
 import com.google.gson.Gson;
-import io.vacco.a4lb.A4Service;
 import io.vacco.a4lb.util.A4Flags;
 import io.vacco.murmux.Murmux;
 import io.vacco.murmux.http.MxStatus;
@@ -22,26 +21,33 @@ public class A4Web implements Closeable {
     this.fl = Objects.requireNonNull(fl);
     this.mx = new Murmux(fl.api.host);
     var apiHdl = new A4ApiHdl(service);
-    var uiHdl = new A4Ui();
-    var rpc = new RvMxAdapter<>(apiHdl, (xc, e) -> log.error("momo?", e), g::fromJson, g::toJson).build();
+    var uiHdl = new A4UiHdl();
+    var rpc = new RvMxAdapter<>(apiHdl, (xc, e) -> {
+      if (log.isDebugEnabled()) {
+        log.debug("ui - request handling error", e);
+      } else {
+        log.warn("ui - request handling error {}", e.getMessage());
+      }
+      xc.withStatus(MxStatus._500);
+      xc.commit();
+    }, g::fromJson, g::toJson).build();
 
     mx.rootHandler(
         new MxRouter()
             .prefix(A4Route.apiRoot, rpc)
-            .prefix(A4Route.uiRoot, uiHdl)
-            .noMatch(xc -> xc.withStatus(MxStatus._500).commitText("momo?"))
+            .noMatch(uiHdl)
     );
   }
 
   public A4Web open() {
     mx.listen(fl.api.port);
-    log.info("Management API/UI ready at http://{}:{}/ui", fl.api.host, fl.api.port);
+    log.info("ui - ready at http://{}:{}", fl.api.host, fl.api.port);
     return this;
   }
 
   @Override public void close() {
     mx.stop();
-    log.info("Management API/UI stopped");
+    log.info("ui - stopped");
   }
 
 }

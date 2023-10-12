@@ -1,13 +1,13 @@
-package io.vacco.a4lb.api;
+package io.vacco.a4lb;
 
 import io.vacco.murmux.http.*;
 import io.vacco.murmux.middleware.MxStatic;
 import java.io.File;
 import java.nio.file.Paths;
 
-import static io.vacco.a4lb.api.A4Route.*;
+import static io.vacco.a4lb.A4Route.*;
 
-public class A4Ui extends MxStatic {
+public class A4UiHdl extends MxStatic {
 
   public static final String html = String.join("\n", "",
       "<!DOCTYPE html>",
@@ -19,7 +19,7 @@ public class A4Ui extends MxStatic {
       "</head>",
       "<body class=\"dark\">",
       "  <div id=\"root\" />",
-      "  <script src=\"/ui/index.js\"></script>",
+      "  <script src=\"/index.js\"></script>",
       "  <noscript>",
       "    <!-- Happiness = Reality minus Expectations -->",
       "    <!-- :P -->",
@@ -30,25 +30,24 @@ public class A4Ui extends MxStatic {
 
   private static final File readme = new File("./README.md");
 
-  public A4Ui() {
+  public A4UiHdl() {
     super(
         readme.exists() ? Origin.FileSystem : Origin.Classpath,
-        readme.exists() ? Paths.get("./build") : Paths.get("/")
+        readme.exists() ? Paths.get("./build/resources/main/ui") : Paths.get("/ui")
     );
     this.withNoTypeResolver((p, o) -> p.endsWith(".map") ? MxMime.json.type : MxMime.bin.type);
   }
 
   @Override public void handle(MxExchange xc) {
-    if (xc.getPath().startsWith(A4Route.uiRoot)) {
-      switch (xc.getPath()) {
-        case uiIndexJs:
-        case uiIndexJsMap:
-        case uiFavicon:
-          super.handle(xc);
-          break;
-        default: // any other Preact router path
-          xc.commitHtml(html);
-      }
+    var p = xc.getPath();
+    switch (p) {
+      case indexJs:
+      case indexJsMap:
+      case favicon:
+        super.handle(xc);
+        break;
+      default: // any other Preact router path
+        xc.commitHtml(html);
     }
   }
 

@@ -1,7 +1,6 @@
 package io.vacco.a4lb;
 
 import com.google.gson.Gson;
-import io.vacco.a4lb.api.A4Web;
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.impl.A4Lb;
 import io.vacco.a4lb.util.*;
