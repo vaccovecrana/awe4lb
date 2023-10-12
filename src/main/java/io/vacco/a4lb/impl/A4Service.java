@@ -1,7 +1,7 @@
 package io.vacco.a4lb.impl;
 
 import com.google.gson.Gson;
-import io.vacco.a4lb.api.A4Api;
+import io.vacco.a4lb.api.A4Web;
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.util.A4Io;
 import io.vacco.a4lb.util.*;
@@ -11,7 +11,7 @@ import static io.vacco.shax.logging.ShOption.*;
 
 public class A4Service implements Closeable {
 
-  public A4Api api;
+  public A4Web api;
   public A4Config config;
   public A4Lb instance;
   public Gson     gson = new Gson();
@@ -34,7 +34,7 @@ public class A4Service implements Closeable {
 
     try {
       if (fl.root.isDirectory()) {
-        this.api = new A4Api(this, fl, gson).open();
+        this.api = new A4Web(this, fl, gson).open();
       } else {
         log.info("Starting static load balancer instance");
         this.config = A4Configs.loadFrom(fl.root.toURI().toURL(), gson);
