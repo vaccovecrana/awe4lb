@@ -10,3 +10,5 @@ gradlew*
 
 java_pid*.hprof
 echo
+
+node_modules/

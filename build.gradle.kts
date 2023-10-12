@@ -1,6 +1,9 @@
+import com.github.gradle.node.npm.task.NpmTask
+
 plugins {
   id("io.vacco.oss.gitflow") version "0.9.8"
   id("io.vacco.ronove") version "1.2.2"
+  id("com.github.node-gradle.node") version "7.0.1"
   application
 }
 
@@ -29,10 +32,32 @@ dependencies {
 
 configure<io.vacco.ronove.plugin.RvPluginExtension> {
   controllerClasses = arrayOf("io.vacco.a4lb.api.A4Hdl")
-  outFile.set(file("./src/main/resources/@ui/rpc.ts"))
+  outFile.set(file("./src/main/javascript/@a4ui/rpc.ts"))
 }
 
 application {
   mainClass.set("io.vacco.a4lb.A4LbMain")
 }
 
+node {
+  download.set(true)
+  version.set("18.16.0")
+}
+
+val buildTaskUsingNpm = tasks.register<NpmTask>("buildNpm") {
+  dependsOn(tasks.npmInstall)
+  npmCommand.set(listOf("run", "build"))
+  inputs.dir("./src/main/javascript")
+  outputs.dir("./build/ui")
+}
+
+val copyRes = tasks.register<Copy>("copyJs") {
+  dependsOn(buildTaskUsingNpm)
+  from("./build/ui")
+  from("./res/favicon.ico")
+  into("./build/resources/main/ui")
+}
+
+tasks.processResources {
+  dependsOn(copyRes)
+}
