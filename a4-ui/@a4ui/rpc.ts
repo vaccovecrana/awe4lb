@@ -2,20 +2,25 @@
 /* ======== Generated file - do not modify directly ======== */
 /* ========================================================= */
 
-const doJsonIo = <I, O>(url: string, method: string, body: I,
-                        headers: Map<string, string>, mediaType?: string): Promise<O> => {
-  const options: any = {method, headers: {}}
+const doJsonIo = <I, O>(
+  url: string,
+  method: string,
+  body: I,
+  headers: Map<string, string>,
+  mediaType?: string
+): Promise<O> => {
+  const options: any = { method, headers: {} };
   if (mediaType) {
-    options.headers["Content-Type"] = mediaType
+    options.headers["Content-Type"] = mediaType;
   }
   if (body) {
-    options.body = body
+    options.body = body;
   }
-  headers.forEach((v, k) => options.headers[k] = v)
+  headers.forEach((v, k) => (options.headers[k] = v));
   return fetch(url, options)
-    .then(response => response.json())
-    .then(jData => Promise.resolve(jData as O))
-}
+    .then((response) => response.json())
+    .then((jData) => Promise.resolve(jData as O));
+};
 
 /* ====================================== */
 /* ============= RPC types ============== */
@@ -24,8 +29,6 @@ const doJsonIo = <I, O>(url: string, method: string, body: I,
 export interface A4Sock {
   host: string;
   port: number;
-  
-  
 }
 
 export interface A4Tls {
@@ -33,8 +36,6 @@ export interface A4Tls {
   keyPath: string;
   protocols: string[];
   ciphers: string[];
-  
-  
 }
 
 export interface A4StringOp {
@@ -42,32 +43,24 @@ export interface A4StringOp {
   contains: string;
   startsWith: string;
   endsWith: string;
-  
-  
 }
 
 export interface A4MatchOp {
   sni: A4StringOp;
   host: A4StringOp;
-  
-  
 }
 
 export const enum Type {
-  
   roundRobin = "roundRobin",
   leastConn = "leastConn",
   ipHash = "ipHash",
   weight = "weight",
-  
 }
 
 export const enum State {
-  
   Up = "Up",
   Down = "Down",
   Unknown = "Unknown",
-  
 }
 
 export interface A4Backend {
@@ -75,14 +68,9 @@ export interface A4Backend {
   weight: number;
   priority: number;
   state: State;
-  
-  
 }
 
-export interface Random {
-  
-  
-}
+export interface Random {}
 
 export interface A4Pool {
   type: Type;
@@ -90,30 +78,22 @@ export interface A4Pool {
   openTls: boolean;
   rnd: Random;
   rrVal: number;
-  
-  
 }
 
 export const enum A4Format {
-  
   text = "text",
   json = "json",
-  
 }
 
 export interface A4DiscHttp {
   endpoint: string;
   format: A4Format;
-  
-  
 }
 
 export interface A4DiscExec {
   command: string;
   args: string[];
   format: A4Format;
-  
-  
 }
 
 export interface A4Disc {
@@ -121,23 +101,17 @@ export interface A4Disc {
   exec: A4DiscExec;
   intervalMs: number;
   timeoutMs: number;
-  
-  
 }
 
 export interface A4HealthExec {
   command: string;
   args: string[];
-  
-  
 }
 
 export interface A4HealthCheck {
   intervalMs: number;
   timeoutMs: number;
   exec: A4HealthExec;
-  
-  
 }
 
 export interface A4Match {
@@ -146,8 +120,6 @@ export interface A4Match {
   pool: A4Pool;
   discover: A4Disc;
   healthCheck: A4HealthCheck;
-  
-  
 }
 
 export interface A4Server {
@@ -155,8 +127,6 @@ export interface A4Server {
   addr: A4Sock;
   tls: A4Tls;
   match: A4Match[];
-  
-  
 }
 
 export interface A4Config {
@@ -165,10 +135,7 @@ export interface A4Config {
   description: string;
   api: A4Sock;
   servers: A4Server[];
-  
-  
 }
-
 
 /* ====================================== */
 /* ============ RPC methods ============= */
@@ -182,17 +149,6 @@ Source controllers:
  */
 
 export const getActiveConfig = (): Promise<A4Config> => {
-  let path = "/api/v1/config"
-  
-  
-  
-  
-  return doJsonIo(path, "GET",
-    
-      undefined
-    ,
-    new Map(),
-    undefined
-  )
-}
-
+  let path = "/api/v1/config";
+  return doJsonIo(path, "GET", undefined, new Map(), undefined);
+};

@@ -15,7 +15,7 @@ dependencies {
 }
 
 configure<io.vacco.ronove.plugin.RvPluginExtension> {
-  controllerClasses = arrayOf("io.vacco.a4lb.api.A4Hdl")
+  controllerClasses = arrayOf("io.vacco.a4lb.api.A4ApiHdl")
   outFile.set(file("./@a4ui/rpc.ts"))
 }
 
