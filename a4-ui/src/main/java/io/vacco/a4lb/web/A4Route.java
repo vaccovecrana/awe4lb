@@ -1,4 +1,4 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.web;
 
 public class A4Route {
 

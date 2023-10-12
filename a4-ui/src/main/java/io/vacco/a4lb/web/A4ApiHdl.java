@@ -1,11 +1,12 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.web;
 
+import io.vacco.a4lb.A4Service;
 import io.vacco.a4lb.cfg.A4Config;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import java.util.Objects;
 
-import static io.vacco.a4lb.A4Route.*;
+import static io.vacco.a4lb.web.A4Route.*;
 
 public class A4ApiHdl {
 

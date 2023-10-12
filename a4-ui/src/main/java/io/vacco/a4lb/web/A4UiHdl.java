@@ -1,11 +1,11 @@
-package io.vacco.a4lb;
+package io.vacco.a4lb.web;
 
 import io.vacco.murmux.http.*;
 import io.vacco.murmux.middleware.MxStatic;
 import java.io.File;
 import java.nio.file.Paths;
 
-import static io.vacco.a4lb.A4Route.*;
+import static io.vacco.a4lb.web.A4Route.*;
 
 public class A4UiHdl extends MxStatic {
 
