@@ -1,6 +1,7 @@
 package io.vacco.a4lb.api;
 
 import com.google.gson.Gson;
+import io.vacco.a4lb.A4Service;
 import io.vacco.a4lb.util.A4Flags;
 import io.vacco.murmux.Murmux;
 import io.vacco.murmux.http.MxStatus;
