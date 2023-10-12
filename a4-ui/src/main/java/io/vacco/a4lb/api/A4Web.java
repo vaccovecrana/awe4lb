@@ -21,7 +21,7 @@ public class A4Web implements Closeable {
   public A4Web(A4Service service, A4Flags fl, Gson g) {
     this.fl = Objects.requireNonNull(fl);
     this.mx = new Murmux(fl.api.host);
-    var apiHdl = new A4Api(service);
+    var apiHdl = new A4ApiHdl(service);
     var uiHdl = new A4Ui();
     var rpc = new RvMxAdapter<>(apiHdl, (xc, e) -> log.error("momo?", e), g::fromJson, g::toJson).build();
 

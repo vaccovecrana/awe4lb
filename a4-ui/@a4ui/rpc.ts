@@ -177,7 +177,7 @@ export interface A4Config {
 /*
 Source controllers:
 
-- io.vacco.a4lb.api.A4Api
+- io.vacco.a4lb.api.A4ApiHdl
 
  */
 

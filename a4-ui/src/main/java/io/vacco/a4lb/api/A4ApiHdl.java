@@ -8,11 +8,11 @@ import java.util.Objects;
 
 import static io.vacco.a4lb.api.A4Route.*;
 
-public class A4Api {
+public class A4ApiHdl {
 
   public A4Service service;
 
-  public A4Api(A4Service service) {
+  public A4ApiHdl(A4Service service) {
     this.service = Objects.requireNonNull(service);
   }
 
