@@ -8,6 +8,6 @@ export default {
   plugins: [
     nodeResolve(),
     typescript(),
-    scss({output: "./build/ui/index.css", failOnError: true})
+    scss({fileName: "index.css", failOnError: true})
   ]
 }

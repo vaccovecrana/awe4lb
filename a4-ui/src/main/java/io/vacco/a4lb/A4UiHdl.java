@@ -16,6 +16,7 @@ public class A4UiHdl extends MxStatic {
       "  <base href=\"/\" />",
       "  <meta charset=\"utf-8\" />",
       "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">",
+      "  <link rel=\"stylesheet\" href=\"/index.css\" />",
       "</head>",
       "<body class=\"dark\">",
       "  <div id=\"root\" />",
@@ -41,6 +42,7 @@ public class A4UiHdl extends MxStatic {
   @Override public void handle(MxExchange xc) {
     var p = xc.getPath();
     switch (p) {
+      case indexCss:
       case indexJs:
       case indexJsMap:
       case favicon:
