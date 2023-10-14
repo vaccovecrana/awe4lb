@@ -11,6 +11,6 @@
     "resolveJsonModule": true,
     "typeRoots": ["node_modules/@types"],
     "allowJs": false,
-    "baseUrl": "./src/main/javascript"
+    "baseUrl": "."
   }
 }

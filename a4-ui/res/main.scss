@@ -45,9 +45,9 @@ small {
 .mr24 { margin-right: 24px; }
 
 .logo svg {
-  background-color: var(--nord7-pale);
-  border-radius: 8px;
-  padding: 8px;
+  padding: 2px;
+  width: 64px;
+  height: 64px;;
 }
 
 #appFrame {
@@ -55,8 +55,8 @@ small {
 }
 
 #menuLeft {
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .addButton {
