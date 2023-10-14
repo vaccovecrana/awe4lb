@@ -13,10 +13,10 @@ public class A4Lb implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(A4Lb.class);
 
-  private final Gson gson;
-  private final A4Config config;
-  private final ExecutorService exSvc = Executors.newCachedThreadPool(new A4ThreadFactory("awe4lb"));
-  private final List<A4TcpSrv> servers = new ArrayList<>();
+  public  final A4Config        config;
+  private final Gson            gson;
+  private final ExecutorService exSvc;
+  private final List<A4TcpSrv>  servers = new ArrayList<>();
 
   public A4Lb(A4Config config, Gson gson) {
     this.gson = Objects.requireNonNull(gson);
@@ -25,6 +25,7 @@ public class A4Lb implements Closeable {
     if (!configErrors.isEmpty()) {
       throw new A4Exceptions.A4ConfigException(configErrors);
     }
+    this.exSvc = Executors.newCachedThreadPool(new A4ThreadFactory(String.format("a4lb-%s", config.id)));
   }
 
   public A4Lb open() {

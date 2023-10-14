@@ -181,7 +181,7 @@ Source controllers:
 
  */
 
-export const getActiveConfig = (): Promise<A4Config> => {
+export const getInstances = (): Promise<A4Config[]> => {
   let path = "/api/v1/config"
   
   

@@ -12,6 +12,7 @@ import Router from 'preact-router'
 
 import { A4MenuLeft, A4MenuTop, A4UiLock } from "@a4ui/components"
 import { initialState, A4Context, A4Reducer } from "@a4ui/store"
+import { A4Dashboard } from "@a4ui/routes"
 
 class A4Shell extends React.Component {
   public render() {
@@ -30,6 +31,7 @@ class A4Shell extends React.Component {
               <div class="col xs-12 sm-12 md-11 lg-11 xl-11">
                 <div id="appFrame">
                   <Router>
+                    <A4Dashboard path="/" />
                   </Router>
                 </div>
               </div>
