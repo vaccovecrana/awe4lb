@@ -34,7 +34,7 @@ val buildTaskUsingNpm = tasks.register<NpmTask>("buildNpm") {
 val copyRes = tasks.register<Copy>("copyJs") {
   dependsOn(buildTaskUsingNpm)
   from("./build/ui")
-  from("./res/favicon.ico")
+  from("./res/favicon.svg")
   into("./build/resources/main/ui")
 }
 

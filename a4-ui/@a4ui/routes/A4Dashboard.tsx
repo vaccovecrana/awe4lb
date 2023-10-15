@@ -4,6 +4,7 @@ import { useContext } from "preact/hooks"
 import { lockUi, A4Context, A4Store } from "@a4ui/store"
 import { A4Backend, A4Config, A4Server, State, apiV1ConfigList } from "@a4ui/rpc"
 import { RenderableProps } from "preact"
+import { matchLabel } from "@a4ui/util"
 
 type A4DProps = RenderableProps<{ s?: A4Store }>
 interface A4DState { configs?: A4Config[] }
@@ -55,9 +56,7 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
                             <div class="mt8">
                               {(match.and || match.or) ? (
                                 <div class="txc match-cond">
-                                  <code>
-                                    {match.and ? "and" : "or"}: {JSON.stringify(match.and ? match.and : match.or)}
-                                  </code>
+                                  <code>{matchLabel(match)}</code>
                                 </div>
                               ) : []}
                               {match.pool.hosts.length > 0 ? (

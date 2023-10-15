@@ -16,6 +16,7 @@ public class A4UiHdl extends MxStatic {
       "  <base href=\"/\" />",
       "  <meta charset=\"utf-8\" />",
       "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">",
+      "  <link rel=\"icon\" href=\"/favicon.svg\" type=\"image/svg+xml\">",
       "  <link rel=\"stylesheet\" href=\"/index.css\" />",
       "</head>",
       "<body class=\"dark\">",
@@ -29,12 +30,12 @@ public class A4UiHdl extends MxStatic {
       "</html>"
   );
 
-  private static final File readme = new File("./README.md");
+  private static final File pkgJson = new File("./package.json");
 
   public A4UiHdl() {
     super(
-        readme.exists() ? Origin.FileSystem : Origin.Classpath,
-        readme.exists() ? Paths.get("./build/resources/main/ui") : Paths.get("/ui")
+        pkgJson.exists() ? Origin.FileSystem : Origin.Classpath,
+        Paths.get("./build/resources/main/ui")
     );
     this.withNoTypeResolver((p, o) -> p.endsWith(".map") ? MxMime.json.type : MxMime.bin.type);
   }
