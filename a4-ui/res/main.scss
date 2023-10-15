@@ -1,11 +1,17 @@
+:root {
+  --nord-deep-darker:#1C2026;
+}
+
 html, body, #root, #app { height: 100%; }
+
+#root, #app {
+  background-color: var(--nord-deep-darker);
+}
 
 body { font-family: Arial, Helvetica, sans-serif; }
 aside { background-color: var(--nord0); }
 
-small {
-  font-size: 11px;
-}
+small { font-size: 11px; }
 
 .source pre { margin: 2px; counter-reset: line; }
 .source code{ counter-increment: line; }
@@ -21,7 +27,7 @@ small {
 
 .txc { text-align: center; }
 .txr { text-align: right; }
-.txBold { font-weight: 700; }
+.txSmall { font-size: 12px;; }
 
 .p4  { padding: 4px; }
 .p8  { padding: 8px; }
@@ -39,6 +45,7 @@ small {
 
 .ph16 { padding-left: 16px; padding-right: 16px; }
 
+.m2 { margin: 2px; }
 .m8 { margin: 8px; }
 .mt8 { margin-top: 8px; }
 .mv8 { margin-top: 8px; margin-bottom: 8px; }
@@ -70,24 +77,23 @@ small {
   background-color: var(--nord7);
 }
 
-.badge-info {
-  background-color: var(--nord10);
-  color: var(--nord6);
-  text-align: center;
-  text-decoration: none;
-  border-radius: 16px;
-  font-weight: bold;
-  font-size: 12px;
-}
-
 .value-input {
   font-family: monospace;
 }
 
-.card-body hr {
-  margin: 0px;
+.card hr {
   width: 100%;
   color: var(--nord1);
+}
+
+.card-title-1 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.card-title-2 {
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .box {
@@ -126,4 +132,14 @@ small {
 
 .pill-green {
   background-color: var(--nord14);
+}
+
+.pill-red {
+  background-color: var(--nord11);
+}
+
+.match-cond {
+  background-color: var(--nord15-pale);
+  border-radius: 4px;
+  padding: 4px;
 }
