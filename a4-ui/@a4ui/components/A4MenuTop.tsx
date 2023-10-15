@@ -13,28 +13,8 @@ const A4MenuTop = () => (
         <div class="txc">
           <div class="pv8">
             <a>
-              <i class="icono-image" /><br />
-              <small>Pictures</small>
-            </a>
-          </div>
-        </div>
-      </div>
-      <div class="col auto">
-        <div class="txc">
-          <div class="pv8">
-            <a>
-              <i class="icono-headphone" /><br />
-              <small>Stems</small>
-            </a>
-          </div>
-        </div>
-      </div>
-      <div class="col auto">
-        <div class="txc">
-          <div class="pv8">
-            <a>
-              <i class="icono-video" /><br />
-              <small>Videos</small>
+              <i class="icono-areaChart" /><br />
+              <small>Status</small>
             </a>
           </div>
         </div>
@@ -44,7 +24,17 @@ const A4MenuTop = () => (
           <div class="pv8">
             <a>
               <i class="icono-tiles" /><br />
-              <small>Mixes</small>
+              <small>Configurations</small>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col auto">
+        <div class="txc">
+          <div class="pv8">
+            <a>
+              <i class="icono-rename" /><br />
+              <small>Editor</small>
             </a>
           </div>
         </div>

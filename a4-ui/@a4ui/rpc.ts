@@ -161,9 +161,9 @@ export interface A4Server {
 
 export interface A4Config {
   Seed: number;
+  active: boolean;
   id: string;
   description: string;
-  api: A4Sock;
   servers: A4Server[];
   
   
@@ -181,8 +181,8 @@ Source controllers:
 
  */
 
-export const getInstances = (): Promise<A4Config[]> => {
-  let path = "/api/v1/config"
+export const apiV1ConfigList = (): Promise<A4Config[]> => {
+  let path = "/api/v1/config/list"
   
   
   

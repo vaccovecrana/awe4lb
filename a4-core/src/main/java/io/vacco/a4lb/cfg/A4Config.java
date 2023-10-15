@@ -7,8 +7,8 @@ public class A4Config {
 
   public static final long Seed = 1984;
 
+  public boolean active;
   public String id, description;
-  public A4Sock api;
   public List<A4Server> servers = new ArrayList<>();
 
   public A4Config server(A4Server server) {

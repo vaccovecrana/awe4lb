@@ -21,6 +21,7 @@ small {
 
 .txc { text-align: center; }
 .txr { text-align: right; }
+.txBold { font-weight: 700; }
 
 .p4  { padding: 4px; }
 .p8  { padding: 8px; }
@@ -39,6 +40,7 @@ small {
 .ph16 { padding-left: 16px; padding-right: 16px; }
 
 .m8 { margin: 8px; }
+.mt8 { margin-top: 8px; }
 .mv8 { margin-top: 8px; margin-bottom: 8px; }
 .mv16 { margin-top: 16px; margin-bottom: 16px; }
 .mt16 { margin-top: 16px; }
@@ -93,14 +95,6 @@ small {
   border-radius: 0.3em;
 }
 
-.audioPlayerBlock {
-  width: 100%;
-}
-
-.videoLoop {
-  width: 320px;
-}
-
 .overlay {
   position: absolute;
   top: 0;
@@ -124,9 +118,12 @@ small {
 }
 
 .pill {
-  background-color: var(--nord4-pale);
   color: var(--nord6);
   padding: 2px 12px;
   text-align: center;
   border-radius: 16px;
+}
+
+.pill-green {
+  background-color: var(--nord14);
 }

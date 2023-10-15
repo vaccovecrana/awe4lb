@@ -20,7 +20,9 @@ public class A4ServiceTest {
       });
       var svc = new A4Service().init(fl);
       var g = new Gson();
-      svc.initInstance(A4Configs.loadFrom(A4ServiceTest.class.getResource("/config.json"), g));
+      var cfg = A4Configs.loadFrom(A4ServiceTest.class.getResource("/config.json"), g);
+      svc.add(cfg);
+      svc.setActive(cfg.id);
       Thread.sleep(Integer.MAX_VALUE);
       svc.close();
     });

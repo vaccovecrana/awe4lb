@@ -145,10 +145,13 @@ public class A4Valid {
           "oneOf", "oneOf",
           "\"{0}\" only one of [and, or] allowed"
       )
-      .constraintOnTarget(
-          m -> m.discover.intervalMs >= m.healthCheck.intervalMs, "intervalMs",
-          "discover.intervalMs.isGreaterThan.healthCheck.intervalMs",
-          "\"{0}\" \"discover.intervalMs\" must be greater than \"healthCheck.intervalMs\""
+      .constraintOnCondition(
+          (m, cg) -> m.discover != null && m.healthCheck != null,
+          b -> b.constraintOnTarget(
+            m -> m.discover.intervalMs > m.healthCheck.intervalMs, "intervalMs",
+              "discover.intervalMs.isGreaterThan.healthCheck.intervalMs",
+              "\"{0}\" \"discover.intervalMs\" must be greater than \"healthCheck.intervalMs\""
+          )
       )
       .constraintOnCondition(
           (m, cg) -> m.discover == null,
@@ -184,7 +187,6 @@ public class A4Valid {
   public static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
       ._string(c -> c.id, "id", A4Valid::nnNeNb)
       ._string(c -> c.description, "description", A4Valid::nnNeNb)
-      .nestIfPresent(c -> c.api, "api", A4SockVld)
       .constraint(A4Config::serverList, "servers", c -> c.notNull().notEmpty())
       .forEach(A4Config::serverList, "servers", A4ServerVld)
       .build();
