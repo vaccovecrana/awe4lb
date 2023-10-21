@@ -1,5 +1,5 @@
 import * as React from "preact/compat"
-import { A4Backend, A4Match, State } from "@a4ui/rpc"
+import { A4Backend, A4Disc, A4Match, State } from "@a4ui/rpc"
 import { matchLabel } from "@a4ui/util"
 
 interface A4McProps { match: A4Match }
@@ -7,6 +7,38 @@ interface A4McProps { match: A4Match }
 const renderBkState = (bk: A4Backend) => {
   const clazz = bk.state === State.Up ? "pill pill-green" : "pill pill-red"
   return <span class={clazz}>{bk.state}</span>
+}
+
+const renderDiscover = (discover: A4Disc) => {
+  if (discover.http) {
+    return (
+      <div>
+        <i class="icon-link mr4"></i>
+        <a href={discover.http.endpoint}>{discover.http.endpoint}</a>
+        <span class="pill pill-pale ml4">{discover.http.format}</span>
+      </div>
+    )
+  } else if (discover.exec) {
+    return (
+      <div>
+        <i class="icon-screen-desktop mr4"></i>
+        <code>
+          {discover.exec.command} {discover.exec.args.join(" ")}
+        </code>
+        <span class="pill pill-pale ml4">{discover.exec.format}</span>
+      </div>
+    )
+  }
+  return <div />
+}
+
+const renderIntervalTimeout = (intervalMs: number, timeoutMs: number) => {
+  return (
+    <div class="mt4">
+      <i class="icon-loop mr4"></i><code>{intervalMs}ms</code>&nbsp;
+      <i class="icon-clock mr4"></i><code>{timeoutMs}ms</code>
+    </div>
+  )
 }
 
 const A4MatchCard = (props: A4McProps) => (
@@ -17,7 +49,17 @@ const A4MatchCard = (props: A4McProps) => (
       </div>
     ) : []}
     {props.match.discover ? (
-      <div>Discover LOL</div>
+      <div class="card minimal p8 mt8 txSmall">
+        <div class="card-title-3">Discovery</div>
+        {renderIntervalTimeout(props.match.discover.intervalMs, props.match.discover.timeoutMs)}
+        {renderDiscover(props.match.discover)}
+      </div>
+    ) : []}
+    {props.match.healthCheck ? (
+      <div class="card minimal p8 mt8 txSmall">
+        <div class="card-title-3">Health check</div>
+        {renderIntervalTimeout(props.match.healthCheck.intervalMs, props.match.healthCheck.timeoutMs)}
+      </div>
     ) : []}
     {props.match.pool.hosts.length > 0 ? (
       <table class="table txSmall">

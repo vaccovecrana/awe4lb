@@ -41,10 +41,13 @@ small { font-size: 11px; }
 
 .m2 { margin: 2px; }
 .m8 { margin: 8px; }
+.mt4 { margin-top: 4px; }
 .mt8 { margin-top: 8px; }
 .mv8 { margin-top: 8px; margin-bottom: 8px; }
 .mv16 { margin-top: 16px; margin-bottom: 16px; }
 .mt16 { margin-top: 16px; }
+.ml4 { margin-left: 4px; }
+.mr4 { margin-right: 4px; }
 .mr24 { margin-right: 24px; }
 
 .logo svg {
@@ -100,6 +103,10 @@ small { font-size: 11px; }
   padding: 2px 12px;
   text-align: center;
   border-radius: 16px;
+}
+
+.pill-pale {
+  background-color: var(--nord10-pale);
 }
 
 .pill-green {

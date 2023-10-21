@@ -35,9 +35,7 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
           <div class="row">
             <div class="col auto">
               <div class="p8 card minimal">
-                <div class="card-title-1 pv8">
-                  {cfg.id}&nbsp;{cfg.active ? <small class="pill pill-green">active</small> : []}
-                </div>
+                <div class="card-title-1 pv8">{cfg.id}</div>
                 <small>{cfg.description}</small>
                 {cfg.servers.length > 0 ? ([
                   <div class="row">
