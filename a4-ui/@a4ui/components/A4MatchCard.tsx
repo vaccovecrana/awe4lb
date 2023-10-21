@@ -63,24 +63,39 @@ const A4MatchCard = (props: A4McProps) => (
       </div>
     ) : []}
     {props.match.pool.hosts.length > 0 ? (
-      <table class="table txSmall">
-        <thead>
-          <th>host/port</th>
-          <th>weight/priority</th>
-          <th>state</th>
-        </thead>
-        <tbody>
-          {props.match.pool.hosts.map(bk => (
-            <tr>
-              <td>{bk.addr.host}:{bk.addr.port}</td>
-              <td>{bk.weight}/{bk.priority}</td>
-              <td>
-                {renderBkState(bk)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div class="card minimal mt8 txSmall">
+        <div class="pltr8">
+          <div class="row">
+            <div class="col auto">
+              <div class="card-title-3">Pool</div>
+            </div>
+            <div class="col auto">
+              <div class="txr ph8">
+                <i class="icon-directions mr4"></i>
+                <code>{props.match.pool.type ? props.match.pool.type : "random"}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+        <table class="table">
+          <thead>
+            <th>host/port</th>
+            <th>weight/priority</th>
+            <th>state</th>
+          </thead>
+          <tbody>
+            {props.match.pool.hosts.map(bk => (
+              <tr>
+                <td>{bk.addr.host}:{bk.addr.port}</td>
+                <td>{bk.weight}/{bk.priority}</td>
+                <td>
+                  {renderBkState(bk)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     ) : []}
   </div>
 )
