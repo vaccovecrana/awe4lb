@@ -31,16 +31,25 @@ val buildTaskUsingNpm = tasks.register<NpmTask>("buildNpm") {
   outputs.dir("./build/ui")
 }
 
-val copyRes = tasks.register<Copy>("copyJs") {
+val copyJs = tasks.register<Copy>("copyJs") {
   dependsOn(buildTaskUsingNpm)
   from("./build/ui")
   from("./res/favicon.svg")
   into("./build/resources/main/ui")
 }
 
-tasks.processResources {
-  dependsOn(copyRes)
+val copyRes = tasks.register<Copy>("copyRes") {
+  dependsOn(buildTaskUsingNpm)
+  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.eot")
+  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.svg")
+  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.ttf")
+  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.woff")
+  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.woff2")
+  into("./build/resources/main/ui/fonts")
 }
+
+tasks.processResources { dependsOn(copyJs) }
+tasks.processResources { dependsOn(copyRes) }
 
 application {
   mainClass.set("io.vacco.a4lb.A4LbMain")

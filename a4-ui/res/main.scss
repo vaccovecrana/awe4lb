@@ -1,17 +1,13 @@
-:root {
-  --nord-deep-darker:#1C2026;
-}
+:root { --nord-deep-darker:#1C2026; }
 
 html, body, #root, #app { height: 100%; }
+body { font-family: Arial, Helvetica, sans-serif; }
+aside { background-color: var(--nord0); }
+small { font-size: 11px; }
 
 #root, #app {
   background-color: var(--nord-deep-darker);
 }
-
-body { font-family: Arial, Helvetica, sans-serif; }
-aside { background-color: var(--nord0); }
-
-small { font-size: 11px; }
 
 .source pre { margin: 2px; counter-reset: line; }
 .source code{ counter-increment: line; }
@@ -32,8 +28,6 @@ small { font-size: 11px; }
 .p4  { padding: 4px; }
 .p8  { padding: 8px; }
 .p16 { padding: 16px; }
-
-.pr12 { padding-right: 12px; }
 
 .pt8 { padding-top: 8px; }
 
@@ -96,31 +90,9 @@ small { font-size: 11px; }
   font-weight: 700;
 }
 
-.box {
-  border: 2px solid var(--nord1);
-  border-radius: 0.3em;
-}
-
-.overlay {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  width: 100%;
-  border-radius: 2px;
-  background-color: #5e81ac7a;
-}
-
-.icon {
-  color: white;
-  font-size: 100px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
+.card-title-3 {
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .pill {
@@ -143,6 +115,3 @@ small { font-size: 11px; }
   border-radius: 4px;
   padding: 4px;
 }
-
-.icoSmall { transform: scale(0.4,0.4); }
-.icoMed   { transform: scale(0.8,0.8); }

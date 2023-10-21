@@ -42,6 +42,10 @@ public class A4UiHdl extends MxStatic {
 
   @Override public void handle(MxExchange xc) {
     var p = xc.getPath();
+    if (p.startsWith(simpleIcons)) {
+      super.handle(xc);
+      return;
+    }
     switch (p) {
       case indexCss:
       case indexJs:

@@ -1,6 +1,6 @@
 import "nord-ui"
 import "nord-ui/dist/dark-theme.css"
-import "icono"
+import "simple-line-icons/css/simple-line-icons.css"
 
 import "../res/ui-lock.css"
 import "../res/main.scss"

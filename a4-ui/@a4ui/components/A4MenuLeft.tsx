@@ -9,20 +9,20 @@ const A4MenuLeft = () => (
         <A4Logo />
       </div>
       <div class="pv8">
-        <a>
-          <i class="icono-areaChart" /><br />
+        <a href="/">
+          <i class="icon-layers" /><br />
           <small>Status</small>
         </a>
       </div>
       <div class="pv8">
         <a>
-          <i class="icono-tiles" /><br />
+          <i class="icon-grid" /><br />
           <small>Configurations</small>
         </a>
       </div>
       <div class="pv8">
         <a>
-          <i class="icono-rename" /><br />
+          <i class="icon-pencil" /><br />
           <small>Editor</small>
         </a>
       </div>

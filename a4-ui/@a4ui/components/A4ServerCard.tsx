@@ -13,19 +13,20 @@ const A4ServerCard = (props: A4ScProps) => (
   <div class="col xs-12 sm-12 md-6">
     <div class="card minimal p8 m2 mt8">
       <div class="card-title-2">
-      <i class="icono-rss icoMed" /> {props.srv.id}
+        <i class="icon-compass" /> {props.srv.id}
       </div>
       {props.srv.tls ? (
-        <div class="mt8 txSmall card minimal">
-          <div>
-            <i class="icono-document icoSmall" /> <span>{props.srv.tls.certPath}</span>
+        <div class="mt8 p8 txSmall card minimal">
+          <div class="card-title-3">TLS</div>
+          <div class="mt8">
+            <i class="icon-doc" /> <span>{props.srv.tls.certPath}</span>
           </div>
           <div>
-            <i class="icono-asterisk icoSmall" /> <span>{props.srv.tls.keyPath}</span>
+            <i class="icon-key" /> <span>{props.srv.tls.keyPath}</span>
           </div>
           {props.srv.tls.ciphers && props.srv.tls.ciphers.length > 0 ? (
             <div>
-              <i class="icono-hamburger icoSmall" /> {props.srv.tls.ciphers.join(", ")}
+              <i class="icon-list" /> {props.srv.tls.ciphers.join(", ")}
             </div>
           ) : []}
         </div>
