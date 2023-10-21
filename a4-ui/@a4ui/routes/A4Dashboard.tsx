@@ -50,7 +50,7 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
                       <div class="col xs-12 sm-12 md-6">
                         <div class="card minimal p8 m2 mt8">
                           <div class="card-title-2">
-                          <i class="icono-caretRight" /> {srv.id}
+                          <i class="icono-rss" /> {srv.id}
                           </div>
                           {srv.match.map((match, k) => (
                             <div class="mt8">
