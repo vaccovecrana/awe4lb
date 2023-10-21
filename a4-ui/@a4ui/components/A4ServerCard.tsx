@@ -1,13 +1,8 @@
 import * as React from "preact/compat"
-import { A4Backend, A4Server, State } from "@a4ui/rpc"
-import { matchLabel } from "@a4ui/util"
+import { A4Server } from "@a4ui/rpc"
+import A4MatchCard from "./A4MatchCard"
 
-interface A4ScProps { srv: A4Server } 
-
-const renderBkState = (bk: A4Backend) => {
-  const clazz = bk.state === State.Up ? "pill pill-green" : "pill pill-red"
-  return <span class={clazz}>{bk.state}</span>
-}
+interface A4ScProps { srv: A4Server }
 
 const A4ServerCard = (props: A4ScProps) => (
   <div class="col xs-12 sm-12 md-6">
@@ -31,36 +26,10 @@ const A4ServerCard = (props: A4ScProps) => (
           ) : []}
         </div>
       ) : []}
-      {props.srv.match.map((match, k) => (
-        <div class="mt8">
-          {(match.and || match.or) ? (
-            <div class="txc match-cond">
-              <code>{matchLabel(match)}</code>
-            </div>
-          ) : []}
-          {match.pool.hosts.length > 0 ? (
-            <table class="table txSmall">
-                <thead>
-                  <th>host/port</th>
-                  <th>weight/priority</th>
-                  <th>state</th>
-                </thead>
-                <tbody>
-                  {match.pool.hosts.map(bk => (
-                    <tr>
-                      <td>{bk.addr.host}:{bk.addr.port}</td>
-                      <td>{bk.weight}/{bk.priority}</td>
-                      <td>
-                        {renderBkState(bk)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-          ) : []}
-          {props.srv.match.length > 1 && (k < props.srv.match.length - 1) ? <hr class="mt8" /> : []}
-        </div>
-      ))}
+      {props.srv.match.map((match, k) => [
+        <A4MatchCard match={match} />,
+        props.srv.match.length > 1 && (k < props.srv.match.length - 1) ? <hr class="mt8" /> : []
+      ])}
     </div>
   </div>
 )
