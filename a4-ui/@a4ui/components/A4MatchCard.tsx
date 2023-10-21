@@ -48,17 +48,18 @@ const A4MatchCard = (props: A4McProps) => (
         <code>{matchLabel(props.match)}</code>
       </div>
     ) : []}
-    {props.match.discover ? (
+    {(props.match.discover || props.match.healthCheck) ? (
       <div class="card minimal p8 mt8 txSmall">
-        <div class="card-title-3">Discovery</div>
-        {renderIntervalTimeout(props.match.discover.intervalMs, props.match.discover.timeoutMs)}
-        {renderDiscover(props.match.discover)}
-      </div>
-    ) : []}
-    {props.match.healthCheck ? (
-      <div class="card minimal p8 mt8 txSmall">
-        <div class="card-title-3">Health check</div>
-        {renderIntervalTimeout(props.match.healthCheck.intervalMs, props.match.healthCheck.timeoutMs)}
+        {props.match.discover ? [
+          <div class="card-title-3">Discovery</div>,
+          renderIntervalTimeout(props.match.discover.intervalMs, props.match.discover.timeoutMs),
+          renderDiscover(props.match.discover)
+        ] : []}
+        {props.match.healthCheck ? [
+          <hr />,
+          <div class="card-title-3 mt8">Health check</div>,
+          renderIntervalTimeout(props.match.healthCheck.intervalMs, props.match.healthCheck.timeoutMs)
+        ] : []}
       </div>
     ) : []}
     {props.match.pool.hosts.length > 0 ? (
