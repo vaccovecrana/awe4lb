@@ -11,7 +11,7 @@ import java.util.Objects;
 
 public class A4Valid {
 
-  public static <T> IntegerConstraint<T> gt0I(IntegerConstraint<T> c) {
+  public static <T> IntegerConstraint<T> gtZero(IntegerConstraint<T> c) {
     return c.greaterThan(0);
   }
 
@@ -33,8 +33,8 @@ public class A4Valid {
       .build();
 
   public static final Validator<A4HealthCheck> A4HealthCheckVld = ValidatorBuilder.<A4HealthCheck>of()
-      ._integer(hc -> hc.intervalMs, "intervalMs", A4Valid::gt0I)
-      ._integer(hc -> hc.timeoutMs, "timeoutMs", A4Valid::gt0I)
+      ._integer(hc -> hc.intervalMs, "intervalMs", A4Valid::gtZero)
+      ._integer(hc -> hc.timeoutMs, "timeoutMs", A4Valid::gtZero)
       .constraintOnTarget(
           hc -> hc.timeoutMs < hc.intervalMs, "timeoutMs",
           "timeoutMs.isLessThanInterval",
@@ -110,8 +110,8 @@ public class A4Valid {
   public static final Validator<A4Disc> A4DiscVld = ValidatorBuilder.<A4Disc>of()
       .nestIfPresent(d -> d.http, "http", A4DiscHttpVld)
       .nestIfPresent(d -> d.exec, "exec", A4DiscExecVld)
-      ._integer(d -> d.intervalMs, "intervalMs", A4Valid::gt0I)
-      ._integer(d -> d.timeoutMs, "timeoutMs", A4Valid::gt0I)
+      ._integer(d -> d.intervalMs, "intervalMs", A4Valid::gtZero)
+      ._integer(d -> d.timeoutMs, "timeoutMs", A4Valid::gtZero)
       .constraintOnTarget(
           d -> d.timeoutMs < d.intervalMs, "timeoutMs",
           "timeoutMs.isLessThanInterval",
@@ -176,12 +176,32 @@ public class A4Valid {
       )
       .build();
 
+  public static final Validator<A4Udp> A4UdpVld = ValidatorBuilder.<A4Udp>of()
+      ._integer(u -> u.bufferSize, "bufferSize", A4Valid::gtZero)
+      .build();
+
   public static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
       ._string(s -> s.id, "id", A4Valid::nnNeNb)
       .nest(s -> s.addr, "addr", A4SockVld)
       .nestIfPresent(s -> s.tls, "tls", A4TlsVld)
-      .constraint(A4Server::matchList, "match", c -> c.notNull().notEmpty())
-      .forEach(A4Server::matchList, "match", A4MatchVld)
+      .nestIfPresent(s -> s.udp, "udp", A4UdpVld)
+      .constraint(A4Configs::allMatchesOf, "match", c -> c.notNull().notEmpty())
+      .forEach(A4Configs::allMatchesOf, "match", A4MatchVld)
+      .constraintOnTarget(
+          s -> allNoNullLtEq(1, s.tls, s.udp),
+          "oneOf", "oneOf",
+          "\"{0}\" only one of [tls, udp] allowed"
+      )
+      .constraintOnCondition(
+          (s, cg) -> s.udp != null,
+          b -> b.forEach(
+              A4Configs::allPoolsOf, "udpPool",
+              pb -> pb.constraintOnTarget(
+                  p -> p.type != A4Pool.Type.leastConn, "poolType", "poolType",
+                  "\"{0}\" cannot use [leastConn] for backend assignment"
+              )
+          )
+      )
       .build();
 
   public static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()

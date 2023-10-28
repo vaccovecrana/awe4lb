@@ -3,7 +3,7 @@ package io.vacco.a4lb.sel;
 import io.vacco.a4lb.cfg.A4Backend;
 import io.vacco.a4lb.cfg.A4Pool;
 
-public class A4SelStd {
+public class A4SelRandom {
 
   public static A4Backend select(A4Pool pool, A4PoolState poolState) {
     var up = pool.upHosts();

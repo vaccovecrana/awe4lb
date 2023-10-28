@@ -11,13 +11,13 @@ import java.util.function.Supplier;
 
 public class A4Selector {
 
-  private final A4Match[] cfg;
+  private final List<A4Match> cfg;
   private final Map<A4Pool, A4PoolState> poolStateIdx = new HashMap<>();
   private final Map<A4Backend, A4BackendState> bkStateIdx = new HashMap<>();
 
-  public A4Selector(A4Match[] cfg) {
+  public A4Selector(List<A4Match> cfg) {
     this.cfg = Objects.requireNonNull(cfg);
-    Arrays.stream(cfg)
+    cfg.stream()
         .map(m -> m.pool)
         .forEach(p -> poolStateIdx.put(p, new A4PoolState()));
   }
@@ -25,7 +25,7 @@ public class A4Selector {
   public A4Backend select(A4Pool pool, int clientIpHash) {
     var poolState = poolStateIdx.computeIfAbsent(pool, p -> new A4PoolState());
     if (pool.type == null) {
-      return A4SelStd.select(pool, poolState);
+      return A4SelRandom.select(pool, poolState);
     }
     switch (pool.type) {
       case weight: return A4SelWeight.select(pool, poolState);

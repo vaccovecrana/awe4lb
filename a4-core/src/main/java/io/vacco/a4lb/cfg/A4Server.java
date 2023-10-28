@@ -1,15 +1,17 @@
 package io.vacco.a4lb.cfg;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class A4Server {
 
   public String id;
   public A4Sock addr;
+  public List<A4Match> match;
+
   public A4Tls tls;
-  public A4Match[] match;
+  public A4Udp udp;
 
   public A4Server id(String id) {
     this.id = id;
@@ -27,12 +29,8 @@ public class A4Server {
   }
 
   public A4Server match(A4Match ... match) {
-    this.match = match;
+    this.match = new ArrayList<>(Arrays.asList(match));
     return this;
-  }
-
-  public List<A4Match> matchList() {
-    return match == null ? Collections.emptyList() : Arrays.asList(match);
   }
 
   /*

@@ -1,6 +1,7 @@
 package io.vacco.a4lb.util;
 
 import io.vacco.a4lb.cfg.*;
+import java.util.List;
 import java.util.Optional;
 
 public class A4MatchOps {
@@ -51,7 +52,7 @@ public class A4MatchOps {
     return false;
   }
 
-  public static Optional<A4Pool> eval(String sni, String host, A4Match ... rules) {
+  public static Optional<A4Pool> eval(String sni, String host, List<A4Match> rules) {
     for (var rule : rules) {
       var out = rule.and != null
           ? evalAnd(sni, host, rule.and)
