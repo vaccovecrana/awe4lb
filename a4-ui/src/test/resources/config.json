@@ -1,16 +1,11 @@
 {
   "id": "test-config-00",
   "description": "Test configuration",
-  "api": {"host":"0.0.0.0", "port": 8888},
-  "metrics": {
-    "enabled": true,
-    "bind": {"host":"0.0.0.0", "port": 9284}
-  },
   "servers": [
     {
       "id": "momo-http-json",
       "addr": {"host":"0.0.0.0", "port": 8080},
-      "match": [{"discover": {"http": {"endpoint": "http://10.89.0.1:4010", "format": "json"}}}]
+      "match": [{"discover": {"http": {"endpoint": "http://127.0.0.1:4010", "format": "json"}}}]
     },
     {
       "id": "sdr-http-json",
@@ -33,7 +28,7 @@
       "match": [
         {
           "and": [{"sni": {"equals": "momo.localhost"}}],
-          "discover": {"http": {"endpoint": "http://10.89.0.1:4011", "format": "text"}}
+          "discover": {"http": {"endpoint": "http://127.0.0.1:4011", "format": "text"}}
         },
         {
           "and": [{"sni": {"equals": "sdr.localhost"}}],

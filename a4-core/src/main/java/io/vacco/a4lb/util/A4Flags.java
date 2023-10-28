@@ -13,6 +13,11 @@ public class A4Flags {
   public static final String DefaultHost = "127.0.0.1";
   public static final int    DefaultPort = 7070;
 
+  public static final String
+          kConfigDir = "--config-dir",
+          kApiHost = "--api-host", kApiPort = "--api-port",
+          kLogFormat = "--log-format", kLogLevel = "--log-level";
+
   public File root;
   public A4Sock api;
   public A4Format logFormat = A4Format.text;
@@ -23,9 +28,7 @@ public class A4Flags {
         "Usage:",
         "  awe4lb [flags]",
         "Flags:",
-        "  --config=string      Path to configuration root.",
-        "                       A file starts a single load balancer instance.",
-        "                       A directory starts a management API/UI, allowing multiple load balancer instances..",
+        "  --config-dir=string  Path to store configurations.",
         "  --api-host=string    API/UI host IP address. Default: " + A4Flags.DefaultHost,
         "  --api-port=number    API/UI host port. Default: " + A4Flags.DefaultPort,
         "  --log-format=string  Log output format ('text' or 'json'). Default: " + A4Format.text,
@@ -33,20 +36,23 @@ public class A4Flags {
     );
   }
 
+  public static String flagOf(String key, String value) {
+    return String.format("%s=%s", key, value);
+  }
+
   public static A4Flags from(String[] args) {
     var argIdx = Arrays.stream(args)
         .filter(arg -> arg.startsWith("--"))
-        .map(arg -> arg.replace("--", ""))
         .map(arg -> arg.split("="))
         .filter(pair -> pair.length == 2)
         .collect(Collectors.toMap(pair -> pair[0], pair -> pair[1]));
     var fl = new A4Flags();
-    var host = argIdx.get("api-host");
-    var port = argIdx.get("api-port");
-    var logFormat = argIdx.get("log-format");
-    var logLevel = argIdx.get("log-level");
+    var host = argIdx.get(kApiHost);
+    var port = argIdx.get(kApiPort);
+    var logFormat = argIdx.get(kLogFormat);
+    var logLevel = argIdx.get(kLogLevel);
 
-    fl.root = new File(argIdx.get("config"));
+    fl.root = new File(argIdx.get(kConfigDir));
     fl.logFormat = logFormat != null ? A4Format.valueOf(logFormat) : fl.logFormat;
     fl.logLevel = logLevel != null ? LogLevel.valueOf(logLevel) : fl.logLevel;
     fl.api = new A4Sock()

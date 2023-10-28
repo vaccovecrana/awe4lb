@@ -2,16 +2,16 @@ services:
   momo-discover-json-00:
     image: vacco/http-echo
     build: http-echo
-    command: '-text="[{\"addr\": {\"host\": \"10.89.0.1\", \"port\": 4000}}, {\"addr\": {\"host\": \"10.89.0.1\", \"port\": 4001}}, {\"addr\": {\"host\": \"10.89.0.1\", \"port\": 4002}}]"'
+    command: '-text="[{\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4000}}, {\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4001}}, {\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4002}}]"'
     ports: ["4010:5678"]
   momo-discover-txt-00:
     image: vacco/http-echo
     build: http-echo
     environment:
       ECHO_TEXT: |
-        10.89.0.1 4000 1 1
-        10.89.0.1 4001 2 1
-        10.89.0.1 4002 1 2
+        127.0.0.1 4000 1 1
+        127.0.0.1 4001 2 1
+        127.0.0.1 4002 1 2
     ports: ["4011:5678"]
   momo-00: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4000:5678"]}
   momo-01: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4001:5678"]}

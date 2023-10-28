@@ -192,10 +192,10 @@ public class A4Valid {
       .build();
 
   public static final Validator<A4Flags> A4FlagsVld = ValidatorBuilder.<A4Flags>of()
-      ._object(fl -> fl.root, "--config", Constraint::notNull)
+      ._object(fl -> fl.root, A4Flags.kConfigDir, Constraint::notNull)
       .constraintOnTarget(
-          fl -> fl.root.exists(), "--config", "exists",
-          "\"{0}\" does not exist"
+          fl -> fl.root.exists() && fl.root.isDirectory(), A4Flags.kConfigDir, "dirExists",
+          "\"{0}\" does not exist or is not a directory"
       )
       .nest(fl -> fl.api, "--api-*", A4SockVld)
       .build();

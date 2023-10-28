@@ -7,8 +7,17 @@ interface A4ScProps { srv: A4Server }
 const A4ServerCard = (props: A4ScProps) => (
   <div class="col xs-12 sm-12 md-6">
     <div class="card minimal p8 m2 mt8">
-      <div class="card-title-2">
-        <i class="icon-compass mr4" /> {props.srv.id}
+      <div class="card-title-2 ph4">
+        <div class="row">
+          <div class="col auto">
+            <i class="icon-compass mr4" /> {props.srv.id}
+          </div>
+          <div class="col auto">
+            <div class="txr">
+              <code>{props.srv.addr.host}:{props.srv.addr.port}</code>
+            </div>
+          </div>
+        </div>
       </div>
       {props.srv.tls ? (
         <div class="mt8 p8 txSmall card minimal">
