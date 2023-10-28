@@ -1,5 +1,6 @@
 package io.vacco.a4lb.tcp;
 
+import io.vacco.a4lb.niossl.SSLCertificates;
 import io.vacco.a4lb.niossl.SSLSocketChannel;
 import io.vacco.a4lb.sel.A4Selector;
 import org.slf4j.*;
@@ -183,7 +184,7 @@ public class A4TcpSess extends SNIMatcher {
   }
 
   @Override public boolean matches(SNIServerName sn) {
-    var sni = A4Ssl.sniOf(sn).orElseThrow();
+    var sni = SSLCertificates.sniOf(sn).orElseThrow();
     var op = bkSel.matches(client.channel, sni);
     if (op.isPresent()) {
       this.tlsSni = sni;

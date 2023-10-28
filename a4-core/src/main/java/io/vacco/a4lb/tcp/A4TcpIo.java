@@ -1,6 +1,7 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Backend;
+import io.vacco.a4lb.niossl.SSLCertificates;
 import io.vacco.a4lb.niossl.SSLSocketChannel;
 import io.vacco.a4lb.util.A4Io;
 import java.io.Closeable;
@@ -31,7 +32,7 @@ public class A4TcpIo implements Closeable {
     try {
       var chn = SocketChannel.open();
       if (openTls) {
-        var ctx = A4Ssl.trustAllContext();
+        var ctx = SSLCertificates.trustAllContext();
         var eng = ctx.createSSLEngine();
         eng.setUseClientMode(true);
         this.channel = new SSLSocketChannel(chn, eng, tlsExec);

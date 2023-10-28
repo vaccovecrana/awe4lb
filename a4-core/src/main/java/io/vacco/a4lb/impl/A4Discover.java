@@ -58,7 +58,7 @@ public class A4Discover implements Callable<Void> {
 
   private List<A4Backend> parseLines(Stream<String> lines) {
     return lines.map(String::trim)
-        .filter(line -> line.length() > 0)
+        .filter(line -> !line.isEmpty())
         .map(this::parseLine)
         .collect(Collectors.toList());
   }

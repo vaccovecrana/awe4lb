@@ -1,4 +1,4 @@
-package io.vacco.a4lb.tcp;
+package io.vacco.a4lb.niossl;
 
 import io.vacco.a4lb.cfg.A4Tls;
 import javax.net.ssl.*;
@@ -9,7 +9,7 @@ import java.security.cert.Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 
-public class A4Ssl {
+public class SSLCertificates {
 
   public static SSLContext trustAllContext() {
     try {

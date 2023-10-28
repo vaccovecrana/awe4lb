@@ -37,7 +37,7 @@ public class A4TcpSrv implements Callable<Void>, Closeable {
       this.srvConfig = Objects.requireNonNull(srv);
       if (srv.tls != null) {
         log.info("{} - initializing SSL context", srv.id);
-        this.sslContext = A4Ssl.contextFrom(srv.tls);
+        this.sslContext = SSLCertificates.contextFrom(srv.tls);
         this.tlsExec = Objects.requireNonNull(tlsExec);
       } else {
         this.sslContext = null;

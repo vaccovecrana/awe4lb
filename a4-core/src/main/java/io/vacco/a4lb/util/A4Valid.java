@@ -194,13 +194,23 @@ public class A4Valid {
       )
       .constraintOnCondition(
           (s, cg) -> s.udp != null,
-          b -> b.forEach(
-              A4Configs::allPoolsOf, "udpPool",
-              pb -> pb.constraintOnTarget(
-                  p -> p.type != A4Pool.Type.leastConn, "poolType", "poolType",
-                  "\"{0}\" cannot use [leastConn] for backend assignment"
+          b ->
+              b.forEach(
+                  A4Configs::allPoolsOf, "udpPool",
+                  pb -> pb.constraintOnTarget(
+                      p -> p.type != A4Pool.Type.leastConn, "poolType", "poolType",
+                      "\"{0}\" cannot use [leastConn] for UDP backend assignment"
+                  )
+              ).forEach(
+                  A4Configs::allMatchesOf, "udpMatch",
+                  mb -> mb.nestIfPresent(
+                      m -> m.healthCheck, "healthCheck",
+                      hb -> hb.constraintOnTarget(
+                          h -> h.exec != null, "exec", "exec",
+                          "\"{0}\" only [exec] allowed for UDP health check"
+                      )
+                  )
               )
-          )
       )
       .build();
 
