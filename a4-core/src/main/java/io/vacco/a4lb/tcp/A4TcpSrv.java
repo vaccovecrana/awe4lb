@@ -43,7 +43,7 @@ public class A4TcpSrv implements Callable<Void>, Closeable {
         this.sslContext = null;
         this.tlsExec = null;
       }
-      log.info("{} - {} - ingress open", srv.id, this.channel.socket());
+      log.info("{} - {} - TCP ingress open", srv.id, this.channel.socket());
     } catch (IOException ioe) {
       log.error("Unable to open server socket channel {}", srv.addr, ioe);
       throw new IllegalStateException(ioe);
@@ -99,7 +99,7 @@ public class A4TcpSrv implements Callable<Void>, Closeable {
   @Override public void close() {
     A4Io.close(channel);
     A4Io.close(selector);
-    log.info("{} - {} - ingress closed", srvConfig.id, this.channel.socket());
+    log.info("{} - {} - TCP ingress closed", srvConfig.id, this.channel.socket());
   }
 
 }

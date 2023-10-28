@@ -28,15 +28,6 @@ export interface A4Sock {
   
 }
 
-export interface A4Tls {
-  certPath: string;
-  keyPath: string;
-  protocols: string[];
-  ciphers: string[];
-  
-  
-}
-
 export interface A4StringOp {
   equals: string;
   contains: string;
@@ -143,11 +134,27 @@ export interface A4Match {
   
 }
 
+export interface A4Tls {
+  certPath: string;
+  keyPath: string;
+  protocols: string[];
+  ciphers: string[];
+  
+  
+}
+
+export interface A4Udp {
+  bufferSize: number;
+  
+  
+}
+
 export interface A4Server {
   id: string;
   addr: A4Sock;
-  tls: A4Tls;
   match: A4Match[];
+  tls: A4Tls;
+  udp: A4Udp;
   
   
 }
@@ -173,6 +180,21 @@ Source controllers:
 - io.vacco.a4lb.web.A4ApiHdl
 
  */
+
+export const apiV1Config = (): Promise<A4Config> => {
+  let path = "/api/v1/config"
+  
+  
+  
+  
+  return doJsonIo(path, "GET",
+    
+      undefined
+    ,
+    new Map(),
+    undefined
+  )
+}
 
 export const apiV1ConfigList = (): Promise<A4Config[]> => {
   let path = "/api/v1/config/list"

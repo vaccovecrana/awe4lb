@@ -2,6 +2,7 @@ package io.vacco.a4lb.util;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -16,6 +17,14 @@ public class A4Configs {
       return g.fromJson(isr, A4Config.class);
     } catch (IOException ioe) {
       throw new IllegalStateException("Unable to load configuration from " + src, ioe);
+    }
+  }
+
+  public static A4Config loadFrom(File f, Gson g) {
+    try {
+      return loadFrom(f.toURI().toURL(), g);
+    } catch (IOException ioe) {
+      throw new IllegalStateException("unable to load configuration from file " + f.getAbsolutePath(), ioe);
     }
   }
 

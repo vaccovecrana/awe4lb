@@ -4,10 +4,10 @@ import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.constraint.*;
 import am.ik.yavi.constraint.base.ContainerConstraintBase;
 import am.ik.yavi.core.Constraint;
+import am.ik.yavi.core.ConstraintViolations;
 import am.ik.yavi.core.Validator;
 import io.vacco.a4lb.cfg.*;
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 
 public class A4Valid {
 
@@ -27,12 +27,12 @@ public class A4Valid {
     return Arrays.stream(vals).filter(Objects::nonNull).count() <= ltEq;
   }
 
-  public static final Validator<A4HealthExec> A4HealthExecVld = ValidatorBuilder.<A4HealthExec>of()
+  private static final Validator<A4HealthExec> A4HealthExecVld = ValidatorBuilder.<A4HealthExec>of()
       ._string(ex -> ex.command, "command", A4Valid::nnNeNb)
       .forEach(A4HealthExec::argList, "args", b -> b._string(s -> s, "arg", A4Valid::nnNeNb))
       .build();
 
-  public static final Validator<A4HealthCheck> A4HealthCheckVld = ValidatorBuilder.<A4HealthCheck>of()
+  private static final Validator<A4HealthCheck> A4HealthCheckVld = ValidatorBuilder.<A4HealthCheck>of()
       ._integer(hc -> hc.intervalMs, "intervalMs", A4Valid::gtZero)
       ._integer(hc -> hc.timeoutMs, "timeoutMs", A4Valid::gtZero)
       .constraintOnTarget(
@@ -42,12 +42,12 @@ public class A4Valid {
       ).nestIfPresent(hc -> hc.exec, "exec", A4HealthExecVld)
       .build();
 
-  public static final Validator<A4Sock> A4SockVld = ValidatorBuilder.<A4Sock>of()
+  private static final Validator<A4Sock> A4SockVld = ValidatorBuilder.<A4Sock>of()
       ._integer(s -> s.port, "port", c -> gtLtEq(c, 0, 65535))
       ._string(s -> s.host, "host", A4Valid::nnNeNb)
       .build();
 
-  public static final Validator<A4Backend> A4BackendVld = ValidatorBuilder.<A4Backend>of()
+  private static final Validator<A4Backend> A4BackendVld = ValidatorBuilder.<A4Backend>of()
       ._integer(b -> b.weight, "weight", c -> gtLtEq(c, 0, 100))
       ._integer(b -> b.priority, "priority", c -> gtLtEq(c, 0, 100))
       .constraintOnCondition(
@@ -60,7 +60,7 @@ public class A4Valid {
       ).nest(b -> b.addr, "addr", A4SockVld)
       .build();
 
-  public static final Validator<A4StringOp> A4StringOpVld = ValidatorBuilder.<A4StringOp>of()
+  private static final Validator<A4StringOp> A4StringOpVld = ValidatorBuilder.<A4StringOp>of()
       .constraintOnCondition(
           (op, cg) -> op.equals != null,
           b -> b._string(op -> op.equals, "equals", A4Valid::nnNeNb)
@@ -83,7 +83,7 @@ public class A4Valid {
           "\"{0}\" only one of [equals, contains, startsWith, endsWith] allowed"
       ).build();
 
-  public static final Validator<A4MatchOp> A4MatchOpVld = ValidatorBuilder.<A4MatchOp>of()
+  private static final Validator<A4MatchOp> A4MatchOpVld = ValidatorBuilder.<A4MatchOp>of()
       .nestIfPresent(mo -> mo.host, "host", A4StringOpVld)
       .nestIfPresent(mo -> mo.sni, "sni", A4StringOpVld)
       .constraintOnTarget(
@@ -96,18 +96,18 @@ public class A4Valid {
           "\"{0}\" only one of [host, sni] allowed"
       ).build();
 
-  public static final Validator<A4DiscHttp> A4DiscHttpVld = ValidatorBuilder.<A4DiscHttp>of()
+  private static final Validator<A4DiscHttp> A4DiscHttpVld = ValidatorBuilder.<A4DiscHttp>of()
       ._object(h -> h.format, "format", Constraint::notNull)
       ._string(h -> h.endpoint, "endpoint", c -> nnNeNb(c).url())
       .build();
 
-  public static final Validator<A4DiscExec> A4DiscExecVld = ValidatorBuilder.<A4DiscExec>of()
+  private static final Validator<A4DiscExec> A4DiscExecVld = ValidatorBuilder.<A4DiscExec>of()
       ._object(e -> e.format, "format", Constraint::notNull)
       ._string(e -> e.command, "command", A4Valid::nnNeNb)
       .forEach(A4DiscExec::argList, "args", b -> b._string(s -> s, "arg", A4Valid::nnNeNb))
       .build();
 
-  public static final Validator<A4Disc> A4DiscVld = ValidatorBuilder.<A4Disc>of()
+  private static final Validator<A4Disc> A4DiscVld = ValidatorBuilder.<A4Disc>of()
       .nestIfPresent(d -> d.http, "http", A4DiscHttpVld)
       .nestIfPresent(d -> d.exec, "exec", A4DiscExecVld)
       ._integer(d -> d.intervalMs, "intervalMs", A4Valid::gtZero)
@@ -128,12 +128,12 @@ public class A4Valid {
       )
       .build();
 
-  public static final Validator<A4Pool> A4PoolVld = ValidatorBuilder.<A4Pool>of()
+  private static final Validator<A4Pool> A4PoolVld = ValidatorBuilder.<A4Pool>of()
       .constraint(A4Pool::hostList, "hosts", Constraint::notNull)
       .forEach(A4Pool::hostList, "hosts", A4BackendVld)
       .build();
 
-  public static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
+  private static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
       .constraintOnCondition(
           (m, cg) -> m.and != null,
           b -> b.forEach(A4Match::andOps, "match.andOps", A4MatchOpVld)
@@ -165,7 +165,7 @@ public class A4Valid {
       .nestIfPresent(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
       .build();
 
-  public static final Validator<A4Tls> A4TlsVld = ValidatorBuilder.<A4Tls>of()
+  private static final Validator<A4Tls> A4TlsVld = ValidatorBuilder.<A4Tls>of()
       ._string(t -> t.certPath, "certPath", A4Valid::nnNeNb)
       ._string(t -> t.keyPath, "keyPath", A4Valid::nnNeNb)
       .forEach(A4Tls::protocolList, "protocols.version",
@@ -176,11 +176,11 @@ public class A4Valid {
       )
       .build();
 
-  public static final Validator<A4Udp> A4UdpVld = ValidatorBuilder.<A4Udp>of()
+  private static final Validator<A4Udp> A4UdpVld = ValidatorBuilder.<A4Udp>of()
       ._integer(u -> u.bufferSize, "bufferSize", A4Valid::gtZero)
       .build();
 
-  public static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
+  private static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
       ._string(s -> s.id, "id", A4Valid::nnNeNb)
       .nest(s -> s.addr, "addr", A4SockVld)
       .nestIfPresent(s -> s.tls, "tls", A4TlsVld)
@@ -214,21 +214,46 @@ public class A4Valid {
       )
       .build();
 
-  public static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
+  private static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
       ._string(c -> c.id, "id", A4Valid::nnNeNb)
       ._string(c -> c.description, "description", A4Valid::nnNeNb)
       .constraint(A4Config::serverList, "servers", c -> c.notNull().notEmpty())
       .forEach(A4Config::serverList, "servers", A4ServerVld)
       .build();
 
-  public static final Validator<A4Flags> A4FlagsVld = ValidatorBuilder.<A4Flags>of()
-      ._object(fl -> fl.root, A4Flags.kConfigDir, Constraint::notNull)
+  private static final Validator<A4Flags> A4FlagsVld = ValidatorBuilder.<A4Flags>of()
+      ._object(fl -> fl.root, A4Flags.kConfig, Constraint::notNull)
       .constraintOnTarget(
-          fl -> fl.root.exists() && fl.root.isDirectory(), A4Flags.kConfigDir, "dirExists",
-          "\"{0}\" does not exist or is not a directory"
+          fl -> fl.root.exists(), A4Flags.kConfig, "exists",
+          "\"{0}\" does not exist (not a file or directory)"
       )
       .nest(fl -> fl.api, "--api-*", A4SockVld)
       .build();
+
+  private static final Map<Class<?>, Validator<?>> validators = new HashMap<>();
+
+  static {
+    validators.put(A4Backend.class, A4BackendVld);
+    validators.put(A4Config.class, A4ConfigVld);
+    validators.put(A4Flags.class, A4FlagsVld);
+  }
+
+  public static <T> ConstraintViolations validate(T t) {
+    @SuppressWarnings("unchecked")
+    var validator = (Validator<T>) validators.get(t.getClass());
+    if (validator == null) {
+      throw new IllegalStateException("Unknown validated type " + t.getClass());
+    }
+    return validator.validate(t);
+  }
+
+  public static <T> T validateOrFail(T t) {
+    var errors = validate(t);
+    if (!errors.isEmpty()) {
+      throw new A4Exceptions.A4ValidationException(errors);
+    }
+    return t;
+  }
 
   /*
    * A director needs a team. My management team. These people know the secrets of the Bureau

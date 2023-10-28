@@ -10,7 +10,7 @@ public class A4Match {
   public A4MatchOp[] and, or;
   public A4Pool pool = new A4Pool();
   public A4Disc discover;
-  public A4HealthCheck healthCheck = new A4HealthCheck();
+  public A4HealthCheck healthCheck;
 
   public A4Match and(A4MatchOp ... and) {
     this.and = and;

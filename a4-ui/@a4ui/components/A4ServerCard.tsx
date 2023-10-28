@@ -14,7 +14,7 @@ const A4ServerCard = (props: A4ScProps) => (
           </div>
           <div class="col auto">
             <div class="txr">
-              <code>{props.srv.addr.host}:{props.srv.addr.port}</code>
+              <code>{props.srv.addr.host}:{props.srv.addr.port}/{props.srv.udp ? "udp" : props.srv.tls ? "tls" : "tcp"}</code>
             </div>
           </div>
         </div>

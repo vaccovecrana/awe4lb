@@ -1,6 +1,5 @@
 package io.vacco.a4lb;
 
-import com.google.gson.Gson;
 import io.vacco.a4lb.util.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
@@ -17,13 +16,9 @@ public class A4ServiceTest {
     it("Forwards socket data", () -> {
       var fl = A4Flags.from(new String[] {
           flagOf(kLogLevel, "debug"),
-          flagOf(kConfigDir, "./src/test/resources")
+          flagOf(kConfig, "./src/test/resources")
       });
       var svc = new A4Service().init(fl);
-      var g = new Gson();
-      var cfg = A4Configs.loadFrom(A4ServiceTest.class.getResource("/config.json"), g);
-      svc.add(cfg);
-      svc.setActive(cfg.id);
       Thread.sleep(Integer.MAX_VALUE);
       svc.close();
     });

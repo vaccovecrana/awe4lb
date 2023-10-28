@@ -14,9 +14,9 @@ public class A4Flags {
   public static final int    DefaultPort = 7070;
 
   public static final String
-          kConfigDir = "--config-dir",
-          kApiHost = "--api-host", kApiPort = "--api-port",
-          kLogFormat = "--log-format", kLogLevel = "--log-level";
+      kConfig = "--config",
+      kApiHost = "--api-host", kApiPort = "--api-port",
+      kLogFormat = "--log-format", kLogLevel = "--log-level";
 
   public File root;
   public A4Sock api;
@@ -28,7 +28,9 @@ public class A4Flags {
         "Usage:",
         "  awe4lb [flags]",
         "Flags:",
-        "  --config-dir=string  Path to store configurations.",
+        "  --config=string      Configuration path.",
+        "                       A file starts a single load balancer instance.",
+        "                       A Directory starts the UI to manage multiple configurations.",
         "  --api-host=string    API/UI host IP address. Default: " + A4Flags.DefaultHost,
         "  --api-port=number    API/UI host port. Default: " + A4Flags.DefaultPort,
         "  --log-format=string  Log output format ('text' or 'json'). Default: " + A4Format.text,
@@ -52,19 +54,14 @@ public class A4Flags {
     var logFormat = argIdx.get(kLogFormat);
     var logLevel = argIdx.get(kLogLevel);
 
-    fl.root = new File(argIdx.get(kConfigDir));
+    fl.root = new File(argIdx.get(kConfig));
     fl.logFormat = logFormat != null ? A4Format.valueOf(logFormat) : fl.logFormat;
     fl.logLevel = logLevel != null ? LogLevel.valueOf(logLevel) : fl.logLevel;
     fl.api = new A4Sock()
         .host(host == null ? DefaultHost : host)
         .port(port == null ? DefaultPort : Integer.parseInt(port));
 
-    var errors = A4Valid.A4FlagsVld.validate(fl);
-    if (!errors.isEmpty()) {
-      throw new A4Exceptions.A4ConfigException(errors);
-    }
-
-    return fl;
+    return A4Valid.validateOrFail(fl);
   }
 
 }

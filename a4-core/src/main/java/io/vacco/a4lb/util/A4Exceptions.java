@@ -8,10 +8,10 @@ public class A4Exceptions {
 
   public static final long ver = 1;
 
-  public static class A4ConfigException extends RuntimeException {
-    public static final long serialVersionUID = ver;
+  public static class A4ValidationException extends RuntimeException {
+    private static final long serialVersionUID = ver;
     public final ConstraintViolations violations;
-    public A4ConfigException(ConstraintViolations violations) {
+    public A4ValidationException(ConstraintViolations violations) {
       super("invalid configuration");
       this.violations = violations;
     }
@@ -21,7 +21,7 @@ public class A4Exceptions {
   }
 
   public static class A4SelectException extends RuntimeException {
-    public static final long serialVersionUID = ver;
+    private static final long serialVersionUID = ver;
     public final String clientHost;
     public final String tlsSni;
     public final List<A4Match> cfg;

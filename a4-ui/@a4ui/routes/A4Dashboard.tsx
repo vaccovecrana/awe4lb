@@ -2,12 +2,12 @@ import * as React from "preact/compat"
 
 import { useContext } from "preact/hooks"
 import { lockUi, A4Context, A4Store } from "@a4ui/store"
-import { A4Config, A4Server, apiV1ConfigList } from "@a4ui/rpc"
+import { A4Config, A4Server, apiV1Config } from "@a4ui/rpc"
 import { RenderableProps } from "preact"
 import { A4ServerCard } from "@a4ui/components"
 
 type A4DProps = RenderableProps<{ s?: A4Store }>
-interface A4DState { configs?: A4Config[] }
+interface A4DState { config?: A4Config }
 
 class A4Dashboard extends React.Component<A4DProps, A4DState> {
 
@@ -18,8 +18,8 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
   public componentDidMount(): void {
     const {dispatch: d} = this.props.s
     lockUi(true, d)
-      .then(() => apiV1ConfigList())
-      .then(configs => this.setState({configs}))
+      .then(() => apiV1Config())
+      .then(config => this.setState({config}))
       .then(() => lockUi(false, d))
   }
 
@@ -28,10 +28,11 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
   }
 
   public render() {
-    return this.state.configs ? (
+    var {config: cfg} = this.state;
+    return (
       <div class="p8">
-        <h2>Active Configuration</h2>
-        {this.state.configs.map((cfg) => (
+        <h2>{cfg ? "Active Configuration" : "No active configuration"}</h2>
+        {cfg ? (
           <div class="row">
             <div class="col auto">
               <div class="p8 card minimal">
@@ -45,9 +46,9 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
               </div>
             </div>
           </div>
-        ))}
+        ) : []}
       </div>
-    ) : (<div />)
+    );
   }
 
 }

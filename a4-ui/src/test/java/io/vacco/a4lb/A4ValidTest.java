@@ -45,15 +45,15 @@ public class A4ValidTest {
                       .discover(new A4Disc())
               )
           );
-      var constraints = A4Valid.A4ConfigVld.validate(a4Cfg);
+      var constraints = A4Valid.validate(a4Cfg);
       for (var cnt : constraints) {
         System.out.println(cnt.message());
       }
     });
     it("Validates a JSON configuration", () -> {
       System.out.println("============================");
-      var cfg = A4Configs.loadFrom(A4ValidTest.class.getResource("/config.json"), new Gson());
-      var constraints = A4Valid.A4ConfigVld.validate(cfg);
+      var cfg = A4Configs.loadFrom(A4ValidTest.class.getResource("/test-config-00.json"), new Gson());
+      var constraints = A4Valid.validate(cfg);
       for (var cnt : constraints) {
         System.out.println(cnt.message());
       }

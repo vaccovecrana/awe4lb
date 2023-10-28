@@ -1,7 +1,6 @@
 package io.vacco.a4lb.tcp;
 
-import io.vacco.a4lb.niossl.SSLCertificates;
-import io.vacco.a4lb.niossl.SSLSocketChannel;
+import io.vacco.a4lb.niossl.*;
 import io.vacco.a4lb.sel.A4Selector;
 import org.slf4j.*;
 import javax.net.ssl.*;
@@ -125,6 +124,14 @@ public class A4TcpSess extends SNIMatcher {
     throw new IllegalStateException(to + " - no data available for writing");
   }
 
+  private void updateQueue(Queue<ByteBuffer> q, SelectionKey k) {
+    if (!q.isEmpty()) {
+      k.interestOps(SelectionKey.OP_WRITE);
+    } else if (k.interestOps() != 0) {
+      k.interestOps(SelectionKey.OP_READ);
+    }
+  }
+
   private void syncOps(SelectionKey key, IOOp op, int bytes) {
     if (op == IOOp.Read && backend != null && key == backend.channelKey && bytes > 0) {
       bkSel.stateOf(backend.backend).trackRxTx(false, bytes);
@@ -143,17 +150,9 @@ public class A4TcpSess extends SNIMatcher {
       }
       return;
     }
-    if (!cltQ.isEmpty()) {
-      client.channelKey.interestOps(SelectionKey.OP_WRITE);
-    } else if (client.channelKey.interestOps() != 0) {
-      client.channelKey.interestOps(SelectionKey.OP_READ);
-    }
+    updateQueue(cltQ, client.channelKey);
     if (backend != null) {
-      if (!bckQ.isEmpty()) {
-        backend.channelKey.interestOps(SelectionKey.OP_WRITE);
-      } else if (backend.channelKey.interestOps() != 0) {
-        backend.channelKey.interestOps(SelectionKey.OP_READ);
-      }
+      updateQueue(bckQ, backend.channelKey);
     }
   }
 

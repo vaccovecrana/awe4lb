@@ -109,7 +109,7 @@ public class A4Discover implements Callable<Void> {
           log.warn("{} - backend entry missing weight/priority, assigned defaults - {}", serverId, bk);
         }
       }
-      var errors = A4Valid.A4BackendVld.validate(bk);
+      var errors = A4Valid.validate(bk);
       return A4BkEntry.of(bk.state(A4Health.stateOf(serverId, bk, hlt)), errors);
     };
   }

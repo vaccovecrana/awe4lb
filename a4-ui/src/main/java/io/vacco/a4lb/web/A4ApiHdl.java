@@ -6,6 +6,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static io.vacco.a4lb.web.A4Route.*;
 
@@ -17,9 +18,14 @@ public class A4ApiHdl {
     this.service = Objects.requireNonNull(service);
   }
 
+  @GET @Path(apiV1Config)
+  public A4Config apiV1Config() {
+    return service.instance.config;
+  }
+
   @GET @Path(apiV1ConfigList)
   public Collection<A4Config> apiV1ConfigList() {
-    return service.configIdx.values();
+    return service.rootConfigs().collect(Collectors.toList());
   }
 
 }

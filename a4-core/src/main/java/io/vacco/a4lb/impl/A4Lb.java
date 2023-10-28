@@ -21,10 +21,7 @@ public class A4Lb implements Closeable {
   public A4Lb(A4Config config, Gson gson) {
     this.gson = Objects.requireNonNull(gson);
     this.config = Objects.requireNonNull(config);
-    var configErrors = A4Valid.A4ConfigVld.validate(config);
-    if (!configErrors.isEmpty()) {
-      throw new A4Exceptions.A4ConfigException(configErrors);
-    }
+    A4Valid.validateOrFail(config);
     this.exSvc = Executors.newCachedThreadPool(new A4ThreadFactory(String.format("a4lb-%s", config.id)));
   }
 

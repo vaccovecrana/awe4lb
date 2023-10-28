@@ -15,7 +15,7 @@ import static j8spec.J8Spec.*;
 public class A4SelectorTest {
   static {
     it("Selects backend matches", () -> {
-      var cfg = A4Configs.loadFrom(A4ValidTest.class.getResource("/config.json"), new Gson());
+      var cfg = A4Configs.loadFrom(A4SelectorTest.class.getResource("/test-config-00.json"), new Gson());
       cfg.servers.stream()
           .flatMap(srv -> srv.match.stream())
           .flatMap(m -> m.pool.hosts.stream())
