@@ -17,6 +17,10 @@ services:
   momo-01: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4001:5678"]}
   momo-02: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4002:5678"]}
 
-  sdr-00:  { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4020:5678"]}
-  sdr-01:  { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4021:5678"]}
-  sdr-02:  { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4022:5678"]}
+  sdr-00: { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4020:5678"]}
+  sdr-01: { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4021:5678"]}
+  sdr-02: { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4022:5678"]}
+
+  momo-udp-00: { image: vacco/udp-echo, build: udp-echo, ports: ["5000:7778/udp"] }
+  momo-udp-01: { image: vacco/udp-echo, build: udp-echo, ports: ["5001:7778/udp"] }
+  momo-udp-02: { image: vacco/udp-echo, build: udp-echo, ports: ["5002:7778/udp"] }
