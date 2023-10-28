@@ -110,7 +110,7 @@ public class A4Discover implements Callable<Void> {
         }
       }
       var errors = A4Valid.validate(bk);
-      return A4BkEntry.of(bk.state(A4Health.stateOf(serverId, bk, hlt)), errors);
+      return A4BkEntry.of(bk.state(A4HealthState.stateOf(serverId, bk, hlt)), errors);
     };
   }
 

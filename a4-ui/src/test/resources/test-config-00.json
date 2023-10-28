@@ -1,1 +1,191 @@
-{"active":true,"id":"test-config-00","description":"Test configuration","servers":[{"id":"momo-http-json","addr":{"host":"0.0.0.0","port":8080},"match":[{"pool":{"hosts":[],"openTls":false},"discover":{"http":{"endpoint":"http://127.0.0.1:4010","format":"json"},"intervalMs":10000,"timeoutMs":9900}}]},{"id":"sdr-http-json","addr":{"host":"0.0.0.0","port":8090},"match":[{"and":[{"host":{"equals":"127.0.0.1"}}],"pool":{"type":"roundRobin","hosts":[],"openTls":false},"discover":{"exec":{"command":"cat","args":["./src/test/resources/sdr-hosts.json"],"format":"json"},"intervalMs":10000,"timeoutMs":9900},"healthCheck":{"intervalMs":5000,"timeoutMs":2500,"exec":{"command":"nc","args":["-z","-v"]}}}]},{"id":"https-txt","addr":{"host":"0.0.0.0","port":8443},"match":[{"and":[{"sni":{"equals":"momo.localhost"}}],"pool":{"hosts":[],"openTls":false},"discover":{"http":{"endpoint":"http://127.0.0.1:4011","format":"text"},"intervalMs":10000,"timeoutMs":9900}},{"and":[{"sni":{"equals":"sdr.localhost"}}],"pool":{"type":"weight","hosts":[],"openTls":false},"discover":{"exec":{"command":"cat","args":["./src/test/resources/sdr-hosts.txt"],"format":"text"},"intervalMs":10000,"timeoutMs":9900}}],"tls":{"certPath":"./src/test/resources/certs/awe4lb.pem","keyPath":"./src/test/resources/certs/awe4lb.key","ciphers":["TLS_AES_128_GCM_SHA256"]}},{"id":"momo-udp-echo","addr":{"host":"0.0.0.0","port":8070},"match":[{"pool":{"hosts":[{"addr":{"host":"127.0.0.1","port":5000},"state":"Unknown"},{"addr":{"host":"127.0.0.1","port":5001},"state":"Unknown"},{"addr":{"host":"127.0.0.1","port":5002},"state":"Unknown"}],"openTls":false}}],"udp":{"bufferSize":2048}}]}
+{
+  "active": true,
+  "id": "test-config-00",
+  "description": "Test configuration",
+  "servers": [
+    {
+      "id": "momo-http-json",
+      "addr": {
+        "host": "0.0.0.0",
+        "port": 8080
+      },
+      "match": [
+        {
+          "pool": {
+            "hosts": [],
+            "openTls": false
+          },
+          "discover": {
+            "http": {
+              "endpoint": "http://127.0.0.1:4010",
+              "format": "json"
+            },
+            "intervalMs": 10000,
+            "timeoutMs": 9900
+          }
+        }
+      ]
+    },
+    {
+      "id": "sdr-http-json",
+      "addr": {
+        "host": "0.0.0.0",
+        "port": 8090
+      },
+      "match": [
+        {
+          "and": [
+            {
+              "host": {
+                "equals": "127.0.0.1"
+              }
+            }
+          ],
+          "pool": {
+            "type": "roundRobin",
+            "hosts": [],
+            "openTls": false
+          },
+          "discover": {
+            "exec": {
+              "command": "cat",
+              "args": [
+                "./src/test/resources/sdr-hosts.json"
+              ],
+              "format": "json"
+            },
+            "intervalMs": 10000,
+            "timeoutMs": 9900
+          },
+          "healthCheck": {
+            "intervalMs": 5000,
+            "timeoutMs": 2500,
+            "exec": {
+              "command": "nc",
+              "args": [
+                "-z",
+                "-v",
+                "$host",
+                "$port"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "https-txt",
+      "addr": {
+        "host": "0.0.0.0",
+        "port": 8443
+      },
+      "match": [
+        {
+          "and": [
+            {
+              "sni": {
+                "equals": "momo.localhost"
+              }
+            }
+          ],
+          "pool": {
+            "hosts": [],
+            "openTls": false
+          },
+          "discover": {
+            "http": {
+              "endpoint": "http://127.0.0.1:4011",
+              "format": "text"
+            },
+            "intervalMs": 10000,
+            "timeoutMs": 9900
+          }
+        },
+        {
+          "and": [
+            {
+              "sni": {
+                "equals": "sdr.localhost"
+              }
+            }
+          ],
+          "pool": {
+            "type": "weight",
+            "hosts": [],
+            "openTls": false
+          },
+          "discover": {
+            "exec": {
+              "command": "cat",
+              "args": [
+                "./src/test/resources/sdr-hosts.txt"
+              ],
+              "format": "text"
+            },
+            "intervalMs": 10000,
+            "timeoutMs": 9900
+          }
+        }
+      ],
+      "tls": {
+        "certPath": "./src/test/resources/certs/awe4lb.pem",
+        "keyPath": "./src/test/resources/certs/awe4lb.key",
+        "ciphers": [
+          "TLS_AES_128_GCM_SHA256"
+        ]
+      }
+    },
+    {
+      "id": "momo-udp-echo",
+      "addr": {
+        "host": "0.0.0.0",
+        "port": 8070
+      },
+      "match": [
+        {
+          "pool": {
+            "hosts": [
+              {
+                "addr": {
+                  "host": "127.0.0.1",
+                  "port": 6000
+                },
+                "state": "Unknown"
+              },
+              {
+                "addr": {
+                  "host": "127.0.0.1",
+                  "port": 6001
+                },
+                "state": "Unknown"
+              },
+              {
+                "addr": {
+                  "host": "127.0.0.1",
+                  "port": 6002
+                },
+                "state": "Unknown"
+              }
+            ],
+            "openTls": false
+          },
+          "healthCheck": {
+            "intervalMs": 5000,
+            "timeoutMs": 2500,
+            "exec": {
+              "command": "ping",
+              "args": [
+                "-c",
+                "1",
+                "$host"
+              ]
+            }
+          }
+        }
+      ],
+      "udp": {
+        "bufferSize": 2048
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 package io.vacco.a4lb;
 
 import am.ik.yavi.core.ConstraintViolations;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.impl.A4Lb;
 import io.vacco.a4lb.util.*;
@@ -21,7 +21,7 @@ public class A4Service implements Closeable {
 
   private Logger  log;
   public  A4Api   api;
-  public  Gson    gson = new Gson();
+  public  Gson    gson = new GsonBuilder().setPrettyPrinting().create();
   public  A4Lb    instance;
   public  File    configRoot;
 

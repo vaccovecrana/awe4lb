@@ -1,7 +1,7 @@
 package io.vacco.a4lb.impl;
 
 import com.google.gson.Gson;
-import io.vacco.a4lb.cfg.A4Config;
+import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.tcp.*;
 import io.vacco.a4lb.util.*;
 import org.slf4j.*;
@@ -33,7 +33,13 @@ public class A4Lb implements Closeable {
       servers.add(srvImpl);
       exSvc.submit(srvImpl);
       for (var match : srv.match) {
-        exSvc.submit(new A4TcpHealth(exSvc, srv.id, match, srvImpl.bkSel));
+        if (srv.udp == null && match.healthCheck == null) {
+          log.info("{} - {} - no TCP health check configuration specified. Using defaults.", srv.id, match);
+          match.healthCheck = new A4HealthCheck();
+        }
+        if (match.healthCheck != null) {
+          exSvc.submit(new A4Health(exSvc, srv.id, match, srvImpl.bkSel));
+        }
         if (match.discover != null) {
           exSvc.submit(new A4Discover(srv.id, match, srvImpl.bkSel, gson, exSvc));
         }
