@@ -69,7 +69,7 @@ public class A4TcpSess extends SNIMatcher {
     if (client != null) { client.close(); }
     if (backend != null) {
       backend.close();
-      bkSel.trackConn(backend.backend, false);
+      bkSel.stateOf(backend.backend).trackConn(false);
     }
     cltQ.clear();
     bckQ.clear();
@@ -126,10 +126,10 @@ public class A4TcpSess extends SNIMatcher {
 
   private void syncOps(SelectionKey key, IOOp op, int bytes) {
     if (op == IOOp.Read && backend != null && key == backend.channelKey && bytes > 0) {
-      bkSel.trackRxTx(backend.backend, false, bytes);
+      bkSel.stateOf(backend.backend).trackRxTx(false, bytes);
     }
     if (op == IOOp.Write && backend != null && key == backend.channelKey && bytes > 0) {
-      bkSel.trackRxTx(backend.backend, true, bytes);
+      bkSel.stateOf(backend.backend).trackRxTx(true, bytes);
     }
     if (op == IOOp.Read && key == client.channelKey && bytes > 0 && backend == null) {
       initBackend(key);
@@ -202,7 +202,7 @@ public class A4TcpSess extends SNIMatcher {
         client.getRawChannel().socket(),
         backend.getRawChannel().socket()
     ).hashCode());
-    this.bkSel.trackConn(backend.backend, true);
+    this.bkSel.stateOf(backend.backend).trackConn(true);
   }
 
   private void tcpUpdate(SelectionKey key) throws IOException {

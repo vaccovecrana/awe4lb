@@ -79,17 +79,10 @@ export interface A4Backend {
   
 }
 
-export interface Random {
-  
-  
-}
-
 export interface A4Pool {
   type: Type;
   hosts: A4Backend[];
   openTls: boolean;
-  rnd: Random;
-  rrVal: number;
   
   
 }

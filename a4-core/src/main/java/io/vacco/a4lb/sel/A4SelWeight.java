@@ -24,10 +24,10 @@ public class A4SelWeight {
     throw new IllegalStateException(msg);
   }
 
-  public static A4Backend select(A4Pool pool) {
+  public static A4Backend select(A4Pool pool, A4PoolState poolState) {
     var up = pool.upHosts();
     var hostIdx = new TreeMap<>(up.stream().collect(groupingBy(bk -> bk.priority)));
-    return wtRdSelect(hostIdx.values().iterator().next(), pool.rnd);
+    return wtRdSelect(hostIdx.values().iterator().next(), poolState.rnd);
   }
 
 }
