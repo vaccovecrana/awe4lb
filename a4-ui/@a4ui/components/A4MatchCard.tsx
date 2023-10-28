@@ -1,5 +1,5 @@
 import * as React from "preact/compat"
-import { A4Backend, A4Disc, A4Match, State } from "@a4ui/rpc"
+import { A4Backend, A4Disc, A4Format, A4Match, State } from "@a4ui/rpc"
 import { matchLabel } from "@a4ui/util"
 
 interface A4McProps { match: A4Match }
@@ -8,6 +8,16 @@ const renderBkState = (bk: A4Backend) => {
   const clazz = bk.state === State.Up ? "pill pill-green" : "pill pill-red"
   return <span class={clazz}>{bk.state}</span>
 }
+
+const renderExec = (command: string, args: string[], format?: A4Format) => (
+  <div>
+    <i class="icon-screen-desktop mr4"></i>
+    <code>
+      {command} {args.join(" ")}
+    </code>
+    {format ? (<span class="pill pill-pale ml4">{format}</span>) : []}
+  </div>
+)
 
 const renderDiscover = (discover: A4Disc) => {
   if (discover.http) {
@@ -19,15 +29,7 @@ const renderDiscover = (discover: A4Disc) => {
       </div>
     )
   } else if (discover.exec) {
-    return (
-      <div>
-        <i class="icon-screen-desktop mr4"></i>
-        <code>
-          {discover.exec.command} {discover.exec.args.join(" ")}
-        </code>
-        <span class="pill pill-pale ml4">{discover.exec.format}</span>
-      </div>
-    )
+    return renderExec(discover.exec.command, discover.exec.args, discover.exec.format);
   }
   return <div />
 }
@@ -53,13 +55,16 @@ const A4MatchCard = (props: A4McProps) => (
         {props.match.discover ? [
           <div class="card-title-3">Discovery</div>,
           renderIntervalTimeout(props.match.discover.intervalMs, props.match.discover.timeoutMs),
-          renderDiscover(props.match.discover)
+          renderDiscover(props.match.discover),
+          <hr />
         ] : []}
         {props.match.healthCheck ? [
-          <hr />,
-          <div class="card-title-3 mt8">Health check</div>,
+          <div class={props.match.discover ? "card-title-3 mt8" : "card-title-3"}>Health check</div>,
           renderIntervalTimeout(props.match.healthCheck.intervalMs, props.match.healthCheck.timeoutMs)
         ] : []}
+        {props.match.healthCheck.exec ? (
+          renderExec(props.match.healthCheck.exec.command, props.match.healthCheck.exec.args)
+        ) : []}
       </div>
     ) : []}
     {props.match.pool.hosts.length > 0 ? (

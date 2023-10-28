@@ -11,7 +11,7 @@ public class A4Pool {
 
   public Type type;
   public List<A4Backend> hosts = new ArrayList<>();
-  public boolean openTls = false;
+  public Boolean openTls;
 
   public A4Pool type(Type type) {
     this.type = type;

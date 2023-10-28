@@ -12,8 +12,7 @@
       "match": [
         {
           "pool": {
-            "hosts": [],
-            "openTls": false
+            "hosts": []
           },
           "discover": {
             "http": {
@@ -43,8 +42,7 @@
           ],
           "pool": {
             "type": "roundRobin",
-            "hosts": [],
-            "openTls": false
+            "hosts": []
           },
           "discover": {
             "exec": {
@@ -89,8 +87,7 @@
             }
           ],
           "pool": {
-            "hosts": [],
-            "openTls": false
+            "hosts": []
           },
           "discover": {
             "http": {
@@ -111,8 +108,7 @@
           ],
           "pool": {
             "type": "weight",
-            "hosts": [],
-            "openTls": false
+            "hosts": []
           },
           "discover": {
             "exec": {
@@ -166,8 +162,7 @@
                 },
                 "state": "Unknown"
               }
-            ],
-            "openTls": false
+            ]
           },
           "healthCheck": {
             "intervalMs": 5000,
