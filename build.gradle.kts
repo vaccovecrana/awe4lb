@@ -8,7 +8,6 @@ subprojects {
   configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
     addClasspathHell()
     sharedLibrary(true, false)
-    addJ8Spec()
   }
 
   configure<io.vacco.cphell.ChPluginExtension> {

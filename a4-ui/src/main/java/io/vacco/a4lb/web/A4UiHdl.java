@@ -30,12 +30,12 @@ public class A4UiHdl extends MxStatic {
       "</html>"
   );
 
-  private static final File pkgJson = new File("./package.json");
+  private static final File pkgJson = new File("../a4-ui/package.json"); // TODO fix this, constructor should determine content origin.
 
   public A4UiHdl() {
     super(
         pkgJson.exists() ? Origin.FileSystem : Origin.Classpath,
-        Paths.get("./build/resources/main/ui")
+        Paths.get("../a4-ui/build/resources/main/ui")
     );
     this.withNoTypeResolver((p, o) -> p.endsWith(".map") ? MxMime.json.type : MxMime.bin.type);
   }
