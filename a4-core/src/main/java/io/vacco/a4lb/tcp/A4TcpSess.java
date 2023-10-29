@@ -42,10 +42,6 @@ public class A4TcpSess extends SNIMatcher {
     this.tlsExec = tlsExec;
   }
 
-  private void sessionMismatch(SelectionKey key) {
-    throw new IllegalStateException("key/session mismatch " + key);
-  }
-
   private void tearDown(Exception e) {
     if (e != null) {
       var x = rootCauseOf(e);

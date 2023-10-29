@@ -11,8 +11,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 
 public class A4TcpSrv implements Callable<Void>, Closeable {
 
@@ -24,16 +23,16 @@ public class A4TcpSrv implements Callable<Void>, Closeable {
   private final ExecutorService tlsExec;
 
   private final A4Server srvConfig;
-  public  final A4Selector bkSel;
+  private final A4Selector bkSel;
 
-  public A4TcpSrv(Selector selector, A4Server srv, ExecutorService tlsExec) {
+  public A4TcpSrv(Selector selector, A4Server srv, A4Selector bkSel, ExecutorService tlsExec) {
     try {
       this.selector = Objects.requireNonNull(selector);
       this.channel = ServerSocketChannel.open();
       this.channel.bind(new InetSocketAddress(srv.addr.host, srv.addr.port));
       this.channel.configureBlocking(false);
       this.channel.register(selector, SelectionKey.OP_ACCEPT);
-      this.bkSel = new A4Selector(srv.match);
+      this.bkSel = Objects.requireNonNull(bkSel);
       this.srvConfig = Objects.requireNonNull(srv);
       if (srv.tls != null) {
         log.info("{} - initializing SSL context", srv.id);
@@ -52,7 +51,7 @@ public class A4TcpSrv implements Callable<Void>, Closeable {
 
   private void initSession() {
     SocketChannel clientChannel = null;
-    SelectionKey clientKey = null;
+    SelectionKey clientKey;
     try {
       // TODO check for connection limits here.
       var sess = new A4TcpSess(this, this.bkSel, sslContext != null, tlsExec);

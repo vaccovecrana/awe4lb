@@ -145,6 +145,8 @@ export interface A4Tls {
 
 export interface A4Udp {
   bufferSize: number;
+  idleTimeoutMs: number;
+  maxSessions: number;
   
   
 }

@@ -54,6 +54,11 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 - [ ] UI implementation.
 - [ ] Documentation/Usage notes/caveats.
 
+## Similar projects
+
+- https://www.envoyproxy.io/
+- https://gost.run/
+- https://github.com/yyyar/gobetween
 
 ## Resources
 
@@ -69,3 +74,4 @@ Test audio:
 - https://stackoverflow.com/questions/14225957/socket-vs-socketchannel
 - https://bugs.openjdk.org/browse/JDK-8202625
 - https://github.com/yyyar/gobetween/issues/335
+- https://github.com/felipejfc/go-udp-echo-server

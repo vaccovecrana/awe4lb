@@ -74,6 +74,10 @@ public class A4Io {
     }
   }
 
+  public static void sessionMismatch(SelectionKey key) {
+    throw new IllegalStateException("key/session mismatch " + key);
+  }
+
   public static InputStream openStream(URL url, int timeoutMs) throws IOException {
     var conn = url.openConnection();
     conn.setConnectTimeout(timeoutMs);

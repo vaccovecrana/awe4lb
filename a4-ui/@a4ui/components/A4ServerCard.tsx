@@ -29,6 +29,14 @@ const A4ServerCard = (props: A4ScProps) => (
           ) : []}
         </div>
       ) : []}
+      {props.srv.udp ? (
+        <div class="mt8 p8 txSmall card minimal">
+          <div class="card-title-3">UDP</div>
+          <div class="mt4"><i class="icon-clock mr4"></i><code>{props.srv.udp.idleTimeoutMs}ms</code></div>
+          <div><i class="icon-options mr4"></i><code>{props.srv.udp.bufferSize} bytes</code></div>
+          <div><i class="icon-layers mr4"></i><code>{props.srv.udp.maxSessions} max sessions</code></div>
+        </div>
+      ) : []}
       {props.srv.match.map((match, k) => [
         <A4MatchCard match={match} />,
         props.srv.match.length > 1 && (k < props.srv.match.length - 1) ? <hr class="mt8" /> : []

@@ -2,8 +2,9 @@ package io.vacco.a4lb.sel;
 
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.tcp.A4TcpIo;
+import io.vacco.a4lb.udp.A4UdpIo;
 import io.vacco.a4lb.util.*;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -36,21 +37,34 @@ public class A4Selector {
     }
   }
 
+  public Optional<A4Pool> matches(String hostAddress, String tlsSni) {
+    return A4MatchOps.eval(tlsSni, hostAddress, cfg);
+  }
+
   public Optional<A4Pool> matches(SocketChannel client, String tlsSni) {
-    var clientIp = client.socket().getInetAddress().getHostAddress();
-    return A4MatchOps.eval(tlsSni, clientIp, cfg);
+    return matches(client.socket().getInetAddress().getHostAddress(), tlsSni);
   }
 
   public A4TcpIo assign(Selector selector, SocketChannel client, String tlsSni, ExecutorService tlsExec) {
     var clientAddr = client.socket().getInetAddress();
     var clientIp = clientAddr.getHostAddress();
     try {
-      var pool = matches(client, tlsSni).orElseThrow();
+      var pool = matches(clientIp, tlsSni).orElseThrow();
       var bk = lockPoolAnd(pool, () -> select(pool, clientIp.hashCode()));
-      var io = new A4TcpIo(new InetSocketAddress(bk.addr.host, bk.addr.port), selector, pool.openTls, tlsExec);
-      return io.backend(bk);
+      var addr = new InetSocketAddress(bk.addr.host, bk.addr.port);
+      return new A4TcpIo(addr, selector, pool.openTls != null && pool.openTls, tlsExec).backend(bk);
     } catch (Exception e) {
       throw new A4Exceptions.A4SelectException(clientIp, tlsSni, this.cfg, e);
+    }
+  }
+
+  public A4UdpIo assign(Selector selector, InetSocketAddress client) {
+    try {
+      var pool = matches(client.getHostString(), null).orElseThrow();
+      var bk = lockPoolAnd(pool, () -> select(pool, client.hashCode()));
+      return new A4UdpIo(selector, bk, client);
+    } catch (Exception e) {
+      throw new A4Exceptions.A4SelectException(client.toString(), null, this.cfg, e);
     }
   }
 

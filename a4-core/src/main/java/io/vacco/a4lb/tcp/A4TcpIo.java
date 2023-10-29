@@ -12,9 +12,9 @@ import java.util.concurrent.ExecutorService;
 
 public class A4TcpIo implements Closeable {
 
-  public final String id;
-  public final SelectionKey channelKey;
-  public final SocketChannel channel;
+  public final String         id;
+  public final SelectionKey   channelKey;
+  public final SocketChannel  channel;
 
   public A4Backend backend;
 
@@ -63,9 +63,7 @@ public class A4TcpIo implements Closeable {
     channelKey.attach(null);
     channelKey.cancel();
     A4Io.close(channel);
-    if (backend != null) {
-      this.backend = null;
-    }
+    this.backend = null;
   }
 
 }

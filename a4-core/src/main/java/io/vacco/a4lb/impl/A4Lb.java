@@ -2,7 +2,9 @@ package io.vacco.a4lb.impl;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.tcp.*;
+import io.vacco.a4lb.udp.A4UdpSrv;
 import io.vacco.a4lb.util.*;
 import org.slf4j.*;
 import java.io.Closeable;
@@ -16,7 +18,7 @@ public class A4Lb implements Closeable {
   public  final A4Config        config;
   private final Gson            gson;
   private final ExecutorService exSvc;
-  private final List<A4TcpSrv>  servers = new ArrayList<>();
+  private final List<Closeable> servers = new ArrayList<>();
 
   public A4Lb(A4Config config, Gson gson) {
     this.gson = Objects.requireNonNull(gson);
@@ -28,20 +30,26 @@ public class A4Lb implements Closeable {
   public A4Lb open() {
     log.info("{} - starting", config.id);
     for (var srv : config.servers) {
-      var srvImpl = new A4TcpSrv(A4Io.newSelector(), srv, exSvc);
-      // TODO this will need to accommodate UDP servers too.
-      servers.add(srvImpl);
-      exSvc.submit(srvImpl);
+      var bkSel = new A4Selector(srv.match);
+      if (srv.udp != null) {
+        var udpImpl = new A4UdpSrv(A4Io.newSelector(), srv, bkSel);
+        servers.add(udpImpl);
+        exSvc.submit(udpImpl);
+      } else {
+        var tcpImpl = new A4TcpSrv(A4Io.newSelector(), srv, bkSel, exSvc);
+        servers.add(tcpImpl);
+        exSvc.submit(tcpImpl);
+      }
       for (var match : srv.match) {
         if (srv.udp == null && match.healthCheck == null) {
           log.info("{} - {} - no TCP health check configuration specified. Using defaults.", srv.id, match);
           match.healthCheck = new A4HealthCheck();
         }
         if (match.healthCheck != null) {
-          exSvc.submit(new A4Health(exSvc, srv.id, match, srvImpl.bkSel));
+          exSvc.submit(new A4Health(exSvc, srv.id, match, bkSel));
         }
         if (match.discover != null) {
-          exSvc.submit(new A4Discover(srv.id, match, srvImpl.bkSel, gson, exSvc));
+          exSvc.submit(new A4Discover(srv.id, match, bkSel, gson, exSvc));
         }
       }
     }
@@ -51,7 +59,7 @@ public class A4Lb implements Closeable {
 
   @Override public void close() {
     exSvc.shutdownNow();
-    servers.forEach(A4TcpSrv::close); // TODO accommodate UDP servers too
+    servers.forEach(A4Io::close);
     log.info("{} - stopped", config.id);
   }
 
