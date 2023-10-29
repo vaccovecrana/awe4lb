@@ -20,7 +20,7 @@ public class A4SelectorTest {
           .flatMap(srv -> srv.match.stream())
           .flatMap(m -> m.pool.hosts.stream())
           .forEach(bk -> bk.state = A4Backend.State.Up);
-      var matches = cfg.servers.get(1).match;
+      var matches = cfg.servers.get(3).match;
       var sel = new A4Selector(matches);
       var host = "172.16.0.111";
       var bk = sel.select(matches.get(0).pool, host.hashCode());

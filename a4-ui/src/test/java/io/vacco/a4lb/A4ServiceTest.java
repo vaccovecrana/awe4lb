@@ -19,7 +19,7 @@ public class A4ServiceTest {
           flagOf(kConfig, "./src/test/resources")
       });
       var svc = new A4Service().init(fl);
-      Thread.sleep(Integer.MAX_VALUE);
+      Thread.sleep(45000); // Integer.MAX_VALUE
       svc.close();
     });
   }
