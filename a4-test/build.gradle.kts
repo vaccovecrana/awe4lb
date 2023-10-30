@@ -1,6 +1,7 @@
 dependencies {
   testImplementation(project(":a4-core"))
   testImplementation(project(":a4-ui"))
+  testImplementation("com.github.mizosoft.methanol:methanol:1.7.0")
 }
 
 configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
