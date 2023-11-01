@@ -181,7 +181,7 @@
       ],
       "udp": {
         "bufferSize": 2048,
-        "idleTimeoutMs": 10000,
+        "idleTimeoutMs": 2000,
         "maxSessions": 1024
       }
     }

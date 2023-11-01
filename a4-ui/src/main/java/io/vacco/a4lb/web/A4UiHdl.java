@@ -23,8 +23,7 @@ public class A4UiHdl extends MxStatic {
       "  <div id=\"root\" />",
       "  <script src=\"/index.js\"></script>",
       "  <noscript>",
-      "    <!-- Happiness = Reality minus Expectations -->",
-      "    <!-- :P -->",
+      "    <!-- Happiness = Reality - Expectations -->",
       "  </noscript>",
       "  </body>",
       "</html>"

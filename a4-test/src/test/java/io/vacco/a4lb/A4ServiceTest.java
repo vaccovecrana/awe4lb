@@ -37,6 +37,15 @@ public class A4ServiceTest {
     }
   }
 
+  public static void doUdpGet(String msg, int count, long sleepMs) throws IOException, InterruptedException {
+    try (var udpClient = new A4UdpClient()) {
+      for (int i = 0; i < count; i++) {
+        log.info("Received reply: [{}]", udpClient.sendEcho(msg));
+        Thread.sleep(sleepMs);
+      }
+    }
+  }
+
   static {
     it("Initializes the Load Balancer Service/UI", () -> {
       var fl = A4Flags.from(new String[] {
@@ -47,6 +56,13 @@ public class A4ServiceTest {
       log = LoggerFactory.getLogger(A4ServiceTest.class);
       Thread.sleep(5000);
     });
+
+    it("Sends UP requests", () -> {
+      var msg = "Hello UDP";
+      doUdpGet(msg, 3, 4000);
+      doUdpGet(msg, 3, 400);
+    });
+
     it("Sends plain HTTP requests", () -> {
       doGet("http://127.0.0.1:8080", 20);
       doGet("http://127.0.0.1:8090", 20);
@@ -55,7 +71,7 @@ public class A4ServiceTest {
     });
 
     // TODO Remaining tests
-    //   - Send UDP requests
+    //   - TCP file download request (or a curl request which closes its connection).
     //   - Query all API/UI endpoints
     //   - Register new configuration
     //   - Activate new configuration
