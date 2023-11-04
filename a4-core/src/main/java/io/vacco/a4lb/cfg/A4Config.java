@@ -11,6 +11,16 @@ public class A4Config {
   public String id, description;
   public List<A4Server> servers = new ArrayList<>();
 
+  public A4Config id(String id) {
+    this.id = id;
+    return this;
+  }
+
+  public A4Config description(String description) {
+    this.description = description;
+    return this;
+  }
+
   public A4Config server(A4Server server) {
     servers.add(server);
     return this;

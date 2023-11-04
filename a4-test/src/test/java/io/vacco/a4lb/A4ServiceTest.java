@@ -1,10 +1,11 @@
 package io.vacco.a4lb;
 
-import com.github.mizosoft.methanol.Methanol;
+import com.github.mizosoft.methanol.*;
 import com.google.gson.Gson;
-import io.vacco.a4lb.cfg.A4Config;
+import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.niossl.SSLCertificates;
 import io.vacco.a4lb.util.*;
+import io.vacco.a4lb.web.A4Route;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.buildobjects.process.ProcBuilder;
@@ -12,7 +13,6 @@ import org.junit.runner.RunWith;
 import org.slf4j.*;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
-import java.net.http.HttpResponse;
 
 import static io.vacco.a4lb.util.A4Flags.*;
 import static j8spec.J8Spec.*;
@@ -30,22 +30,50 @@ public class A4ServiceTest {
   private static A4Service svc;
   private static final Gson gson = new Gson();
   private static final SSLContext trustAllCtx = SSLCertificates.trustAllContext();
+  private static final Methanol apiClient = Methanol.newBuilder()
+      .baseUri("http://localhost:7070")
+      .build();
 
-  public static void doGet(String url, int count) throws IOException, InterruptedException {
-    var req = GET(url);
+  private static A4Config tempConfig = new A4Config()
+      .id("temp-test-config")
+      .description("Test runtime configuration")
+      .server(
+          new A4Server()
+              .id("http-test-00")
+              .addr(new A4Sock().host("127.0.0.1").port(8080))
+              .match(
+                  new A4Match().pool(new A4Pool().hosts(
+                      new A4Backend().addr(new A4Sock().host("somewhere.io").port(10022))
+                  ))
+              )
+      );
+
+  public static String doRequest(Methanol m, MutableRequest req, long sleepMs) throws IOException, InterruptedException {
+    var res = m.send(req, ofString());
+    Thread.sleep(sleepMs);
+    return res.body();
+  }
+
+  public static void repeatRequest(Methanol m, MutableRequest req, long sleepMs, int count) throws IOException, InterruptedException {
     for (int i = 0; i < count; i++) {
-      var client = Methanol.newBuilder().sslContext(trustAllCtx).build();
-      var res = client.send(req, ofString());
-      log.info(res.body());
-      Thread.sleep(500);
+      log.info(doRequest(m, req, sleepMs));
     }
   }
 
-  public static String doPost(String url, Object body) throws IOException, InterruptedException {
+  public static void doGet(String url, int count) throws IOException, InterruptedException {
+    var req = GET(url);
+    repeatRequest(Methanol.newBuilder().sslContext(trustAllCtx).build(), req, count, 500);
+  }
+
+  public static String doGet(Methanol m, String url) throws IOException, InterruptedException {
+    var req = GET(url);
+    return doRequest(m, req, 0);
+  }
+
+  public static String doPost(Methanol m, String url, Object body) throws IOException, InterruptedException {
     var json = gson.toJson(body);
     var req = POST(url, BodyPublishers.ofString(json));
-    var res = Methanol.create().send(req, HttpResponse.BodyHandlers.ofString());
-    return res.body();
+    return doRequest(m, req, 0);
   }
 
   public static void doUdpGet(String msg, int count, long sleepMs) throws IOException, InterruptedException {
@@ -73,22 +101,30 @@ public class A4ServiceTest {
       log.info(res);
     });
 
-    it("Loads the active configuration", () -> doGet("http://127.0.0.1:7070/api/v1/config", 1));
-    it("Loads all configurations", () -> doGet("http://127.0.0.1:7070/api/v1/config/list", 1));
+    it("Loads the active configuration", () -> doGet(apiClient, A4Route.apiV1Config));
+    it("Loads all configurations", () -> doGet(apiClient, A4Route.apiV1ConfigList));
+
     it("Attempts to add an invalid configuration", () -> {
       var cfg = new A4Config();
-      var res = doPost("http://127.0.0.1:7070/api/v1/config", cfg);
+      var res = doPost(apiClient, A4Route.apiV1Config, cfg);
       log.info(res);
       assertNotNull(res);
       assertFalse(res.isEmpty());
     });
+    it("Adds a new configuration", () -> {
+      var res = doPost(apiClient, A4Route.apiV1Config, tempConfig);
+      log.info(res);
+      log.info("momo?");
+    });
+    it("Opens the new configuration", () -> {
 
-    // TODO Remaining tests
-    //   - Add new configuration
-    //   - Open new configuration
-    //   - Close new configuration
-    //   - Delete new configuration
-    //   - Retrieve performance metrics
+    });
+    it("Closes the new configuration", () -> {
+
+    });
+    it("Deletes the new configuration", () -> {
+
+    });
 
     it("Sends UP requests", () -> {
       var msg = "Hello UDP";
@@ -102,6 +138,9 @@ public class A4ServiceTest {
       doGet("https://momo.localhost:8443", 20);
       doGet("https://sdr.localhost:8443", 20);
     });
+
+    // TODO Remaining tests
+    //   - Retrieve performance metrics
 
     it("Stops the Load Balancer Service/UI", () -> svc.close());
   }

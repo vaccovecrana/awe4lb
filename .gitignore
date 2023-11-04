@@ -13,3 +13,5 @@ java_pid*.hprof
 echo
 
 node_modules/
+
+temp-test-config.json
