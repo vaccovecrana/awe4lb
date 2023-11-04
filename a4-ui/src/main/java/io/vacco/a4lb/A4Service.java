@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import java.io.Closeable;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 import static io.vacco.shax.logging.ShOption.*;
@@ -20,6 +21,8 @@ public class A4Service implements Closeable {
   public static final String ExtJson = ".json";
 
   private Logger  log;
+  private final ReentrantLock configLock = new ReentrantLock();
+
   public  A4Api   api;
   public  Gson    gson = new GsonBuilder().setPrettyPrinting().create();
   public  A4Lb    instance;
@@ -42,6 +45,7 @@ public class A4Service implements Closeable {
   }
 
   private void setActive(File cfgFile) {
+    configLock.lock();
     try {
       if (this.instance != null) {
         A4Io.close(instance);
@@ -55,6 +59,8 @@ public class A4Service implements Closeable {
       } else {
         log.error("{} - unable to initialize load balancer instance - {}", cfgFile.getAbsolutePath(), e.getMessage());
       }
+    } finally {
+      configLock.unlock();
     }
   }
 

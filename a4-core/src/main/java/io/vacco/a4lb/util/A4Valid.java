@@ -8,6 +8,7 @@ import am.ik.yavi.core.ConstraintViolations;
 import am.ik.yavi.core.Validator;
 import io.vacco.a4lb.cfg.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class A4Valid {
 
@@ -253,6 +254,21 @@ public class A4Valid {
       throw new A4Exceptions.A4ValidationException(errors);
     }
     return t;
+  }
+
+  public static Collection<A4Validation> validationsOf(ConstraintViolations cv) {
+    return cv.stream().map(c -> {
+      var v = new A4Validation();
+      v.name = c.name();
+      v.args = new String[c.args().length];
+      v.message = c.message();
+      v.key = c.messageKey();
+      v.format = c.defaultMessageFormat();
+      for (int i = 0; i < c.args().length; i++) {
+        v.args[i] = c.args()[i] != null ? c.args()[i].toString() : "";
+      }
+      return v;
+    }).collect(Collectors.toList());
   }
 
   /*

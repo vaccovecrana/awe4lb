@@ -2,6 +2,7 @@ package io.vacco.a4lb;
 
 import com.github.mizosoft.methanol.Methanol;
 import com.google.gson.Gson;
+import io.vacco.a4lb.cfg.A4Config;
 import io.vacco.a4lb.niossl.SSLCertificates;
 import io.vacco.a4lb.util.*;
 import j8spec.annotation.DefinedOrder;
@@ -11,9 +12,11 @@ import org.junit.runner.RunWith;
 import org.slf4j.*;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.net.http.HttpResponse;
 
 import static io.vacco.a4lb.util.A4Flags.*;
 import static j8spec.J8Spec.*;
+import static org.junit.Assert.*;
 import static com.github.mizosoft.methanol.MutableRequest.*;
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
 
@@ -38,6 +41,13 @@ public class A4ServiceTest {
     }
   }
 
+  public static String doPost(String url, Object body) throws IOException, InterruptedException {
+    var json = gson.toJson(body);
+    var req = POST(url, BodyPublishers.ofString(json));
+    var res = Methanol.create().send(req, HttpResponse.BodyHandlers.ofString());
+    return res.body();
+  }
+
   public static void doUdpGet(String msg, int count, long sleepMs) throws IOException, InterruptedException {
     try (var udpClient = new A4UdpClient()) {
       for (int i = 0; i < count; i++) {
@@ -58,6 +68,28 @@ public class A4ServiceTest {
       Thread.sleep(5000); // Integer.MAX_VALUE
     });
 
+    it("Sends a curl request", () -> {
+      var res = ProcBuilder.run("curl", "--verbose", "http://127.0.0.1:8080");
+      log.info(res);
+    });
+
+    it("Loads the active configuration", () -> doGet("http://127.0.0.1:7070/api/v1/config", 1));
+    it("Loads all configurations", () -> doGet("http://127.0.0.1:7070/api/v1/config/list", 1));
+    it("Attempts to add an invalid configuration", () -> {
+      var cfg = new A4Config();
+      var res = doPost("http://127.0.0.1:7070/api/v1/config", cfg);
+      log.info(res);
+      assertNotNull(res);
+      assertFalse(res.isEmpty());
+    });
+
+    // TODO Remaining tests
+    //   - Add new configuration
+    //   - Open new configuration
+    //   - Close new configuration
+    //   - Delete new configuration
+    //   - Retrieve performance metrics
+
     it("Sends UP requests", () -> {
       var msg = "Hello UDP";
       doUdpGet(msg, 3, 4000);
@@ -70,22 +102,6 @@ public class A4ServiceTest {
       doGet("https://momo.localhost:8443", 20);
       doGet("https://sdr.localhost:8443", 20);
     });
-
-    it("Sends a curl request", () -> {
-      var res = ProcBuilder.run("curl", "--verbose", "http://127.0.0.1:8080");
-      log.info(res);
-    });
-
-    it("Loads the active configuration", () -> doGet("http://127.0.0.1:7070/api/v1/config", 1));
-    it("Loads all configurations", () -> doGet("http://127.0.0.1:7070/api/v1/config/list", 1));
-
-    // TODO Remaining tests
-    //   - Register new configuration
-    //   - Activate new configuration
-    //   - Stop new configuration
-    //   - Delete new configuration
-    //   - Register an invalid configuration
-    //   - Retrieve performance metrics
 
     it("Stops the Load Balancer Service/UI", () -> svc.close());
   }

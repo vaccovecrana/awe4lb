@@ -183,7 +183,7 @@ Source controllers:
 
  */
 
-export const apiV1Config = (): Promise<A4Config> => {
+export const apiV1ConfigGet = (): Promise<A4Config> => {
   let path = "/api/v1/config"
   
   
@@ -198,7 +198,7 @@ export const apiV1Config = (): Promise<A4Config> => {
   )
 }
 
-export const apiV1ConfigList = (): Promise<A4Config[]> => {
+export const apiV1ConfigListGet = (): Promise<A4Config[]> => {
   let path = "/api/v1/config/list"
   
   

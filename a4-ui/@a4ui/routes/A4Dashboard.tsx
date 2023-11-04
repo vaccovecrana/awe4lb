@@ -2,7 +2,7 @@ import * as React from "preact/compat"
 
 import { useContext } from "preact/hooks"
 import { lockUi, A4Context, A4Store } from "@a4ui/store"
-import { A4Config, A4Server, apiV1Config } from "@a4ui/rpc"
+import { A4Config, A4Server, apiV1ConfigGet } from "@a4ui/rpc"
 import { RenderableProps } from "preact"
 import { A4ServerCard } from "@a4ui/components"
 
@@ -18,7 +18,7 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
   public componentDidMount(): void {
     const {dispatch: d} = this.props.s
     lockUi(true, d)
-      .then(() => apiV1Config())
+      .then(() => apiV1ConfigGet())
       .then(config => this.setState({config}))
       .then(() => lockUi(false, d))
   }

@@ -1,10 +1,10 @@
 package io.vacco.a4lb.web;
 
 import io.vacco.a4lb.A4Service;
-import io.vacco.a4lb.cfg.A4Config;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import java.util.Collection;
+import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.util.A4Valid;
+import jakarta.ws.rs.*;
+import java.util.*;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -19,12 +19,18 @@ public class A4ApiHdl {
   }
 
   @GET @Path(apiV1Config)
-  public A4Config apiV1Config() {
+  public A4Config apiV1ConfigGet() {
     return service.instance.config;
   }
 
+  @POST @Path(apiV1Config)
+  public Collection<A4Validation> apiV1ConfigPost(@BeanParam A4Config config) {
+    var errList = service.add(config);
+    return errList.isEmpty() ? Collections.emptyList() : A4Valid.validationsOf(errList);
+  }
+
   @GET @Path(apiV1ConfigList)
-  public Collection<A4Config> apiV1ConfigList() {
+  public Collection<A4Config> apiV1ConfigListGet() {
     return service.rootConfigs().collect(Collectors.toList());
   }
 
