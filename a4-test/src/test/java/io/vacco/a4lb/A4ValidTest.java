@@ -52,7 +52,7 @@ public class A4ValidTest {
     });
     it("Validates a JSON configuration", () -> {
       System.out.println("============================");
-      var cfg = A4Configs.loadFrom(A4ValidTest.class.getResource("/test-config-00.json"), new Gson());
+      var cfg = A4Configs.loadFromOrFail(A4ValidTest.class.getResource("/test-config-00.json"), new Gson());
       var constraints = A4Valid.validate(cfg);
       for (var cnt : constraints) {
         System.out.println(cnt.message());

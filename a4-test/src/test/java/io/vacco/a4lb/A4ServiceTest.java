@@ -6,6 +6,7 @@ import io.vacco.a4lb.niossl.SSLCertificates;
 import io.vacco.a4lb.util.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
+import org.buildobjects.process.ProcBuilder;
 import org.junit.runner.RunWith;
 import org.slf4j.*;
 import javax.net.ssl.SSLContext;
@@ -54,7 +55,7 @@ public class A4ServiceTest {
       });
       svc = new A4Service().init(fl);
       log = LoggerFactory.getLogger(A4ServiceTest.class);
-      Thread.sleep(5000);
+      Thread.sleep(5000); // Integer.MAX_VALUE
     });
 
     it("Sends UP requests", () -> {
@@ -70,9 +71,15 @@ public class A4ServiceTest {
       doGet("https://sdr.localhost:8443", 20);
     });
 
+    it("Sends a curl request", () -> {
+      var res = ProcBuilder.run("curl", "--verbose", "http://127.0.0.1:8080");
+      log.info(res);
+    });
+
+    it("Loads the active configuration", () -> doGet("http://127.0.0.1:7070/api/v1/config", 1));
+    it("Loads all configurations", () -> doGet("http://127.0.0.1:7070/api/v1/config/list", 1));
+
     // TODO Remaining tests
-    //   - TCP file download request (or a curl request which closes its connection).
-    //   - Query all API/UI endpoints
     //   - Register new configuration
     //   - Activate new configuration
     //   - Stop new configuration

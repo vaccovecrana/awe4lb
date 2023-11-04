@@ -47,7 +47,7 @@ public class A4Service implements Closeable {
         A4Io.close(instance);
         syncFs(instance.config, false);
       }
-      var cfg = A4Configs.loadFrom(cfgFile.toURI().toURL(), gson);
+      var cfg = A4Configs.loadFromOrFail(cfgFile.toURI().toURL(), gson);
       this.instance = new A4Lb(syncFs(cfg, true), gson).open();
     } catch (Exception e) {
       if (log.isDebugEnabled()) {
@@ -75,7 +75,19 @@ public class A4Service implements Closeable {
     if (files != null) {
       return Arrays.stream(files)
           .filter(f -> f.getName().endsWith(ExtJson))
-          .map(f -> A4Configs.loadFrom(f, gson));
+          .map(f -> {
+            try {
+              return A4Configs.loadFromOrFail(f.toURI().toURL(), gson);
+            } catch (Exception e) {
+              if (log.isDebugEnabled()) {
+                log.debug("unable to load configuration from file " + f.getAbsolutePath(), e);
+              } else {
+                log.warn("unable to load configuration from file {} - {}", f.getAbsolutePath(), A4Exceptions.messageFor(e));
+              }
+              return null;
+            }
+          })
+          .filter(Objects::nonNull);
     }
     return Stream.empty();
   }
