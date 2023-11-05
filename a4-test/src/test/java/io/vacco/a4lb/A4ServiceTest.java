@@ -143,9 +143,9 @@ public class A4ServiceTest {
       doRequest(apiClient, req, 0);
     });
 
-    it("Loads the active configuration", () -> doGet(apiClient, A4Route.apiV1Config));
+    it("Loads the active configuration", () -> log.info(doGet(apiClient, A4Route.apiV1Config)));
 
-    it("Loads all configurations", () -> doGet(apiClient, A4Route.apiV1ConfigList));
+    it("Loads all configurations", () -> log.info(doGet(apiClient, A4Route.apiV1ConfigList)));
 
     it("Sends UDP requests", () -> {
       var msg = "Hello UDP";

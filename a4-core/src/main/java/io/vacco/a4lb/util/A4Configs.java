@@ -35,6 +35,12 @@ public class A4Configs {
             m.discover.intervalMs = m.discover.intervalMs != null ? m.discover.intervalMs : A4Disc.DefaultIntervalMs;
             m.discover.timeoutMs = m.discover.timeoutMs != null ? m.discover.timeoutMs : A4Disc.DefaultTimeoutMs;
           }
+          if (m.pool == null) {
+            m.pool = new A4Pool();
+          }
+          if (m.pool.hosts == null) {
+            m.pool.hosts = new ArrayList<>();
+          }
         }
       }
       return cfg;
@@ -57,7 +63,10 @@ public class A4Configs {
     for (var srv : cfg0.servers) {
       for (var m : allMatchesOf(srv)) {
         if (m.discover != null) {
-          m.pool.hosts.clear();
+          m.pool.hosts = null;
+          if (m.pool.type == null) {
+            m.pool = null;
+          }
           if (A4Disc.DefaultIntervalMs.equals(m.discover.intervalMs)
               && A4Disc.DefaultTimeoutMs.equals(m.discover.timeoutMs)) {
             m.discover.intervalMs = null;

@@ -10,7 +10,7 @@ public class A4Pool {
   }
 
   public Type type;
-  public List<A4Backend> hosts = new ArrayList<>();
+  public List<A4Backend> hosts;
   public Boolean openTls;
 
   public A4Pool type(Type type) {

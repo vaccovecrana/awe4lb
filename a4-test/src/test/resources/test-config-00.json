@@ -1,5 +1,5 @@
 {
-  "active": true,
+  "active": false,
   "id": "test-config-00",
   "description": "Test configuration",
   "servers": [
@@ -11,9 +11,6 @@
       },
       "match": [
         {
-          "pool": {
-            "hosts": []
-          },
           "discover": {
             "http": {
               "endpoint": "http://127.0.0.1:4010",
@@ -39,8 +36,7 @@
             }
           ],
           "pool": {
-            "type": "roundRobin",
-            "hosts": []
+            "type": "roundRobin"
           },
           "discover": {
             "exec": {
@@ -80,9 +76,6 @@
               }
             }
           ],
-          "pool": {
-            "hosts": []
-          },
           "discover": {
             "http": {
               "endpoint": "http://127.0.0.1:4011",
@@ -99,8 +92,7 @@
             }
           ],
           "pool": {
-            "type": "weight",
-            "hosts": []
+            "type": "weight"
           },
           "discover": {
             "exec": {
