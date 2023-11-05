@@ -29,7 +29,8 @@ public class A4UiHdl extends MxStatic {
       "</html>"
   );
 
-  private static final File pkgJson = new File("../a4-ui/package.json"); // TODO fix this, constructor should determine content origin.
+  // TODO fix this, constructor should determine content origin.
+  private static final File pkgJson = new File("../a4-ui/package.json");
 
   public A4UiHdl() {
     super(
