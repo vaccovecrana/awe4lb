@@ -21,7 +21,7 @@ public class A4Service implements Closeable {
   public static final String ExtJson = ".json";
 
   private Logger  log;
-  private final ReentrantLock configLock = new ReentrantLock();
+  private final ReentrantLock instanceLock = new ReentrantLock();
 
   public  A4Api   api;
   public  Gson    gson = new GsonBuilder().setPrettyPrinting().create();
@@ -32,48 +32,71 @@ public class A4Service implements Closeable {
     return new File(configRoot, format("%s%s", id, ExtJson));
   }
 
-  private A4Config syncFs(A4Config cfg, boolean active) {
-    var cfgFile = cfgFileOf(cfg.id);
-    cfg.active = active;
+  private A4Config syncFs(A4Config config, boolean markActive) {
+    var cfgFile = cfgFileOf(config.id);
+    config.active = markActive;
     try (var fw = new FileWriter(cfgFile)) {
-      gson.toJson(cfg, fw);
-      return cfg;
+      gson.toJson(config, fw);
+      return config;
     } catch (Exception e) {
-      cfg.active = false;
+      config.active = false;
       throw new IllegalStateException("Unable to write configuration: " + cfgFile.getAbsolutePath(), e);
     }
   }
 
-  private void setActive(File cfgFile) {
-    configLock.lock();
+  private void lockInstanceAnd(Runnable then) {
+    instanceLock.lock();
     try {
-      if (this.instance != null) {
-        A4Io.close(instance);
-        syncFs(instance.config, false);
-      }
-      var cfg = A4Configs.loadFromOrFail(cfgFile.toURI().toURL(), gson);
-      this.instance = new A4Lb(syncFs(cfg, true), gson).open();
-    } catch (Exception e) {
-      if (log.isDebugEnabled()) {
-        log.debug("{} - unable to initialize load balancer instance", cfgFile.getAbsolutePath(), e);
-      } else {
-        log.error("{} - unable to initialize load balancer instance - {}", cfgFile.getAbsolutePath(), e.getMessage());
-      }
+      then.run();
     } finally {
-      configLock.unlock();
+      instanceLock.unlock();
     }
   }
 
-  public void setActive(String cfgId) {
-    setActive(cfgFileOf(cfgId));
+  private void setActive(File configFile) {
+    lockInstanceAnd(() -> {
+      A4Io.close(instance);
+      if (this.instance != null) {
+        syncFs(instance.config, false);
+      } try {
+        var cfg = A4Configs.loadFromOrFail(configFile.toURI().toURL(), gson);
+        this.instance = new A4Lb(syncFs(cfg, true), gson).open();
+      } catch (Exception e) {
+        if (log.isDebugEnabled()) {
+          log.debug("{} - unable to initialize load balancer instance", configFile.getAbsolutePath(), e);
+        } else {
+          log.error("{} - unable to initialize load balancer instance - {}", configFile.getAbsolutePath(), e.getMessage());
+        }
+      }
+    });
   }
 
-  public ConstraintViolations add(A4Config cfg) {
-    var errors = A4Valid.validate(cfg);
+  public void setActive(String configId) {
+    setActive(cfgFileOf(configId));
+  }
+
+  public ConstraintViolations add(A4Config config) {
+    var errors = A4Valid.validate(config);
     if (errors.isEmpty()) {
-      syncFs(cfg, false);
+      syncFs(config, false);
     }
     return errors;
+  }
+
+  public boolean delete(String configId) {
+    var cfgFile = cfgFileOf(configId);
+    if (cfgFile.exists() && cfgFile.isFile()) {
+      lockInstanceAnd(() -> {
+        if (instance != null && instance.config.id.equals(configId)) {
+          A4Io.close(instance);
+        }
+      });
+      instanceLock.lock();
+      return cfgFile.delete();
+    } else {
+      log.warn("will not delete invalid configuration file: {}", cfgFile.getAbsolutePath());
+      return false;
+    }
   }
 
   public Stream<A4Config> rootConfigs() {

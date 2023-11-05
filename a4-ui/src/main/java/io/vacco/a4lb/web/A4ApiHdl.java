@@ -29,6 +29,11 @@ public class A4ApiHdl {
     return errList.isEmpty() ? Collections.emptyList() : A4Valid.validationsOf(errList);
   }
 
+  @DELETE @Path(apiV1Config)
+  public boolean apiV1ConfigDelete(@QueryParam("configId") String configId) {
+    return service.delete(configId);
+  }
+
   @GET @Path(apiV1ConfigList)
   public Collection<A4Config> apiV1ConfigListGet() {
     return service.rootConfigs().collect(Collectors.toList());

@@ -34,8 +34,12 @@ public class A4ServiceTest {
       .baseUri("http://localhost:7070")
       .build();
 
-  private static A4Config tempConfig = new A4Config()
-      .id("temp-test-config")
+  private static final String
+      testConfigId = "test-config-00",
+      tempConfigId = "temp-test-config";
+
+  private static final A4Config tempConfig = new A4Config()
+      .id(tempConfigId)
       .description("Test runtime configuration")
       .server(
           new A4Server()
@@ -114,16 +118,13 @@ public class A4ServiceTest {
     it("Adds a new configuration", () -> {
       var res = doPost(apiClient, A4Route.apiV1Config, tempConfig);
       log.info(res);
-      log.info("momo?");
+      assertNotNull(res);
+      assertEquals("[]", res);
     });
-    it("Opens the new configuration", () -> {
-
-    });
-    it("Closes the new configuration", () -> {
-
-    });
+    it("Opens the new configuration", () -> svc.setActive(tempConfigId));
+    it("Closes the new configuration and restarts the original active configuration", () -> svc.setActive(testConfigId));
     it("Deletes the new configuration", () -> {
-
+      create("lol")
     });
 
     it("Sends UP requests", () -> {

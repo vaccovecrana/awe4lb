@@ -171,6 +171,16 @@ export interface A4Config {
   
 }
 
+export interface A4Validation {
+  args: string[];
+  format: string;
+  key: string;
+  name: string;
+  message: string;
+  
+  
+}
+
 
 /* ====================================== */
 /* ============ RPC methods ============= */
@@ -182,6 +192,28 @@ Source controllers:
 - io.vacco.a4lb.web.A4ApiHdl
 
  */
+
+export const apiV1ConfigDelete = (configId: string): Promise<boolean> => {
+  let path = "/api/v1/config"
+  
+  
+    const qParams = new URLSearchParams()
+    
+      qParams.append("configId", configId.toString())
+  
+    
+    path = `${path}?${qParams.toString()}`
+  
+  
+  
+  return doJsonIo(path, "DELETE",
+    
+      undefined
+    ,
+    new Map(),
+    undefined
+  )
+}
 
 export const apiV1ConfigGet = (): Promise<A4Config> => {
   let path = "/api/v1/config"
@@ -207,6 +239,21 @@ export const apiV1ConfigListGet = (): Promise<A4Config[]> => {
   return doJsonIo(path, "GET",
     
       undefined
+    ,
+    new Map(),
+    undefined
+  )
+}
+
+export const apiV1ConfigPost = (arg0: A4Config): Promise<A4Validation[]> => {
+  let path = "/api/v1/config"
+  
+  
+  
+  
+  return doJsonIo(path, "POST",
+    
+      JSON.stringify(arg0)
     ,
     new Map(),
     undefined
