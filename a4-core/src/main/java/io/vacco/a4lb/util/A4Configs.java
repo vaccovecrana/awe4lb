@@ -41,6 +41,9 @@ public class A4Configs {
           if (m.pool.hosts == null) {
             m.pool.hosts = new ArrayList<>();
           }
+          for (var bk : m.pool.hosts) {
+            bk.state = A4Backend.State.Unknown;
+          }
         }
       }
       return cfg;
@@ -71,6 +74,11 @@ public class A4Configs {
               && A4Disc.DefaultTimeoutMs.equals(m.discover.timeoutMs)) {
             m.discover.intervalMs = null;
             m.discover.timeoutMs = null;
+          }
+        }
+        if (m.pool != null && m.pool.hosts != null) {
+          for (var bk : m.pool.hosts) {
+            bk.state = null;
           }
         }
         if (m.healthCheck != null

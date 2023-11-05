@@ -6,7 +6,7 @@ public class A4Backend {
 
   public A4Sock addr;
   public Integer weight, priority;
-  public transient State state = State.Unknown;
+  public State state = State.Unknown;
 
   public A4Backend addr(A4Sock addr) {
     this.addr = addr;
