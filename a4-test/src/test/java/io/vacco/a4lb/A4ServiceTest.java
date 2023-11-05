@@ -120,9 +120,7 @@ public class A4ServiceTest {
       doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, tempConfigId));
     });
 
-    it("Closes the new configuration", () -> {
-      doGet(apiClient, apiV1ConfigSelect);
-    });
+    it("Closes the new configuration", () -> doGet(apiClient, apiV1ConfigSelect));
 
     it("Opens the initial configuration", () -> {
       doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, testConfigId));
@@ -167,6 +165,8 @@ public class A4ServiceTest {
 
     // TODO Remaining tests
     //   - Retrieve performance metrics
+
+    it("Closes the initial configuration", () -> doGet(apiClient, apiV1ConfigSelect));
 
     it("Stops the Load Balancer context", () -> ctx.close());
   }
