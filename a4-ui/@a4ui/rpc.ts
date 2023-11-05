@@ -21,16 +21,6 @@ const doJsonIo = <I, O>(url: string, method: string, body: I,
 /* ============= RPC types ============== */
 /* ====================================== */
 
-export interface A4Validation {
-  args: string[];
-  format: string;
-  key: string;
-  name: string;
-  message: string;
-  
-  
-}
-
 export interface A4Sock {
   host: string;
   port: number;
@@ -111,6 +101,8 @@ export interface A4DiscExec {
 }
 
 export interface A4Disc {
+  DefaultIntervalMs: number;
+  DefaultTimeoutMs: number;
   http: A4DiscHttp;
   exec: A4DiscExec;
   intervalMs: number;
@@ -127,6 +119,8 @@ export interface A4HealthExec {
 }
 
 export interface A4HealthCheck {
+  DefaultIntervalMs: number;
+  DefaultTimeoutMs: number;
   intervalMs: number;
   timeoutMs: number;
   exec: A4HealthExec;
@@ -177,6 +171,16 @@ export interface A4Config {
   id: string;
   description: string;
   servers: A4Server[];
+  
+  
+}
+
+export interface A4Validation {
+  args: string[];
+  format: string;
+  key: string;
+  name: string;
+  message: string;
   
   
 }

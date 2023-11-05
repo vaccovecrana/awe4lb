@@ -11,6 +11,11 @@ public class A4Config {
   public String id, description;
   public List<A4Server> servers = new ArrayList<>();
 
+  public A4Config active(boolean active) {
+    this.active = active;
+    return this;
+  }
+
   public A4Config id(String id) {
     this.id = id;
     return this;
@@ -28,6 +33,10 @@ public class A4Config {
 
   public List<A4Server> serverList() {
     return servers;
+  }
+
+  @Override public String toString() {
+    return id;
   }
 
   /*

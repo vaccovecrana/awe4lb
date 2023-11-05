@@ -29,6 +29,11 @@ public class A4Lb implements Closeable {
 
   public A4Lb open() {
     log.info("{} - starting", config.id);
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
     for (var srv : config.servers) {
       var bkSel = new A4Selector(srv.match);
       if (srv.udp != null) {
@@ -41,10 +46,6 @@ public class A4Lb implements Closeable {
         exSvc.submit(tcpImpl);
       }
       for (var match : srv.match) {
-        if (srv.udp == null && match.healthCheck == null) {
-          log.info("{} - {} - no TCP health check configuration specified. Using defaults.", srv.id, match);
-          match.healthCheck = new A4HealthCheck();
-        }
         if (match.healthCheck != null) {
           exSvc.submit(new A4Health(exSvc, srv.id, match, bkSel));
         }
@@ -60,6 +61,7 @@ public class A4Lb implements Closeable {
   @Override public void close() {
     exSvc.shutdownNow();
     servers.forEach(A4Io::close);
+    servers.clear();
     log.info("{} - stopped", config.id);
   }
 

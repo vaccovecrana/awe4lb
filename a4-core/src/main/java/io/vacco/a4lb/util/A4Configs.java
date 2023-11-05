@@ -6,8 +6,7 @@ import io.vacco.a4lb.cfg.*;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.*;
 
 import static java.lang.String.format;
 
@@ -22,7 +21,23 @@ public class A4Configs {
   public static A4Config loadFromOrFail(URL src, Gson g) {
     try (var is = src.openStream()) {
       var isr = new InputStreamReader(is);
-      return g.fromJson(isr, A4Config.class);
+      var cfg = g.fromJson(isr, A4Config.class);
+      for (var srv : cfg.servers) {
+        for (var m : allMatchesOf(srv)) {
+          if (srv.udp == null && m.healthCheck == null) {
+            m.healthCheck = new A4HealthCheck();
+          }
+          if (m.healthCheck != null) {
+            m.healthCheck.intervalMs = m.healthCheck.intervalMs != null ? m.healthCheck.intervalMs : A4HealthCheck.DefaultIntervalMs;
+            m.healthCheck.timeoutMs = m.healthCheck.timeoutMs != null ? m.healthCheck.timeoutMs : A4HealthCheck.DefaultTimeoutMs;
+          }
+          if (m.discover != null) {
+            m.discover.intervalMs = m.discover.intervalMs != null ? m.discover.intervalMs : A4Disc.DefaultIntervalMs;
+            m.discover.timeoutMs = m.discover.timeoutMs != null ? m.discover.timeoutMs : A4Disc.DefaultTimeoutMs;
+          }
+        }
+      }
+      return cfg;
     } catch (IOException ioe) {
       throw new IllegalStateException("unable to load configuration from " + src, ioe);
     }
@@ -38,9 +53,30 @@ public class A4Configs {
 
   public static A4Config syncFs(File configRoot, Gson g, A4Config config, boolean markActive) {
     var cfgFile = configFileOf(configRoot, config.id);
-    config.active = markActive;
+    var cfg0 = g.fromJson(g.toJson(config), A4Config.class).active(markActive);
+    for (var srv : cfg0.servers) {
+      for (var m : allMatchesOf(srv)) {
+        if (m.discover != null) {
+          m.pool.hosts.clear();
+          if (A4Disc.DefaultIntervalMs.equals(m.discover.intervalMs)
+              && A4Disc.DefaultTimeoutMs.equals(m.discover.timeoutMs)) {
+            m.discover.intervalMs = null;
+            m.discover.timeoutMs = null;
+          }
+        }
+        if (m.healthCheck != null
+            && A4HealthCheck.DefaultIntervalMs.equals(m.healthCheck.intervalMs)
+            && A4HealthCheck.DefaultTimeoutMs.equals(m.healthCheck.timeoutMs)) {
+          m.healthCheck.intervalMs = null;
+          m.healthCheck.timeoutMs = null;
+          if (m.healthCheck.exec == null) {
+            m.healthCheck = null;
+          }
+        }
+      }
+    }
     try (var fw = new FileWriter(cfgFile)) {
-      g.toJson(config, fw);
+      g.toJson(cfg0, fw);
       return config;
     } catch (Exception e) {
       throw new IllegalStateException("Unable to write configuration: " + cfgFile.getAbsolutePath(), e);

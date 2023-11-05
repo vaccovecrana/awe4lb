@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class A4Valid {
 
   public static <T> IntegerConstraint<T> gtZero(IntegerConstraint<T> c) {
-    return c.greaterThan(0);
+    return c.notNull().greaterThan(0);
   }
 
   public static <T> IntegerConstraint<T> gtLtEq(IntegerConstraint<T> c, int gt, int ltEq) {
@@ -36,11 +36,15 @@ public class A4Valid {
   private static final Validator<A4HealthCheck> A4HealthCheckVld = ValidatorBuilder.<A4HealthCheck>of()
       ._integer(hc -> hc.intervalMs, "intervalMs", A4Valid::gtZero)
       ._integer(hc -> hc.timeoutMs, "timeoutMs", A4Valid::gtZero)
-      .constraintOnTarget(
-          hc -> hc.timeoutMs < hc.intervalMs, "timeoutMs",
-          "timeoutMs.isLessThanInterval",
-          "\"{0}\" \"timeoutMs\" must be less than \"intervalMs\""
-      ).nestIfPresent(hc -> hc.exec, "exec", A4HealthExecVld)
+      .constraintOnCondition(
+          (hc, cc) -> hc.intervalMs != null && hc.timeoutMs != null,
+          b -> b.constraintOnTarget(
+              hc -> hc.timeoutMs < hc.intervalMs, "timeoutMs",
+              "timeoutMs.isLessThanInterval",
+              "\"{0}\" \"timeoutMs\" must be less than \"intervalMs\""
+          )
+      )
+      .nestIfPresent(hc -> hc.exec, "exec", A4HealthExecVld)
       .build();
 
   private static final Validator<A4Sock> A4SockVld = ValidatorBuilder.<A4Sock>of()
@@ -113,10 +117,13 @@ public class A4Valid {
       .nestIfPresent(d -> d.exec, "exec", A4DiscExecVld)
       ._integer(d -> d.intervalMs, "intervalMs", A4Valid::gtZero)
       ._integer(d -> d.timeoutMs, "timeoutMs", A4Valid::gtZero)
-      .constraintOnTarget(
-          d -> d.timeoutMs < d.intervalMs, "timeoutMs",
-          "timeoutMs.isLessThanInterval",
-          "\"{0}\" \"timeoutMs\" must be less than \"intervalMs\""
+      .constraintOnCondition(
+          (d, cc) -> d.intervalMs != null && d.timeoutMs != null,
+          b -> b.constraintOnTarget(
+              d -> d.timeoutMs < d.intervalMs, "timeoutMs",
+              "timeoutMs.isLessThanInterval",
+              "\"{0}\" \"timeoutMs\" must be less than \"intervalMs\""
+          )
       )
       .constraintOnTarget(
           d -> d.http != null || d.exec != null,
@@ -147,7 +154,9 @@ public class A4Valid {
           "\"{0}\" only one of [and, or] allowed"
       )
       .constraintOnCondition(
-          (m, cg) -> m.discover != null && m.healthCheck != null,
+          (m, cg) ->
+              m.discover != null && m.discover.intervalMs != null
+                  && m.healthCheck != null && m.healthCheck.intervalMs != null,
           b -> b.constraintOnTarget(
             m -> m.discover.intervalMs > m.healthCheck.intervalMs, "intervalMs",
               "discover.intervalMs.isGreaterThan.healthCheck.intervalMs",

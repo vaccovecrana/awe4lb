@@ -46,7 +46,7 @@ public class A4ServiceTest {
       .description("Test runtime configuration")
       .server(
           new A4Server()
-              .id("http-test-00")
+              .id("temp-http-00")
               .addr(new A4Sock().host("127.0.0.1").port(8080))
               .match(
                   new A4Match().pool(new A4Pool().hosts(
@@ -98,23 +98,7 @@ public class A4ServiceTest {
       ctx.init(fl);
       log = LoggerFactory.getLogger(A4ServiceTest.class);
       Thread.sleep(5000); // Integer.MAX_VALUE
-      if (ctx.service.instance != null) {
-        for (var srv : ctx.service.instance.config.servers) {
-          for (var m : A4Configs.allMatchesOf(srv)) {
-            log.info(m.toString());
-          }
-        }
-      }
     });
-
-    it("Sends a curl request", () -> {
-      var res = ProcBuilder.run("curl", "--verbose", "http://127.0.0.1:8080");
-      log.info(res);
-    });
-
-    it("Loads the active configuration", () -> doGet(apiClient, A4Route.apiV1Config));
-
-    it("Loads all configurations", () -> doGet(apiClient, A4Route.apiV1ConfigList));
 
     it("Attempts to add an invalid configuration", () -> {
       var cfg = new A4Config();
@@ -125,6 +109,7 @@ public class A4ServiceTest {
     });
 
     it("Adds a new configuration", () -> {
+      log.info(tempConfig.toString());
       var res = doPost(apiClient, A4Route.apiV1Config, tempConfig);
       log.info(res);
       assertNotNull(res);
@@ -133,17 +118,22 @@ public class A4ServiceTest {
 
     it("Opens the new configuration", () -> {
       doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, tempConfigId));
-      Thread.sleep(5000);
     });
 
     it("Closes the new configuration", () -> {
       doGet(apiClient, apiV1ConfigSelect);
-      Thread.sleep(5000);
     });
 
     it("Opens the initial configuration", () -> {
       doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, testConfigId));
-      Thread.sleep(5000);
+      if (ctx.service.instance != null) {
+        for (var srv : ctx.service.instance.config.servers) {
+          for (var m : A4Configs.allMatchesOf(srv)) {
+            log.info(m.toString());
+          }
+        }
+      }
+      Thread.sleep(10000);
     });
 
     it("Deletes the new configuration", () -> {
@@ -152,6 +142,10 @@ public class A4ServiceTest {
           .method("DELETE", BodyPublishers.ofString(""));
       doRequest(apiClient, req, 0);
     });
+
+    it("Loads the active configuration", () -> doGet(apiClient, A4Route.apiV1Config));
+
+    it("Loads all configurations", () -> doGet(apiClient, A4Route.apiV1ConfigList));
 
     it("Sends UDP requests", () -> {
       var msg = "Hello UDP";
@@ -164,6 +158,11 @@ public class A4ServiceTest {
       doGet("http://127.0.0.1:8090", 20);
       doGet("https://momo.localhost:8443", 20);
       doGet("https://sdr.localhost:8443", 20);
+    });
+
+    it("Sends a curl request", () -> {
+      var res = ProcBuilder.run("curl", "--verbose", "http://127.0.0.1:8080");
+      log.info(res);
     });
 
     // TODO Remaining tests

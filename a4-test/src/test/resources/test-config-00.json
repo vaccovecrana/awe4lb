@@ -18,9 +18,7 @@
             "http": {
               "endpoint": "http://127.0.0.1:4010",
               "format": "json"
-            },
-            "intervalMs": 10000,
-            "timeoutMs": 9900
+            }
           }
         }
       ]
@@ -51,13 +49,9 @@
                 "./src/test/resources/sdr-hosts.json"
               ],
               "format": "json"
-            },
-            "intervalMs": 10000,
-            "timeoutMs": 9900
+            }
           },
           "healthCheck": {
-            "intervalMs": 5000,
-            "timeoutMs": 2500,
             "exec": {
               "command": "nc",
               "args": [
@@ -93,9 +87,7 @@
             "http": {
               "endpoint": "http://127.0.0.1:4011",
               "format": "text"
-            },
-            "intervalMs": 10000,
-            "timeoutMs": 9900
+            }
           }
         },
         {
@@ -117,9 +109,7 @@
                 "./src/test/resources/sdr-hosts.txt"
               ],
               "format": "text"
-            },
-            "intervalMs": 10000,
-            "timeoutMs": 9900
+            }
           }
         }
       ],
@@ -146,28 +136,23 @@
                 "addr": {
                   "host": "127.0.0.1",
                   "port": 6000
-                },
-                "state": "Unknown"
+                }
               },
               {
                 "addr": {
                   "host": "127.0.0.1",
                   "port": 6001
-                },
-                "state": "Unknown"
+                }
               },
               {
                 "addr": {
                   "host": "127.0.0.1",
                   "port": 6002
-                },
-                "state": "Unknown"
+                }
               }
             ]
           },
           "healthCheck": {
-            "intervalMs": 5000,
-            "timeoutMs": 2500,
             "exec": {
               "command": "ping",
               "args": [
