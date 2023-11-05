@@ -118,6 +118,7 @@ public class A4ServiceTest {
 
     it("Opens the new configuration", () -> {
       doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, tempConfigId));
+      // Thread.sleep(Integer.MAX_VALUE);
     });
 
     it("Closes the new configuration", () -> doGet(apiClient, apiV1ConfigSelect));
