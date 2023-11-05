@@ -169,6 +169,7 @@ public class A4Discover implements Callable<Void> {
         if (log.isTraceEnabled()) {
           log.trace("{} - discovery task stopped", serverId, e);
         }
+        break;
       } catch (Exception e) {
         if (log.isDebugEnabled()) {
           log.error("{} - backend discovery failed for match [{}]", serverId, match, e);
@@ -177,6 +178,7 @@ public class A4Discover implements Callable<Void> {
         }
       }
     }
+    return null;
   }
 
 }

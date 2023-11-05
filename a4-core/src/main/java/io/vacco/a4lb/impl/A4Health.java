@@ -37,6 +37,7 @@ public class A4Health implements Callable<Void> {
       } catch (RejectedExecutionException | InterruptedException e) {
         if (log.isTraceEnabled()) {
           log.trace("{} - health check task stopped", serverId, e);
+          break;
         }
       } catch (Exception e) {
         if (log.isDebugEnabled()) {
@@ -47,6 +48,7 @@ public class A4Health implements Callable<Void> {
         }
       }
     }
+    return null;
   }
 
 }

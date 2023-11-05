@@ -4,6 +4,7 @@ import com.github.mizosoft.methanol.*;
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.niossl.SSLCertificates;
+import io.vacco.a4lb.service.A4Context;
 import io.vacco.a4lb.util.*;
 import io.vacco.a4lb.web.A4Route;
 import j8spec.annotation.DefinedOrder;
@@ -14,11 +15,13 @@ import org.slf4j.*;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 
+import static io.vacco.a4lb.web.A4Route.*;
 import static io.vacco.a4lb.util.A4Flags.*;
 import static j8spec.J8Spec.*;
 import static org.junit.Assert.*;
 import static com.github.mizosoft.methanol.MutableRequest.*;
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
+import static java.lang.String.format;
 
 // These tests require podman-compose up and /etc/hosts mappings defined
 
@@ -27,7 +30,7 @@ import static java.net.http.HttpResponse.BodyHandlers.ofString;
 public class A4ServiceTest {
 
   private static Logger log;
-  private static A4Service svc;
+  private static A4Context ctx = new A4Context();
   private static final Gson gson = new Gson();
   private static final SSLContext trustAllCtx = SSLCertificates.trustAllContext();
   private static final Methanol apiClient = Methanol.newBuilder()
@@ -47,7 +50,7 @@ public class A4ServiceTest {
               .addr(new A4Sock().host("127.0.0.1").port(8080))
               .match(
                   new A4Match().pool(new A4Pool().hosts(
-                      new A4Backend().addr(new A4Sock().host("somewhere.io").port(10022))
+                      new A4Backend().addr(new A4Sock().host("nowhere.localhost").port(10022))
                   ))
               )
       );
@@ -58,15 +61,12 @@ public class A4ServiceTest {
     return res.body();
   }
 
-  public static void repeatRequest(Methanol m, MutableRequest req, long sleepMs, int count) throws IOException, InterruptedException {
-    for (int i = 0; i < count; i++) {
-      log.info(doRequest(m, req, sleepMs));
-    }
-  }
-
   public static void doGet(String url, int count) throws IOException, InterruptedException {
     var req = GET(url);
-    repeatRequest(Methanol.newBuilder().sslContext(trustAllCtx).build(), req, count, 500);
+    var m = Methanol.newBuilder().sslContext(trustAllCtx).build();
+    for (int i = 0; i < count; i++) {
+      log.info(doRequest(m, req, 500));
+    }
   }
 
   public static String doGet(Methanol m, String url) throws IOException, InterruptedException {
@@ -90,14 +90,21 @@ public class A4ServiceTest {
   }
 
   static {
-    it("Initializes the Load Balancer Service/UI", () -> {
+    it("Initializes the Load Balancer context", () -> {
       var fl = A4Flags.from(new String[] {
           flagOf(kLogLevel, "trace"),
           flagOf(kConfig, "./src/test/resources")
       });
-      svc = new A4Service().init(fl);
+      ctx.init(fl);
       log = LoggerFactory.getLogger(A4ServiceTest.class);
       Thread.sleep(5000); // Integer.MAX_VALUE
+      if (ctx.service.instance != null) {
+        for (var srv : ctx.service.instance.config.servers) {
+          for (var m : A4Configs.allMatchesOf(srv)) {
+            log.info(m.toString());
+          }
+        }
+      }
     });
 
     it("Sends a curl request", () -> {
@@ -106,6 +113,7 @@ public class A4ServiceTest {
     });
 
     it("Loads the active configuration", () -> doGet(apiClient, A4Route.apiV1Config));
+
     it("Loads all configurations", () -> doGet(apiClient, A4Route.apiV1ConfigList));
 
     it("Attempts to add an invalid configuration", () -> {
@@ -115,19 +123,37 @@ public class A4ServiceTest {
       assertNotNull(res);
       assertFalse(res.isEmpty());
     });
+
     it("Adds a new configuration", () -> {
       var res = doPost(apiClient, A4Route.apiV1Config, tempConfig);
       log.info(res);
       assertNotNull(res);
       assertEquals("[]", res);
     });
-    it("Opens the new configuration", () -> svc.setActive(tempConfigId));
-    it("Closes the new configuration and restarts the original active configuration", () -> svc.setActive(testConfigId));
-    it("Deletes the new configuration", () -> {
-      create("lol")
+
+    it("Opens the new configuration", () -> {
+      doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, tempConfigId));
+      Thread.sleep(5000);
     });
 
-    it("Sends UP requests", () -> {
+    it("Closes the new configuration", () -> {
+      doGet(apiClient, apiV1ConfigSelect);
+      Thread.sleep(5000);
+    });
+
+    it("Opens the initial configuration", () -> {
+      doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, testConfigId));
+      Thread.sleep(5000);
+    });
+
+    it("Deletes the new configuration", () -> {
+      var req = MutableRequest.create()
+          .uri(format("%s?%s=%s", apiV1Config, pConfigId, tempConfigId))
+          .method("DELETE", BodyPublishers.ofString(""));
+      doRequest(apiClient, req, 0);
+    });
+
+    it("Sends UDP requests", () -> {
       var msg = "Hello UDP";
       doUdpGet(msg, 3, 4000);
       doUdpGet(msg, 3, 400);
@@ -143,7 +169,7 @@ public class A4ServiceTest {
     // TODO Remaining tests
     //   - Retrieve performance metrics
 
-    it("Stops the Load Balancer Service/UI", () -> svc.close());
+    it("Stops the Load Balancer context", () -> ctx.close());
   }
 
 }

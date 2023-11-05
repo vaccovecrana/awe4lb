@@ -30,7 +30,7 @@ public class A4Flags {
         "Flags:",
         "  --config=string      Configuration path.",
         "                       A file starts a single load balancer instance.",
-        "                       A Directory starts the UI to manage multiple configurations.",
+        "                       A Directory starts the API/UI to manage multiple configurations.",
         "  --api-host=string    API/UI host IP address. Default: " + A4Flags.DefaultHost,
         "  --api-port=number    API/UI host port. Default: " + A4Flags.DefaultPort,
         "  --log-format=string  Log output format ('text' or 'json'). Default: " + A4Format.text,

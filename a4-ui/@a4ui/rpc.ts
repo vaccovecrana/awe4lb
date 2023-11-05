@@ -21,6 +21,16 @@ const doJsonIo = <I, O>(url: string, method: string, body: I,
 /* ============= RPC types ============== */
 /* ====================================== */
 
+export interface A4Validation {
+  args: string[];
+  format: string;
+  key: string;
+  name: string;
+  message: string;
+  
+  
+}
+
 export interface A4Sock {
   host: string;
   port: number;
@@ -171,12 +181,9 @@ export interface A4Config {
   
 }
 
-export interface A4Validation {
-  args: string[];
-  format: string;
-  key: string;
-  name: string;
-  message: string;
+export interface A4ConfigState {
+  active: A4Config;
+  inactive: A4Config;
   
   
 }
@@ -233,6 +240,28 @@ export const apiV1ConfigGet = (): Promise<A4Config> => {
 export const apiV1ConfigListGet = (): Promise<A4Config[]> => {
   let path = "/api/v1/config/list"
   
+  
+  
+  
+  return doJsonIo(path, "GET",
+    
+      undefined
+    ,
+    new Map(),
+    undefined
+  )
+}
+
+export const apiV1ConfigSelectGet = (configId: string): Promise<A4ConfigState> => {
+  let path = "/api/v1/config/select"
+  
+  
+    const qParams = new URLSearchParams()
+    
+      qParams.append("configId", configId.toString())
+  
+    
+    path = `${path}?${qParams.toString()}`
   
   
   
