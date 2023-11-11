@@ -11,10 +11,6 @@ interface A4DState { config?: A4Config }
 
 class A4Dashboard extends React.Component<A4DProps, A4DState> {
 
-  constructor() {
-    super()
-  }
-
   public componentDidMount(): void {
     const {dispatch: d} = this.props.s
     lockUi(true, d)

@@ -111,17 +111,10 @@ small { font-size: 11px; }
   border-radius: 16px;
 }
 
-.pill-pale {
-  background-color: var(--nord10-pale);
-}
-
-.pill-green {
-  background-color: var(--nord14);
-}
-
-.pill-red {
-  background-color: var(--nord11);
-}
+.pill-pale { background-color: var(--nord10-pale); }
+.pill-green { background-color: var(--nord14); }
+.pill-red { background-color: var(--nord11); }
+.pill-orange { background-color: var(--nord12); }
 
 .match-cond {
   background-color: var(--nord15-pale);
