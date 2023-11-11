@@ -27,7 +27,7 @@ class A4Configs extends React.Component<A4CProps, A4CState> {
           <div class="col auto">
             <div class="card minimal">
               {configs ? (
-                <table class="table">
+                <table class="table txSmall">
                   <thead>
                     <th>ID</th>
                     <th>Description</th>

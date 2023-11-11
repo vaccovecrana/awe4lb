@@ -36,7 +36,7 @@ public class A4Lb implements Closeable {
     }
     for (var srv : config.servers) {
       var bkSel = new A4Selector(srv.match);
-      if (srv.udp != null) {
+      if (srv.udp != null) { // TODO add a UDP session reaper periodic task
         var udpImpl = new A4UdpSrv(A4Io.newSelector(), srv, bkSel);
         servers.add(udpImpl);
         exSvc.submit(udpImpl);

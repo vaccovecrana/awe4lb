@@ -2,9 +2,10 @@
 
 `awe4lb` is a layer 4 load balancer
 
-## UDP configuration
+## Configuration notes
 
-- Set the size of the reception buffer according to your application's requirements.
+- TCP buffer size are currently determined by the Operating System.
+- UDP buffer sizes are application specific. Default is 16384 bytes.
 
 ## Security considerations
 
@@ -20,6 +21,10 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -addext "subjectAltName = DNS:*.localhost" \
   -keyout ./awe4lb.key -out ./awe4lb.pem
 ```
+
+## Security checks
+
+1. Generate UDP connections in large numbers. This should exercise the LB capability to clear out expired UDP sessions (TTL timeout).
 
 ## Implementation items
 

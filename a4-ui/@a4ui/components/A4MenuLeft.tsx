@@ -1,7 +1,7 @@
 import * as React from "preact/compat"
 
 import A4Logo from "./A4Logo"
-import { uiConfigList, uiRoot } from "@a4ui/routes"
+import { uiConfigList, uiRoot } from "@a4ui/util"
 
 const A4MenuLeft = () => (
   <div id="menuLeft">
@@ -19,12 +19,6 @@ const A4MenuLeft = () => (
         <a href={uiConfigList}>
           <i class="icon-grid" /><br />
           <small>Configurations</small>
-        </a>
-      </div>
-      <div class="pv8">
-        <a>
-          <i class="icon-pencil" /><br />
-          <small>Editor</small>
         </a>
       </div>
     </div>

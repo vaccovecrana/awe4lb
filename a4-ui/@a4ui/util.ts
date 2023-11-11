@@ -1,5 +1,9 @@
 import { A4StringOp, A4MatchOp, A4Match } from "@a4ui/rpc";
 
+export const uiRoot = "/"
+export const uiConfigList = "/config/list"
+export const uiConfigEdit = "/config/:configId/edit"
+
 const stringOpLabel = (op: A4StringOp): string => {
   if (!op) {
     return "?"

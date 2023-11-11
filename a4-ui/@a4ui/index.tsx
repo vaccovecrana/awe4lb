@@ -12,7 +12,8 @@ import Router from 'preact-router'
 
 import { A4MenuLeft, A4MenuTop, A4UiLock } from "@a4ui/components"
 import { initialState, A4Context, A4Reducer } from "@a4ui/store"
-import { A4Configs, A4Dashboard, uiConfigList, uiRoot } from "@a4ui/routes"
+import { A4Configs, A4Dashboard } from "@a4ui/routes"
+import { uiConfigList, uiRoot } from "@a4ui/util"
 
 class A4Shell extends React.Component {
   public render() {
