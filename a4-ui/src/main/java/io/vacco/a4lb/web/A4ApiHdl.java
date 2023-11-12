@@ -29,7 +29,7 @@ public class A4ApiHdl {
 
   @GET @Path(apiV1Config)
   public A4Config apiV1ConfigGet() {
-    return service.instance != null ? service.instance.config : null;
+    return service.instance != null ? service.instance.config : new A4Config();
   }
 
   @POST @Path(apiV1Config)
@@ -45,7 +45,7 @@ public class A4ApiHdl {
 
   @GET @Path(apiV1ConfigSelect)
   public A4ConfigState apiV1ConfigSelectGet(@QueryParam(pConfigId) String configId) {
-    var state = configId == null
+    var state = configId == null || configId.isEmpty()
         ? service.setActive(null)
         : service.setActive(loadFromOrFail(configFileOf(configRoot, configId), gson));
     if (state.active != null) {

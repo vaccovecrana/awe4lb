@@ -27,22 +27,22 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
     var {config: cfg} = this.state;
     return (
       <div class="p8">
-        <h2>{cfg ? "Active Configuration" : "No active configuration"}</h2>
-        {cfg ? (
-          <div class="row">
-            <div class="col auto">
-              <div class="p8 card minimal">
-                <div class="card-title-1 pv8">{cfg.id}</div>
-                <small>{cfg.description}</small>
-                {cfg.servers.length > 0 ? ([
+        <h2>Active Configuration</h2>
+        <div class="row">
+          <div class="col auto">
+            <div class="p8 card minimal">
+              {cfg && cfg.id ? [
+                <div class="card-title-1 pv8">{cfg.id}</div>,
+                <small>{cfg.description}</small>,
+                cfg.servers.length > 0 ? (
                   <div class="row">
                     {this.sortServers(cfg.servers).map(srv => (<A4ServerCard srv={srv} />))}
                   </div>
-                ]) : []}
-              </div>
+                ) : []
+              ] : <div class="txc p16">No active configuration</div>}
             </div>
           </div>
-        ) : []}
+        </div>
       </div>
     );
   }

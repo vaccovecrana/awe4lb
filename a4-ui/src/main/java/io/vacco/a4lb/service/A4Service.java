@@ -35,9 +35,10 @@ public class A4Service implements Closeable {
       if (instance != null) {
         A4Io.close(instance);
         state.inactive = instance.config;
+        this.instance = null;
       }
       if (config != null) {
-        instance = new A4Lb(config, gson).open();
+        this.instance = new A4Lb(config, gson).open();
         state.active = instance.config;
       }
       return state;

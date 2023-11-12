@@ -7,7 +7,7 @@ import io.vacco.a4lb.web.A4Api;
 import org.slf4j.Logger;
 import java.io.Closeable;
 import java.io.File;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.vacco.a4lb.util.A4Configs.*;
@@ -25,11 +25,14 @@ public class A4Context implements Closeable {
   private void loadLastActive(File configRoot) {
     var activeConfigs = configList(configRoot, gson)
         .filter(cfg -> cfg.active)
-        .collect(Collectors.toList());
-    var cfg = activeConfigs.isEmpty() ? null : activeConfigs.get(0);
+        .collect(Collectors.toCollection(ArrayList::new));
+    var cfg = activeConfigs.isEmpty() ? null : activeConfigs.remove(0);
     if (cfg != null) {
       if (activeConfigs.size() > 1) {
         log.warn("multiple active configurations found, starting configuration [{}]", cfg.id);
+        for (var cfg0 : activeConfigs) {
+          syncFs(configRoot, gson, cfg0, false);
+        }
       } else {
         log.info("loading last active configuration: [{}]", cfg.id);
       }

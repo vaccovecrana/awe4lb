@@ -61,6 +61,7 @@ public class A4Configs {
   }
 
   public static A4Config syncFs(File configRoot, Gson g, A4Config config, boolean markActive) {
+    config.active = markActive;
     var cfgFile = configFileOf(configRoot, config.id);
     var cfg0 = g.fromJson(g.toJson(config), A4Config.class).active(markActive);
     for (var srv : cfg0.servers) {
