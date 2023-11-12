@@ -175,19 +175,19 @@ export interface A4Config {
   
 }
 
+export interface A4ConfigState {
+  active: A4Config;
+  inactive: A4Config;
+  
+  
+}
+
 export interface A4Validation {
   args: string[];
   format: string;
   key: string;
   name: string;
   message: string;
-  
-  
-}
-
-export interface A4ConfigState {
-  active: A4Config;
-  inactive: A4Config;
   
   
 }
@@ -226,9 +226,16 @@ export const apiV1ConfigDelete = (configId: string): Promise<boolean> => {
   )
 }
 
-export const apiV1ConfigGet = (): Promise<A4Config> => {
+export const apiV1ConfigGet = (configId: string): Promise<A4Config> => {
   let path = "/api/v1/config"
   
+  
+    const qParams = new URLSearchParams()
+    
+      qParams.append("configId", configId.toString())
+  
+    
+    path = `${path}?${qParams.toString()}`
   
   
   

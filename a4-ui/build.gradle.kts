@@ -38,17 +38,20 @@ val copyJs = tasks.register<Copy>("copyJs") {
   into("./build/resources/main/ui")
 }
 
+val copyTs = tasks.register<Copy>("copyTs") {
+  dependsOn(buildTaskUsingNpm)
+  from("./@a4ui")
+  into("./build/resources/main/ui/@a4ui")
+}
+
 val copyRes = tasks.register<Copy>("copyRes") {
   dependsOn(buildTaskUsingNpm)
-  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.eot")
-  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.svg")
-  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.ttf")
-  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.woff")
-  from("./node_modules/simple-line-icons/fonts/Simple-Line-Icons.woff2")
+  from("./node_modules/simple-line-icons/fonts")
   into("./build/resources/main/ui/fonts")
 }
 
-tasks.processResources { dependsOn(copyJs) }
+tasks.processResources { dependsOn(copyJs)  }
+tasks.processResources { dependsOn(copyTs)  }
 tasks.processResources { dependsOn(copyRes) }
 
 application {

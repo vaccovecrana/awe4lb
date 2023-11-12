@@ -5,7 +5,9 @@ import io.vacco.a4lb.cfg.A4ConfigState;
 import io.vacco.a4lb.service.A4Service;
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.util.A4Valid;
+import io.vacco.ronove.RvResponse;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Response;
 
 import java.io.File;
 import java.util.*;
@@ -28,8 +30,16 @@ public class A4ApiHdl {
   }
 
   @GET @Path(apiV1Config)
-  public A4Config apiV1ConfigGet() {
-    return service.instance != null ? service.instance.config : new A4Config();
+  public RvResponse<A4Config> apiV1ConfigGet(@QueryParam(pConfigId) String configId) {
+    var res = new RvResponse<A4Config>().withStatus(Response.Status.OK);
+    try {
+      if (configId != null && !configId.isEmpty()) {
+        return res.withBody(loadFromOrFail(configFileOf(configRoot, configId), gson));
+      }
+      return res.withBody(service.instance != null ? service.instance.config : new A4Config());
+    } catch (Exception e) {
+      return res.withStatus(Response.Status.NOT_FOUND);
+    }
   }
 
   @POST @Path(apiV1Config)

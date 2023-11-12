@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "sourceMap": false,
+    "sourceMap": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "module": "ES2022",

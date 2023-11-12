@@ -42,7 +42,7 @@ public class A4UiHdl extends MxStatic {
 
   @Override public void handle(MxExchange xc) {
     var p = xc.getPath();
-    if (p.startsWith(simpleIcons)) {
+    if (p.startsWith(simpleIcons) || p.startsWith(a4Ui)) {
       super.handle(xc);
       return;
     }
