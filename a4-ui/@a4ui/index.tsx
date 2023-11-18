@@ -34,7 +34,7 @@ class A4Shell extends React.Component {
                   <Router>
                     <A4Dashboard path={uiRoot} />
                     <A4Configs path={uiConfigList} />
-                    <A4ConfigEdit path={uiConfigEdit} />
+                    <A4ConfigEdit path={uiConfigEdit} configId="" />
                   </Router>
                 </div>
               </div>

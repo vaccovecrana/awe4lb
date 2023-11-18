@@ -4,6 +4,7 @@ import { useContext } from "preact/hooks"
 import { lockUi, A4Context, A4Store } from "@a4ui/store"
 import { A4Config, apiV1ConfigListGet, apiV1ConfigSelectGet } from "@a4ui/rpc"
 import { RenderableProps } from "preact"
+import { uiConfigEditFmt } from "@a4ui/util"
 
 type A4CProps = RenderableProps<{ s?: A4Store }>
 interface A4CState { configs?: A4Config[] }
@@ -49,7 +50,7 @@ class A4Configs extends React.Component<A4CProps, A4CState> {
         <td>
           <div class="row justify-center align-center">
             <div class="col auto">
-              <a href=".">
+              <a href={uiConfigEditFmt(cfg.id)}>
                 <i class="icon-pencil" />
               </a>
             </div>

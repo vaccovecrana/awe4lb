@@ -4,6 +4,8 @@ export const uiRoot = "/"
 export const uiConfigList = "/config/list"
 export const uiConfigEdit = "/config/:configId/edit"
 
+export const uiConfigEditFmt = (configId: string) => `/config/${configId}/edit`
+
 const stringOpLabel = (op: A4StringOp): string => {
   if (!op) {
     return "?"

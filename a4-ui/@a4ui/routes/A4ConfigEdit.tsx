@@ -4,7 +4,7 @@ import { useContext } from "preact/hooks"
 import { lockUi, A4Context, A4Store } from "@a4ui/store"
 import { RenderableProps } from "preact"
 
-type A4EProps = RenderableProps<{ s?: A4Store }>
+type A4EProps = RenderableProps<{ s?: A4Store, configId: string }>
 interface A4EState { json: string }
 
 class A4ConfigEdit extends React.Component<A4EProps, A4EState> {
@@ -18,9 +18,9 @@ class A4ConfigEdit extends React.Component<A4EProps, A4EState> {
   }
 
   public render() {
-    return <div>{this.props.path}</div>
+    return <div>Config: {this.props.configId}</div>
   }
 
 }
 
-export default (props: A4EProps) => <A4ConfigEdit s={useContext(A4Context)} />
+export default (props: A4EProps) => <A4ConfigEdit s={useContext(A4Context)} {...props} />

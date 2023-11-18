@@ -92,7 +92,7 @@ public class A4ServiceTest {
   static {
     it("Initializes the Load Balancer context", () -> {
       var fl = A4Flags.from(new String[] {
-          flagOf(kLogLevel, "trace"),
+          flagOf(kLogLevel, "debug"),
           flagOf(kConfig, "./src/test/resources")
       });
       ctx.init(fl);
@@ -136,15 +136,16 @@ public class A4ServiceTest {
     });
 
     it("Deletes the new configuration", () -> {
+      // Thread.sleep(Integer.MAX_VALUE);
       var req = MutableRequest.create()
           .uri(format("%s?%s=%s", apiV1Config, pConfigId, tempConfigId))
           .method("DELETE", BodyPublishers.ofString(""));
       doRequest(apiClient, req, 0);
     });
 
-    it("Loads the active configuration", () -> log.info(doGet(apiClient, A4Route.apiV1Config)));
+    it("Requests the active configuration", () -> log.info(doGet(apiClient, A4Route.apiV1Config)));
 
-    it("Loads all configurations", () -> log.info(doGet(apiClient, A4Route.apiV1ConfigList)));
+    it("Requests all configurations", () -> log.info(doGet(apiClient, A4Route.apiV1ConfigList)));
 
     it("Sends UDP requests", () -> {
       var msg = "Hello UDP";
