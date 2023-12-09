@@ -34,7 +34,8 @@ public class A4ApiHdl {
     var res = new RvResponse<A4Config>().withStatus(Response.Status.OK);
     try {
       if (configId != null && !configId.isEmpty()) {
-        return res.withBody(loadFromOrFail(configFileOf(configRoot, configId), gson));
+        var cfg = loadFromOrFail(configFileOf(configRoot, configId), gson);
+        return res.withBody(minify(cfg, gson));
       }
       return res.withBody(service.instance != null ? service.instance.config : new A4Config());
     } catch (Exception e) {
@@ -43,7 +44,7 @@ public class A4ApiHdl {
   }
 
   @POST @Path(apiV1Config)
-  public Collection<A4Validation> apiV1ConfigPost(@BeanParam A4Config config) {
+  public Collection<A4Validation> apiV1ConfigPost(@QueryParam(pConfigId) String configId, @BeanParam A4Config config) {
     var errList = save(configRoot, gson, config);
     return errList.isEmpty() ? Collections.emptyList() : A4Valid.validationsOf(errList);
   }

@@ -60,10 +60,8 @@ public class A4Configs {
     }
   }
 
-  public static A4Config syncFs(File configRoot, Gson g, A4Config config, boolean markActive) {
-    config.active = markActive;
-    var cfgFile = configFileOf(configRoot, config.id);
-    var cfg0 = g.fromJson(g.toJson(config), A4Config.class).active(markActive);
+  public static A4Config minify(A4Config config, Gson g) {
+    var cfg0 = g.fromJson(g.toJson(config), A4Config.class);
     for (var srv : cfg0.servers) {
       for (var m : allMatchesOf(srv)) {
         if (m.discover != null) {
@@ -93,6 +91,13 @@ public class A4Configs {
         }
       }
     }
+    return cfg0;
+  }
+
+  public static A4Config syncFs(File configRoot, Gson g, A4Config config, boolean markActive) {
+    config.active = markActive;
+    var cfgFile = configFileOf(configRoot, config.id);
+    var cfg0 = minify(config, g).active(markActive);
     try (var fw = new FileWriter(cfgFile)) {
       g.toJson(cfg0, fw);
       return config;

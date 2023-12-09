@@ -175,19 +175,19 @@ export interface A4Config {
   
 }
 
-export interface A4ConfigState {
-  active: A4Config;
-  inactive: A4Config;
-  
-  
-}
-
 export interface A4Validation {
   args: string[];
   format: string;
   key: string;
   name: string;
   message: string;
+  
+  
+}
+
+export interface A4ConfigState {
+  active: A4Config;
+  inactive: A4Config;
   
   
 }
@@ -226,7 +226,7 @@ export const apiV1ConfigDelete = (configId: string): Promise<boolean> => {
   )
 }
 
-export const apiV1ConfigGet = (configId: string): Promise<A4Config> => {
+export const apiV1ConfigGet = (configId: string): Promise<RvResponse<A4Config>> => {
   let path = "/api/v1/config"
   
   
@@ -285,15 +285,22 @@ export const apiV1ConfigSelectGet = (configId: string): Promise<A4ConfigState> =
   )
 }
 
-export const apiV1ConfigPost = (arg0: A4Config): Promise<A4Validation[]> => {
+export const apiV1ConfigPost = (configId: string, arg1: A4Config): Promise<A4Validation[]> => {
   let path = "/api/v1/config"
   
+  
+    const qParams = new URLSearchParams()
+    
+      qParams.append("configId", configId.toString())
+  
+    
+    path = `${path}?${qParams.toString()}`
   
   
   
   return doJsonIo(path, "POST",
     
-      JSON.stringify(arg0)
+      JSON.stringify(arg1)
     ,
     new Map(),
     undefined
