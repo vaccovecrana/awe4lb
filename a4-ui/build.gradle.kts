@@ -2,20 +2,16 @@ import com.github.gradle.node.npm.task.NpmTask
 
 plugins {
   id("io.vacco.oss.gitflow") version "0.9.8"
-  id("io.vacco.ronove") version "1.2.3-SNAPSHOT"
+  id("io.vacco.ronove") version "1.2.3"
   id("com.github.node-gradle.node") version "7.0.1"
   application
-}
-
-repositories {
-  mavenLocal()
 }
 
 val api by configurations
 
 dependencies {
   api(project(":a4-core"))
-  api("io.vacco.ronove:rv-kit-murmux:1.2.3-SNAPSHOT_2.2.2")
+  api("io.vacco.ronove:rv-kit-murmux:1.2.3_2.2.2")
 }
 
 configure<io.vacco.ronove.plugin.RvPluginExtension> {

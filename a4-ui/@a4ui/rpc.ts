@@ -21,6 +21,16 @@ const doJsonIo = <I, O>(url: string, method: string, body: I,
 /* ============= RPC types ============== */
 /* ====================================== */
 
+export interface A4Validation {
+  args: string[];
+  format: string;
+  key: string;
+  name: string;
+  message: string;
+  
+  
+}
+
 export interface A4Sock {
   host: string;
   port: number;
@@ -171,16 +181,6 @@ export interface A4Config {
   id: string;
   description: string;
   servers: A4Server[];
-  
-  
-}
-
-export interface A4Validation {
-  args: string[];
-  format: string;
-  key: string;
-  name: string;
-  message: string;
   
   
 }
