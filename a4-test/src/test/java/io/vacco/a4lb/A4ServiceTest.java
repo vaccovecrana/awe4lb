@@ -110,7 +110,8 @@ public class A4ServiceTest {
 
     it("Adds a new configuration", () -> {
       log.info(tempConfig.toString());
-      var res = doPost(apiClient, A4Route.apiV1Config, tempConfig);
+      var query = format("%s?configId=%s", A4Route.apiV1Config, tempConfig.id);
+      var res = doPost(apiClient, query, tempConfig);
       log.info(res);
       assertNotNull(res);
       assertEquals("[]", res);

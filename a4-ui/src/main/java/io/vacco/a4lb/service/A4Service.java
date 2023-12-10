@@ -5,9 +5,12 @@ import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.impl.A4Lb;
 import io.vacco.a4lb.util.*;
 import java.io.Closeable;
-import java.util.Objects;
+import java.io.File;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
+
+import static java.lang.String.format;
 
 public class A4Service implements Closeable {
 
@@ -43,6 +46,14 @@ public class A4Service implements Closeable {
       }
       return state;
     });
+  }
+
+  public Collection<A4Validation> update(File configRoot, String configId, A4Config config, boolean save) {
+    if (!configId.equals(config.id)) {
+      throw new IllegalArgumentException(format("Config id mismatch: [%s, %s]", configId, config.id));
+    }
+    var errList = A4Configs.save(configRoot, gson, config);
+    return errList.isEmpty() ? Collections.emptyList() : A4Valid.validationsOf(errList);
   }
 
   @Override public void close() {
