@@ -1,3 +1,7 @@
+repositories {
+  mavenLocal()
+}
+
 dependencies {
   testImplementation(project(":a4-core"))
   testImplementation(project(":a4-ui"))

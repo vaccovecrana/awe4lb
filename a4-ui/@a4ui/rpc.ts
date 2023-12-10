@@ -226,7 +226,7 @@ export const apiV1ConfigDelete = (configId: string): Promise<boolean> => {
   )
 }
 
-export const apiV1ConfigGet = (configId: string): Promise<RvResponse<A4Config>> => {
+export const apiV1ConfigGet = (configId: string): Promise<A4Config> => {
   let path = "/api/v1/config"
   
   
