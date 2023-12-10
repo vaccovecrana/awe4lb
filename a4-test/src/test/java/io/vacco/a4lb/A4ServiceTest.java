@@ -102,7 +102,8 @@ public class A4ServiceTest {
 
     it("Attempts to add an invalid configuration", () -> {
       var cfg = new A4Config();
-      var res = doPost(apiClient, A4Route.apiV1Config, cfg);
+      var query = format("%s?configId=%s", A4Route.apiV1Config, cfg.id);
+      var res = doPost(apiClient, query, cfg);
       log.info(res);
       assertNotNull(res);
       assertFalse(res.isEmpty());
@@ -137,7 +138,7 @@ public class A4ServiceTest {
     });
 
     it("Deletes the new configuration", () -> {
-      // Thread.sleep(Integer.MAX_VALUE);
+      Thread.sleep(Integer.MAX_VALUE);
       var req = MutableRequest.create()
           .uri(format("%s?%s=%s", apiV1Config, pConfigId, tempConfigId))
           .method("DELETE", BodyPublishers.ofString(""));

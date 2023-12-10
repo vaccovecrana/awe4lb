@@ -43,19 +43,18 @@ public class A4ApiHdl {
     }
   }
 
+  @POST @Path(apiV1ConfigValidate)
+  public Collection<A4Validation> apiV1ConfigValidatePost(@BeanParam A4Config config) {
+    return A4Valid.validationsOf(A4Valid.validate(config));
+  }
+
   @POST @Path(apiV1Config)
   public RvResponse<Collection<A4Validation>> apiV1ConfigPost(@QueryParam(pConfigId) String configId,
                                                               @BeanParam A4Config config) {
-    var res = new RvResponse<Collection<A4Validation>>();
-    try {
-      return res
-          .withStatus(Response.Status.OK)
-          .withBody(service.update(configRoot, configId, config));
-    } catch (Exception e) {
-      return res
-          .withStatus(Response.Status.CONFLICT)
-          .withBody(List.of(A4Validation.ofMessage(e.getMessage())));
-    }
+    var errors = service.update(configRoot, configId, config);
+    return new RvResponse<Collection<A4Validation>>()
+        .withStatus(errors.isEmpty() ? Response.Status.OK : Response.Status.CONFLICT)
+        .withBody(errors);
   }
 
   @DELETE @Path(apiV1Config)

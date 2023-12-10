@@ -48,9 +48,9 @@ public class A4Service implements Closeable {
     });
   }
 
-  public Collection<A4Validation> update(File configRoot, String configId, A4Config config, boolean save) {
-    if (!configId.equals(config.id)) {
-      throw new IllegalArgumentException(format("Config id mismatch: [%s, %s]", configId, config.id));
+  public Collection<A4Validation> update(File configRoot, String configId, A4Config config) {
+    if (config == null || !configId.equals(config.id)) {
+      return List.of(A4Validation.ofMessage(format("Config id mismatch: [%s, %s]", configId, config.id)));
     }
     var errList = A4Configs.save(configRoot, gson, config);
     return errList.isEmpty() ? Collections.emptyList() : A4Valid.validationsOf(errList);

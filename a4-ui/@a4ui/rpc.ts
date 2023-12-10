@@ -307,3 +307,18 @@ export const apiV1ConfigPost = (configId: string, arg1: A4Config): Promise<A4Val
   )
 }
 
+export const apiV1ConfigValidatePost = (arg0: A4Config): Promise<A4Validation[]> => {
+  let path = "/api/v1/config/validate"
+  
+  
+  
+  
+  return doJsonIo(path, "POST",
+    
+      JSON.stringify(arg0)
+    ,
+    new Map(),
+    undefined
+  )
+}
+
