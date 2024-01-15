@@ -38,7 +38,7 @@ public class A4Context implements Closeable {
       }
       service.setActive(cfg);
     } else {
-      log.info("no active configuration found");
+      log.warn("no active configuration found");
     }
   }
 

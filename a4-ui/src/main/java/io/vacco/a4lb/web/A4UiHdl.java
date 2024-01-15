@@ -4,10 +4,13 @@ import io.vacco.murmux.http.*;
 import io.vacco.murmux.middleware.MxStatic;
 import java.io.File;
 import java.nio.file.Paths;
+import org.slf4j.*;
 
 import static io.vacco.a4lb.web.A4Route.*;
 
 public class A4UiHdl extends MxStatic {
+
+  private static final Logger log = LoggerFactory.getLogger(A4UiHdl.class);
 
   public static final String html = String.join("\n", "",
       "<!DOCTYPE html>",
@@ -29,13 +32,14 @@ public class A4UiHdl extends MxStatic {
       "</html>"
   );
 
-  // TODO fix this, constructor should determine content origin.
   private static final File pkgJson = new File("../a4-ui/package.json");
 
   public A4UiHdl() {
     super(
         pkgJson.exists() ? Origin.FileSystem : Origin.Classpath,
-        Paths.get("../a4-ui/build/resources/main/ui")
+        pkgJson.exists()
+          ? Paths.get("../a4-ui/build/resources/main/ui")
+          : Paths.get("/ui")
     );
     this.withNoTypeResolver((p, o) -> p.endsWith(".map") ? MxMime.json.type : MxMime.bin.type);
   }
