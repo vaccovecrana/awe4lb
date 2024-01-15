@@ -6,8 +6,7 @@ build/
 bin/
 
 .gradle
-gradle/
-gradlew*
+gradlew.bat
 
 java_pid*.hprof
 echo
