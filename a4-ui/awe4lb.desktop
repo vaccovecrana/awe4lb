@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=awe4lb
+Exec=AppRun
+Icon=awe4lb
+Type=Application
+Categories=Utility
+Terminal=true

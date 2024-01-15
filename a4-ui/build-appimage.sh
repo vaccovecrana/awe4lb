@@ -1,6 +1,8 @@
 gradle clean assemble
 
 cp ./AppRun ./build/distributions
+cp ./awe4lb.desktop ./build/distributions
+cp ./awe4lb.png ./build/distributions
 
 cd ./build
 wget -nc https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
@@ -16,4 +18,5 @@ rm -rfv *.zip
 rm -rfv *.tar
 rm -rfv ./bin
 
-
+cd ../
+./appimagetool-x86_64.AppImage ./distributions
