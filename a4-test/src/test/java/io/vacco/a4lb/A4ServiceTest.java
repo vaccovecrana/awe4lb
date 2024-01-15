@@ -138,7 +138,7 @@ public class A4ServiceTest {
     });
 
     it("Deletes the new configuration", () -> {
-      Thread.sleep(Integer.MAX_VALUE);
+      // Thread.sleep(Integer.MAX_VALUE);
       var req = MutableRequest.create()
           .uri(format("%s?%s=%s", apiV1Config, pConfigId, tempConfigId))
           .method("DELETE", BodyPublishers.ofString(""));
