@@ -1,0 +1,1 @@
+./jre/bin/java -cp "./lib/*" io.vacco.a4lb.A4LbMain $@

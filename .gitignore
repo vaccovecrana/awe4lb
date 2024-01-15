@@ -15,3 +15,4 @@ echo
 node_modules/
 
 temp-test-config.json
+appimagetool-x86_64.AppImage*
