@@ -21,16 +21,6 @@ const doJsonIo = <I, O>(url: string, method: string, body: I,
 /* ============= RPC types ============== */
 /* ====================================== */
 
-export interface A4Validation {
-  args: string[];
-  format: string;
-  key: string;
-  name: string;
-  message: string;
-  
-  
-}
-
 export interface A4Sock {
   host: string;
   port: number;
@@ -192,6 +182,16 @@ export interface A4ConfigState {
   
 }
 
+export interface A4Validation {
+  args: string[];
+  format: string;
+  key: string;
+  name: string;
+  message: string;
+  
+  
+}
+
 
 /* ====================================== */
 /* ============ RPC methods ============= */
@@ -301,21 +301,6 @@ export const apiV1ConfigPost = (configId: string, arg1: A4Config): Promise<A4Val
   return doJsonIo(path, "POST",
     
       JSON.stringify(arg1)
-    ,
-    new Map(),
-    undefined
-  )
-}
-
-export const apiV1ConfigValidatePost = (arg0: A4Config): Promise<A4Validation[]> => {
-  let path = "/api/v1/config/validate"
-  
-  
-  
-  
-  return doJsonIo(path, "POST",
-    
-      JSON.stringify(arg0)
     ,
     new Map(),
     undefined

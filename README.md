@@ -4,7 +4,7 @@
 
 ## Configuration notes
 
-- TCP buffer size are currently determined by the Operating System.
+- TCP buffer sizes are currently determined by the Operating System.
 - UDP buffer sizes are application specific. Default is 16384 bytes.
 
 ## Security considerations
@@ -24,26 +24,26 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ## Security checks
 
-1. Generate UDP connections in large numbers. This should exercise the LB capability to clear out expired UDP sessions (TTL timeout).
+1. Generate UDP connections in large numbers. This should exercise the LB's capability to clear out expired UDP sessions (TTL timeout).
 
 ## Implementation items
 
 ### TCP
 
-- [ ] Thread-per-request connection tracking PoC. Non-SSL.
-- [ ] Schema modeling (configuration template).
-- [ ] SSL connection tracking.
+- [x] Schema modeling (configuration template).
+- [x] SSL connection tracking.
+- [ ] ACME certificate issuance/renewal. For now, use `certbot` to rotate certificates, then restart `awe4lb`.
 
 ### UDP
 
-- [ ] UDP backend selection strategies (weight, random, round robin).
-- [ ] Sticky session support.
-- [ ] Transparent proxying?
+- [x] UDP backend selection strategies (weight, random, round robin).
+- [x] Sticky session support.
+- [ ] UDP Transparent proxying.
 
 ### Backend discovery
 
 - [ ] DNS records.
-- [ ] Exec return value.
+- [x] Exec return value.
 - [ ] Any others provided by `gobetween`.
 
 ### Monitoring
@@ -55,8 +55,8 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ### Admin functionality
 
-- [ ] REST API access for configuration changes.
-- [ ] UI implementation.
+- [x] REST API access for configuration changes.
+- [x] UI implementation.
 - [ ] Documentation/Usage notes/caveats.
 
 ## Similar projects
@@ -67,11 +67,6 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ## Resources
 
-Test audio:
-
-- https://archive.org/details/MusopenCollectionAsFlac/Bach_GoldbergVariations/JohannSebastianBach-16-GoldbergVariationsBwv.988-Variation15.CanonOnTheFifth.flac
-- https://ia800307.us.archive.org/34/items/MusopenCollectionAsFlac/Bach_GoldbergVariations/JohannSebastianBach-16-GoldbergVariationsBwv.988-Variation15.CanonOnTheFifth.flac
-
 - https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#jsse-cipher-suite-names
 - https://stackoverflow.com/questions/53323855/sslserversocket-and-certificate-setup
 - https://stackoverflow.com/a/62263402/491160
@@ -80,3 +75,10 @@ Test audio:
 - https://bugs.openjdk.org/browse/JDK-8202625
 - https://github.com/yyyar/gobetween/issues/335
 - https://github.com/felipejfc/go-udp-echo-server
+
+Test audio:
+
+- https://archive.org/details/MusopenCollectionAsFlac/Bach_GoldbergVariations/JohannSebastianBach-16-GoldbergVariationsBwv.988-Variation15.CanonOnTheFifth.flac
+- https://ia800307.us.archive.org/34/items/MusopenCollectionAsFlac/Bach_GoldbergVariations/JohannSebastianBach-16-GoldbergVariationsBwv.988-Variation15.CanonOnTheFifth.flac
+
+In memory of James Perry McCaffrey (March 27, 1958 – December 17, 2023).

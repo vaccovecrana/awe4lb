@@ -29,7 +29,7 @@ const renderDiscover = (discover: A4Disc) => {
       </div>
     )
   } else if (discover.exec) {
-    return renderExec(discover.exec.command, discover.exec.args, discover.exec.format);
+    return renderExec(discover.exec.command, discover.exec.args, discover.exec.format)
   }
   return <div />
 }

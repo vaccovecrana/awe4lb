@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.A4ConfigState;
 import io.vacco.a4lb.service.A4Service;
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.util.A4Valid;
 import io.vacco.ronove.RvResponse;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
@@ -35,7 +34,7 @@ public class A4ApiHdl {
     try {
       if (configId != null && !configId.isEmpty()) {
         var cfg = loadFromOrFail(configFileOf(configRoot, configId), gson);
-        return res.withBody(minify(cfg, gson));
+        return res.withBody(deflate(cfg, gson));
       }
       return res.withBody(service.instance != null ? service.instance.config : new A4Config());
     } catch (Exception e) {
@@ -43,15 +42,10 @@ public class A4ApiHdl {
     }
   }
 
-  @POST @Path(apiV1ConfigValidate)
-  public Collection<A4Validation> apiV1ConfigValidatePost(@BeanParam A4Config config) {
-    return A4Valid.validationsOf(A4Valid.validate(config));
-  }
-
   @POST @Path(apiV1Config)
   public RvResponse<Collection<A4Validation>> apiV1ConfigPost(@QueryParam(pConfigId) String configId,
                                                               @BeanParam A4Config config) {
-    var errors = service.update(configRoot, configId, config);
+    var errors = service.update(configRoot, configId, inflate(config));
     return new RvResponse<Collection<A4Validation>>()
         .withStatus(errors.isEmpty() ? Response.Status.OK : Response.Status.CONFLICT)
         .withBody(errors);

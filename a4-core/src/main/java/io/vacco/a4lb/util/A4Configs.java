@@ -18,35 +18,38 @@ public class A4Configs {
     return new File(configRoot, format("%s%s", id, ExtJson));
   }
 
+  public static A4Config inflate(A4Config cfg) {
+    for (var srv : cfg.servers) {
+      for (var m : allMatchesOf(srv)) {
+        if (srv.udp == null && m.healthCheck == null) {
+          m.healthCheck = new A4HealthCheck();
+        }
+        if (m.healthCheck != null) {
+          m.healthCheck.intervalMs = m.healthCheck.intervalMs != null ? m.healthCheck.intervalMs : A4HealthCheck.DefaultIntervalMs;
+          m.healthCheck.timeoutMs = m.healthCheck.timeoutMs != null ? m.healthCheck.timeoutMs : A4HealthCheck.DefaultTimeoutMs;
+        }
+        if (m.discover != null) {
+          m.discover.intervalMs = m.discover.intervalMs != null ? m.discover.intervalMs : A4Disc.DefaultIntervalMs;
+          m.discover.timeoutMs = m.discover.timeoutMs != null ? m.discover.timeoutMs : A4Disc.DefaultTimeoutMs;
+        }
+        if (m.pool == null) {
+          m.pool = new A4Pool();
+        }
+        if (m.pool.hosts == null) {
+          m.pool.hosts = new ArrayList<>();
+        }
+        for (var bk : m.pool.hosts) {
+          bk.state = A4Backend.State.Unknown;
+        }
+      }
+    }
+    return cfg;
+  }
+
   public static A4Config loadFromOrFail(URL src, Gson g) {
     try (var is = src.openStream()) {
       var isr = new InputStreamReader(is);
-      var cfg = g.fromJson(isr, A4Config.class);
-      for (var srv : cfg.servers) {
-        for (var m : allMatchesOf(srv)) {
-          if (srv.udp == null && m.healthCheck == null) {
-            m.healthCheck = new A4HealthCheck();
-          }
-          if (m.healthCheck != null) {
-            m.healthCheck.intervalMs = m.healthCheck.intervalMs != null ? m.healthCheck.intervalMs : A4HealthCheck.DefaultIntervalMs;
-            m.healthCheck.timeoutMs = m.healthCheck.timeoutMs != null ? m.healthCheck.timeoutMs : A4HealthCheck.DefaultTimeoutMs;
-          }
-          if (m.discover != null) {
-            m.discover.intervalMs = m.discover.intervalMs != null ? m.discover.intervalMs : A4Disc.DefaultIntervalMs;
-            m.discover.timeoutMs = m.discover.timeoutMs != null ? m.discover.timeoutMs : A4Disc.DefaultTimeoutMs;
-          }
-          if (m.pool == null) {
-            m.pool = new A4Pool();
-          }
-          if (m.pool.hosts == null) {
-            m.pool.hosts = new ArrayList<>();
-          }
-          for (var bk : m.pool.hosts) {
-            bk.state = A4Backend.State.Unknown;
-          }
-        }
-      }
-      return cfg;
+      return inflate(g.fromJson(isr, A4Config.class));
     } catch (IOException ioe) {
       throw new IllegalStateException("unable to load configuration from " + src, ioe);
     }
@@ -60,7 +63,7 @@ public class A4Configs {
     }
   }
 
-  public static A4Config minify(A4Config config, Gson g) {
+  public static A4Config deflate(A4Config config, Gson g) {
     var cfg0 = g.fromJson(g.toJson(config), A4Config.class);
     for (var srv : cfg0.servers) {
       for (var m : allMatchesOf(srv)) {
@@ -97,7 +100,7 @@ public class A4Configs {
   public static A4Config syncFs(File configRoot, Gson g, A4Config config, boolean markActive) {
     config.active = markActive;
     var cfgFile = configFileOf(configRoot, config.id);
-    var cfg0 = minify(config, g).active(markActive);
+    var cfg0 = deflate(config, g).active(markActive);
     try (var fw = new FileWriter(cfgFile)) {
       g.toJson(cfg0, fw);
       return config;

@@ -24,7 +24,7 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
   }
 
   public render() {
-    var {config: cfg} = this.state;
+    var {config: cfg} = this.state
     return (
       <div class="p8">
         <h2>Active Configuration</h2>

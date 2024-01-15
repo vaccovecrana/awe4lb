@@ -50,8 +50,8 @@ class A4Configs extends React.Component<A4CProps, A4CState> {
         <td>
           <div class="row justify-center align-center">
             <div class="col auto">
-              <a href={uiConfigEditFmt(cfg.id)}>
-                <i class="icon-pencil" />
+              <a href={cfg.active ? "/" : uiConfigEditFmt(cfg.id)}>
+                <i class={cfg.active ? "icon-magnifier" : "icon-pencil"} />
               </a>
             </div>
             <div class="col auto">
