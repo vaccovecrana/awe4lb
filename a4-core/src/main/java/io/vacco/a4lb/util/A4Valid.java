@@ -231,10 +231,10 @@ public class A4Valid {
       .forEach(A4Config::serverList, "servers", A4ServerVld)
       .build();
 
-  private static final Validator<A4Flags> A4FlagsVld = ValidatorBuilder.<A4Flags>of()
-      ._object(fl -> fl.root, A4Flags.kConfig, Constraint::notNull)
+  private static final Validator<A4Options> A4FlagsVld = ValidatorBuilder.<A4Options>of()
+      ._object(fl -> fl.root, A4Options.kConfig, Constraint::notNull)
       .constraintOnTarget(
-          fl -> fl.root.exists(), A4Flags.kConfig, "exists",
+          fl -> fl.root.exists(), A4Options.kConfig, "exists",
           "\"{0}\" does not exist (not a file or directory)"
       )
       .nest(fl -> fl.api, "--api-*", A4SockVld)
@@ -245,7 +245,7 @@ public class A4Valid {
   static {
     validators.put(A4Backend.class, A4BackendVld);
     validators.put(A4Config.class, A4ConfigVld);
-    validators.put(A4Flags.class, A4FlagsVld);
+    validators.put(A4Options.class, A4FlagsVld);
   }
 
   public static <T> ConstraintViolations validate(T t) {

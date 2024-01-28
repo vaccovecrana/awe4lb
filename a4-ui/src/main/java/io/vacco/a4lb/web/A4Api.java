@@ -2,7 +2,7 @@ package io.vacco.a4lb.web;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.service.A4Service;
-import io.vacco.a4lb.util.A4Flags;
+import io.vacco.a4lb.util.A4Options;
 import io.vacco.murmux.Murmux;
 import io.vacco.murmux.http.MxStatus;
 import io.vacco.murmux.middleware.MxRouter;
@@ -16,9 +16,9 @@ public class A4Api implements Closeable {
   private static final Logger log = LoggerFactory.getLogger(A4Api.class);
 
   private final Murmux mx;
-  private final A4Flags fl;
+  private final A4Options fl;
 
-  public A4Api(File configRoot, A4Service service, A4Flags fl, Gson g) {
+  public A4Api(File configRoot, A4Service service, A4Options fl, Gson g) {
     this.fl = Objects.requireNonNull(fl);
     this.mx = new Murmux(fl.api.host);
     var apiHdl = new A4ApiHdl(configRoot, service, g);

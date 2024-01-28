@@ -16,7 +16,7 @@ import javax.net.ssl.SSLContext;
 import java.io.IOException;
 
 import static io.vacco.a4lb.web.A4Route.*;
-import static io.vacco.a4lb.util.A4Flags.*;
+import static io.vacco.a4lb.util.A4Options.*;
 import static j8spec.J8Spec.*;
 import static org.junit.Assert.*;
 import static com.github.mizosoft.methanol.MutableRequest.*;
@@ -91,7 +91,7 @@ public class A4ServiceTest {
 
   static {
     it("Initializes the Load Balancer context", () -> {
-      var fl = A4Flags.from(new String[] {
+      var fl = A4Options.from(new String[] {
           flagOf(kLogLevel, "debug"),
           flagOf(kConfig, "./src/test/resources")
       });

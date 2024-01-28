@@ -6,7 +6,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class A4Flags {
+public class A4Options {
 
   public enum LogLevel { error, warning, info, debug, trace }
 
@@ -26,13 +26,13 @@ public class A4Flags {
   public static String usage() {
     return String.join("\n",
         "Usage:",
-        "  awe4lb [flags]",
-        "Flags:",
-        "  --config=string      Configuration path.",
-        "                       A file starts a single load balancer instance.",
-        "                       A Directory starts the API/UI to manage multiple configurations.",
-        "  --api-host=string    API/UI host IP address. Default: " + A4Flags.DefaultHost,
-        "  --api-port=number    API/UI host port. Default: " + A4Flags.DefaultPort,
+        "  awe4lb [options]",
+        "Options:",
+        "  --config=string      Configuration path. Required.",
+        "                       - A file starts a single load balancer instance.",
+        "                       - A Directory starts the API/UI to manage multiple configurations.",
+        "  --api-host=string    API/UI host IP address. Default: " + A4Options.DefaultHost,
+        "  --api-port=number    API/UI host port. Default: " + A4Options.DefaultPort,
         "  --log-format=string  Log output format ('text' or 'json'). Default: " + A4Format.text,
         "  --log-level=string   Log level ('error', 'warning', 'info', 'debug', 'trace'). Default: info"
     );
@@ -42,26 +42,27 @@ public class A4Flags {
     return String.format("%s=%s", key, value);
   }
 
-  public static A4Flags from(String[] args) {
+  public static A4Options from(String[] args) {
     var argIdx = Arrays.stream(args)
         .filter(arg -> arg.startsWith("--"))
         .map(arg -> arg.split("="))
         .filter(pair -> pair.length == 2)
+        .filter(pair -> pair[0] != null && pair[1] != null)
         .collect(Collectors.toMap(pair -> pair[0], pair -> pair[1]));
-    var fl = new A4Flags();
+    var opt = new A4Options();
     var host = argIdx.get(kApiHost);
     var port = argIdx.get(kApiPort);
     var logFormat = argIdx.get(kLogFormat);
     var logLevel = argIdx.get(kLogLevel);
 
-    fl.root = new File(argIdx.get(kConfig));
-    fl.logFormat = logFormat != null ? A4Format.valueOf(logFormat) : fl.logFormat;
-    fl.logLevel = logLevel != null ? LogLevel.valueOf(logLevel) : fl.logLevel;
-    fl.api = new A4Sock()
+    opt.root = new File(argIdx.get(kConfig));
+    opt.logFormat = logFormat != null ? A4Format.valueOf(logFormat) : opt.logFormat;
+    opt.logLevel = logLevel != null ? LogLevel.valueOf(logLevel) : opt.logLevel;
+    opt.api = new A4Sock()
         .host(host == null ? DefaultHost : host)
         .port(port == null ? DefaultPort : Integer.parseInt(port));
 
-    return A4Valid.validateOrFail(fl);
+    return A4Valid.validateOrFail(opt);
   }
 
 }

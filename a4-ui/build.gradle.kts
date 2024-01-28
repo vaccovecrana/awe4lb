@@ -4,7 +4,6 @@ plugins {
   id("io.vacco.oss.gitflow") version "0.9.8"
   id("io.vacco.ronove") version "1.2.3"
   id("com.github.node-gradle.node") version "7.0.1"
-  application
 }
 
 val api by configurations
@@ -50,10 +49,8 @@ val copyRes = tasks.register<Copy>("copyRes") {
   into("./build/resources/main/ui/fonts")
 }
 
-tasks.processResources { dependsOn(copyJs)  }
-tasks.processResources { dependsOn(copyTs)  }
-tasks.processResources { dependsOn(copyRes) }
-
-application {
-  mainClass.set("io.vacco.a4lb.A4LbMain")
+tasks.processResources {
+  dependsOn(copyJs)
+  dependsOn(copyTs)
+  dependsOn(copyRes)
 }

@@ -42,7 +42,7 @@ public class A4Context implements Closeable {
     }
   }
 
-  public void init(A4Flags fl) {
+  public void init(A4Options fl) {
     setSysProp(IO_VACCO_SHAX_PRETTYPRINT, "true");
     setSysProp(IO_VACCO_SHAX_DEVMODE, fl.logFormat == A4Format.text ? "true" : "false");
     setSysProp(IO_VACCO_SHAX_LOGLEVEL, fl.logLevel.toString());
