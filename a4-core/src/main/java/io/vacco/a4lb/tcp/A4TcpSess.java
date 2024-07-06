@@ -157,9 +157,6 @@ public class A4TcpSess extends SNIMatcher {
     if (op == IOOp.Write && backend != null && key == backend.channelKey && bytes > 0) {
       bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
     }
-    if (op == IOOp.Read && key == client.channelKey && bytes > 0 && backend == null) {
-      initBackend(key);
-    }
     if (bytes == -1) {
       if (client.channelKey == key) {
         client.channelKey.interestOps(0);
@@ -210,7 +207,7 @@ public class A4TcpSess extends SNIMatcher {
     return false;
   }
 
-  private void initBackend(SelectionKey key) {
+  protected void initBackend(SelectionKey key) {
     if (tlsClient && tlsSni == null) {
       return;
     }

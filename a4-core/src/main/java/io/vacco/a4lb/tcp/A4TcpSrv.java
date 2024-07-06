@@ -70,6 +70,7 @@ public class A4TcpSrv implements A4Srv {
         clientKey = clientChannel.register(selector, SelectionKey.OP_READ);
       }
       sess.setClient(new A4TcpIo(clientKey, clientChannel));
+      sess.initBackend(clientKey);
     } catch (Exception ioe) {
       log.error("{} - Unable to initialize tcp session", channel.socket(), ioe);
       if (clientChannel != null) {
