@@ -14,9 +14,9 @@ public class A4Options {
   public static final int    DefaultPort = 7070;
 
   public static final String
-      kConfig = "--config",
-      kApiHost = "--api-host", kApiPort = "--api-port",
-      kLogFormat = "--log-format", kLogLevel = "--log-level";
+    kConfig = "--config",
+    kApiHost = "--api-host", kApiPort = "--api-port",
+    kLogFormat = "--log-format", kLogLevel = "--log-level";
 
   public File root;
   public A4Sock api;
@@ -25,16 +25,17 @@ public class A4Options {
 
   public static String usage() {
     return String.join("\n",
-        "Usage:",
-        "  awe4lb [options]",
-        "Options:",
-        "  --config=string      Configuration path. Required.",
-        "                       - A file starts a load balancer configuration immediately.",
-        "                       - A directory starts the API/UI to select an active configuration.",
-        "  --api-host=string    API/UI host IP address. Default: " + A4Options.DefaultHost,
-        "  --api-port=number    API/UI host port. Default: " + A4Options.DefaultPort,
-        "  --log-format=string  Log output format ('text' or 'json'). Default: " + A4Format.text,
-        "  --log-level=string   Log level ('error', 'warning', 'info', 'debug', 'trace'). Default: info"
+      "Usage:",
+      "  awe4lb [options]",
+      "Options:",
+      "  --config=string      Configuration path. Required.",
+      "                       - A file starts a load balancer configuration immediately.",
+      "                       - A directory starts the API/UI to select an active configuration.",
+      "  --api-host=string    API/UI host IP address. Default: " + A4Options.DefaultHost,
+      "  --api-port=number    API/UI host port. Default: " + A4Options.DefaultPort,
+      "  --log-format=string  Log output format ('text' or 'json'). Default: " + A4Format.text,
+      "  --log-level=string   Log level ('error', 'warning', 'info', 'debug', 'trace'). Default: info",
+      "  --help               Prints this help message."
     );
   }
 
@@ -44,11 +45,11 @@ public class A4Options {
 
   public static A4Options from(String[] args) {
     var argIdx = Arrays.stream(args)
-        .filter(arg -> arg.startsWith("--"))
-        .map(arg -> arg.split("="))
-        .filter(pair -> pair.length == 2)
-        .filter(pair -> pair[0] != null && pair[1] != null)
-        .collect(Collectors.toMap(pair -> pair[0], pair -> pair[1]));
+      .filter(arg -> arg.startsWith("--"))
+      .map(arg -> arg.split("="))
+      .filter(pair -> pair.length == 2)
+      .filter(pair -> pair[0] != null && pair[1] != null)
+      .collect(Collectors.toMap(pair -> pair[0], pair -> pair[1]));
     var opt = new A4Options();
     var host = argIdx.get(kApiHost);
     var port = argIdx.get(kApiPort);
@@ -59,8 +60,8 @@ public class A4Options {
     opt.logFormat = logFormat != null ? A4Format.valueOf(logFormat) : opt.logFormat;
     opt.logLevel = logLevel != null ? LogLevel.valueOf(logLevel) : opt.logLevel;
     opt.api = new A4Sock()
-        .host(host == null ? DefaultHost : host)
-        .port(port == null ? DefaultPort : Integer.parseInt(port));
+      .host(host == null ? DefaultHost : host)
+      .port(port == null ? DefaultPort : Integer.parseInt(port));
 
     return A4Valid.validateOrFail(opt);
   }

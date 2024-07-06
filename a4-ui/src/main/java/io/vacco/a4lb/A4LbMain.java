@@ -3,10 +3,12 @@ package io.vacco.a4lb;
 import io.vacco.a4lb.service.A4Context;
 import io.vacco.a4lb.util.*;
 
+import java.util.Arrays;
+
 public class A4LbMain {
 
-  public static void main(String[] args) throws InterruptedException {
-    if (args == null || args.length == 0) {
+  public static void main(String[] args) {
+    if (args == null || args.length == 0 || Arrays.asList(args).contains("--help")) {
       System.out.println(A4Options.usage());
       return;
     }
