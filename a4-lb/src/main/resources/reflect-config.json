@@ -48,6 +48,12 @@
     "allDeclaredFields": true
   },
   {
+    "name": "io.vacco.a4lb.cfg.A4DiscK8s",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
     "name": "io.vacco.a4lb.cfg.A4Format",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true,

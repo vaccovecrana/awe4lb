@@ -42,7 +42,7 @@
             "exec": {
               "command": "cat",
               "args": [
-                "./src/test/resources/sdr-hosts.json"
+                "./src/test/resources/discover/sdr-hosts.json"
               ],
               "format": "json"
             }
@@ -98,7 +98,7 @@
             "exec": {
               "command": "cat",
               "args": [
-                "./src/test/resources/sdr-hosts.txt"
+                "./src/test/resources/discover/sdr-hosts.txt"
               ],
               "format": "text"
             }

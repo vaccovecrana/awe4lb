@@ -3,9 +3,12 @@ package io.vacco.a4lb.util;
 import org.slf4j.*;
 import java.io.*;
 import java.net.*;
+import java.net.http.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -85,12 +88,29 @@ public class A4Io {
     return conn.getInputStream();
   }
 
-  public static String loadContent(URI u, int timeoutMs) {
-    try (var in = openStream(u, timeoutMs)) {
+  public static String loadContent(URI uri, int timeoutMs) {
+    try (var in = openStream(uri, timeoutMs)) {
       var reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
       return reader.lines().collect(Collectors.joining(System.lineSeparator()));
     } catch (Exception e) {
-      throw new IllegalStateException("Unable to load content from " + u, e);
+      throw new IllegalStateException("Unable to load content from " + uri, e);
+    }
+  }
+
+  public static String loadContent(URI uri, HttpClient client, String bearerToken, int timeoutMs) {
+    try {
+      var request = HttpRequest.newBuilder()
+        .GET().uri(uri)
+        .header("Authorization", "Bearer " + bearerToken)
+        .timeout(Duration.of(timeoutMs, ChronoUnit.MILLIS))
+        .build();
+      var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      if (response.statusCode() != 200) {
+        throw new RuntimeException("Failed : HTTP error code : " + response.statusCode());
+      }
+      return response.body();
+    } catch (Exception e) {
+      throw new IllegalStateException("Unable to load content from " + uri, e);
     }
   }
 

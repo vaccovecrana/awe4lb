@@ -56,5 +56,14 @@ public class A4ValidTest {
         System.out.println(cnt.message());
       }
     });
+    it("Validates a K8S discovery configuration", () -> {
+      var k8s = new A4DiscK8s();
+      k8s.port = 8080;
+      k8s.service = "momo";
+      k8s.namespace = "test";
+      k8s.tokenPath = "./build.gradle.kts";
+      k8s.apiUri = "https://k8s.example.com:6443";
+      System.out.println(A4Valid.validationsOf(A4Valid.validate(k8s)));
+    });
   }
 }

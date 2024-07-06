@@ -1,0 +1,104 @@
+{
+  "kind": "Service",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "cockroachdb",
+    "namespace": "grayhawk",
+    "uid": "19ce5792-5cbe-4cdc-b881-51e0f4bb0a45",
+    "resourceVersion": "18993",
+    "creationTimestamp": "2024-07-04T06:15:32Z",
+    "labels": {
+      "app": "cockroachdb",
+      "beleth.io": "true",
+      "beleth.io/id": "io.ghrk.b201a5c3"
+    },
+    "annotations": {
+      "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"app\":\"cockroachdb\",\"beleth.io\":\"true\",\"beleth.io/id\":\"io.ghrk.b201a5c3\"},\"name\":\"cockroachdb\",\"namespace\":\"grayhawk\"},\"spec\":{\"externalTrafficPolicy\":\"Local\",\"ports\":[{\"name\":\"grpc\",\"nodePort\":30257,\"port\":26257,\"targetPort\":\"grpc\"},{\"name\":\"http\",\"nodePort\":30080,\"port\":8080,\"targetPort\":\"http\"}],\"selector\":{\"app\":\"cockroachdb\"},\"type\":\"NodePort\"}}\n"
+    },
+    "managedFields": [
+      {
+        "manager": "kubectl-client-side-apply",
+        "operation": "Update",
+        "apiVersion": "v1",
+        "time": "2024-07-04T06:15:32Z",
+        "fieldsType": "FieldsV1",
+        "fieldsV1": {
+          "f:metadata": {
+            "f:annotations": {
+              ".": {},
+              "f:kubectl.kubernetes.io/last-applied-configuration": {}
+            },
+            "f:labels": {
+              ".": {},
+              "f:app": {},
+              "f:beleth.io": {},
+              "f:beleth.io/id": {}
+            }
+          },
+          "f:spec": {
+            "f:externalTrafficPolicy": {},
+            "f:internalTrafficPolicy": {},
+            "f:ports": {
+              ".": {},
+              "k:{\"port\":8080,\"protocol\":\"TCP\"}": {
+                ".": {},
+                "f:name": {},
+                "f:nodePort": {},
+                "f:port": {},
+                "f:protocol": {},
+                "f:targetPort": {}
+              },
+              "k:{\"port\":26257,\"protocol\":\"TCP\"}": {
+                ".": {},
+                "f:name": {},
+                "f:nodePort": {},
+                "f:port": {},
+                "f:protocol": {},
+                "f:targetPort": {}
+              }
+            },
+            "f:selector": {},
+            "f:sessionAffinity": {},
+            "f:type": {}
+          }
+        }
+      }
+    ]
+  },
+  "spec": {
+    "ports": [
+      {
+        "name": "grpc",
+        "protocol": "TCP",
+        "port": 26257,
+        "targetPort": "grpc",
+        "nodePort": 30257
+      },
+      {
+        "name": "http",
+        "protocol": "TCP",
+        "port": 8080,
+        "targetPort": "http",
+        "nodePort": 30080
+      }
+    ],
+    "selector": {
+      "app": "cockroachdb"
+    },
+    "clusterIP": "10.106.25.243",
+    "clusterIPs": [
+      "10.106.25.243"
+    ],
+    "type": "NodePort",
+    "sessionAffinity": "None",
+    "externalTrafficPolicy": "Local",
+    "ipFamilies": [
+      "IPv4"
+    ],
+    "ipFamilyPolicy": "SingleStack",
+    "internalTrafficPolicy": "Cluster"
+  },
+  "status": {
+    "loadBalancer": {}
+  }
+}
