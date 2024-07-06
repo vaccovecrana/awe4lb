@@ -7,7 +7,7 @@ bin/
 
 .gradle
 gradle/
-gradlew.bat
+gradlew*
 
 java_pid*.hprof
 echo

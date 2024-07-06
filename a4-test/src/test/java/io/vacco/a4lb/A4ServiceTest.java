@@ -42,18 +42,18 @@ public class A4ServiceTest {
       tempConfigId = "temp-test-config";
 
   private static final A4Config tempConfig = new A4Config()
-      .id(tempConfigId)
-      .description("Test runtime configuration")
-      .server(
-          new A4Server()
-              .id("temp-http-00")
-              .addr(new A4Sock().host("127.0.0.1").port(8080))
-              .match(
-                  new A4Match().pool(new A4Pool().hosts(
-                      new A4Backend().addr(new A4Sock().host("nowhere.localhost").port(10022))
-                  ))
-              )
-      );
+    .id(tempConfigId)
+    .description("Test runtime configuration")
+    .server(
+      new A4Server()
+        .id("temp-http-00")
+        .addr(new A4Sock().host("127.0.0.1").port(8080))
+        .match(
+          new A4Match().pool(new A4Pool().hosts(
+            new A4Backend().addr(new A4Sock().host("nowhere.localhost").port(10022))
+          ))
+        )
+    );
 
   public static String doRequest(Methanol m, MutableRequest req, long sleepMs) throws IOException, InterruptedException {
     var res = m.send(req, ofString());
@@ -98,7 +98,7 @@ public class A4ServiceTest {
 
     it("Initializes the Load Balancer context", () -> {
       var fl = A4Options.from(new String[] {
-          flagOf(kLogLevel, "info"),
+          flagOf(kLogLevel, "debug"),
           flagOf(kConfig, "./src/test/resources")
       });
       ctx.init(fl);

@@ -9,12 +9,12 @@ import java.util.Objects;
 
 public class A4UdpIo implements Closeable {
 
-  public A4Backend        backend;
-  public DatagramChannel  channel;
-  public SelectionKey     channelKey;
-  public SocketAddress    client;
+  public A4Backend          backend;
+  public DatagramChannel    channel;
+  public SelectionKey       channelKey;
+  public InetSocketAddress  client;
 
-  public A4UdpIo(Selector selector, A4Backend backend, SocketAddress client) {
+  public A4UdpIo(Selector selector, A4Backend backend, InetSocketAddress client) {
     try {
       this.backend = Objects.requireNonNull(backend);
       this.channel = DatagramChannel.open().connect(new InetSocketAddress(backend.addr.host, backend.addr.port));

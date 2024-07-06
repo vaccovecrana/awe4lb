@@ -10,6 +10,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import static io.vacco.a4lb.util.A4Logging.onError;
 
@@ -76,6 +77,20 @@ public class A4UdpSrv implements A4Srv {
         onError(log, "{} - UDP update error", e, srvConfig.id);
       }
     });
+  }
+
+  public Callable<List<A4UdpIo>> createSessionCleanupTask() {
+    return () -> {
+      var nowMs = System.currentTimeMillis();
+      var expiredSessions = new ArrayList<A4UdpIo>();
+      for (var e : sessions.values()) {
+        if (nowMs > e.getExpireBy()) {
+          var sessionId = idOf(e.getEntry().client);
+          expiredSessions.add(sessions.removeAndGet(sessionId));
+        }
+      }
+      return expiredSessions;
+    };
   }
 
   @Override public Void call() {

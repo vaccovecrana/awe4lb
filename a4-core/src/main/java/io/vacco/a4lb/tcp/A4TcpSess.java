@@ -9,7 +9,7 @@ import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 
 import static io.vacco.a4lb.util.A4Logging.*;
 import static io.vacco.a4lb.util.A4Io.*;
@@ -31,8 +31,11 @@ public class A4TcpSess extends SNIMatcher {
   private final ExecutorService tlsExec;
   private final boolean tlsClient;
 
-  private final Queue<ByteBuffer> cltQ = new ArrayDeque<>(); // TODO check if buffer pooling could increase performance after running initial benchmarks.
+  private final Queue<ByteBuffer> cltQ = new ArrayDeque<>();
   private final Queue<ByteBuffer> bckQ = new ArrayDeque<>();
+
+  private static final int POOL_SIZE = 2048; // TODO should this be configurable?
+  private static final Queue<ByteBuffer> bufferPool = new LinkedBlockingQueue<>(POOL_SIZE);
 
   public A4TcpSess(A4TcpSrv owner, A4Selector bkSel, boolean tlsClient, ExecutorService tlsExec) {
     super(0);
@@ -47,18 +50,18 @@ public class A4TcpSess extends SNIMatcher {
       var x = rootCauseOf(e);
       if (log.isDebugEnabled()) {
         log.debug("!! [{}, {}] {} - {} - {}",
-            client != null ? client.id : "?",
-            backend != null ? backend.id : "?",
-            e.getClass().getSimpleName(), x.getClass().getSimpleName(),
-            e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
+          client != null ? client.id : "?",
+          backend != null ? backend.id : "?",
+          e.getClass().getSimpleName(), x.getClass().getSimpleName(),
+          e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
         );
       } else if (log.isTraceEnabled()) {
         log.trace("!! [{}, {}] {} - {} - {}",
-            client != null ? client.id : "?",
-            backend != null ? backend.id : "?",
-            e.getClass().getSimpleName(), x.getClass().getSimpleName(),
-            e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage()),
-            x
+          client != null ? client.id : "?",
+          backend != null ? backend.id : "?",
+          e.getClass().getSimpleName(), x.getClass().getSimpleName(),
+          e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage()),
+          x
         );
       }
     }
@@ -78,31 +81,49 @@ public class A4TcpSess extends SNIMatcher {
   private void logState(int bytes, ByteChannel c, IOOp op) {
     if (log.isDebugEnabled() && bytes != 0) {
       var sck = c instanceof SSLSocketChannel
-          ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
-          : ((SocketChannel) c).socket();
+        ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
+        : ((SocketChannel) c).socket();
       log.debug("{}: {} (i/o: {}), c[{},{},{}] b[{},{},{}] {} {} {}",
-          this.id != null ? id : '?',
-          op == IOOp.Read ? 'r' : 'w',
-          format("%06d", bytes),
-          format("%02d", client.channelKey.interestOps()),
-          format("%02d", client.channelKey.readyOps()),
-          format("%02d", cltQ.size()),
-          backend != null ? format("%02d", backend.channelKey.interestOps()) : "?",
-          backend != null ? format("%02d", backend.channelKey.readyOps()) : "?",
-          format("%02d", bckQ.size()),
-          sck.getLocalSocketAddress(),
-          op == IOOp.Read ? "<<" : ">>",
-          sck.getRemoteSocketAddress()
+        this.id != null ? id : '?',
+        op == IOOp.Read ? 'r' : 'w',
+        format("%06d", bytes),
+        format("%02d", client.channelKey.interestOps()),
+        format("%02d", client.channelKey.readyOps()),
+        format("%02d", cltQ.size()),
+        backend != null ? format("%02d", backend.channelKey.interestOps()) : "?",
+        backend != null ? format("%02d", backend.channelKey.readyOps()) : "?",
+        format("%02d", bckQ.size()),
+        sck.getLocalSocketAddress(),
+        op == IOOp.Read ? "<<" : ">>",
+        sck.getRemoteSocketAddress()
       );
     }
   }
 
+  private ByteBuffer acquireBuffer(int bufferSize) {
+    var buffer = bufferPool.poll();
+    if (buffer == null) {
+      buffer = ByteBuffer.allocateDirect(bufferSize);
+    } else {
+      buffer.clear();
+    }
+    return buffer;
+  }
+
+  private void releaseBuffer(ByteBuffer buffer) {
+    if (bufferPool.size() < POOL_SIZE) {
+      bufferPool.offer(buffer);
+    }
+  }
+
   private int doTcpRead(String channelId, ByteChannel from, Queue<ByteBuffer> target, int bufferSize) {
-    var bb = ByteBuffer.allocateDirect(bufferSize);
+    var bb = acquireBuffer(bufferSize);
     var bytes = eofRead(channelId, from, bb);
     logState(bytes, from, IOOp.Read);
     if (bytes > 0) {
       target.add(bb);
+    } else {
+      releaseBuffer(bb);
     }
     return bytes;
   }
@@ -114,6 +135,7 @@ public class A4TcpSess extends SNIMatcher {
       logState(bytes, to, IOOp.Write);
       if (!bb.hasRemaining()) {
         source.remove();
+        releaseBuffer(bb);
       }
       return bytes;
     }
@@ -195,8 +217,8 @@ public class A4TcpSess extends SNIMatcher {
     this.backend = bkSel.assign(key.selector(), client.channel, tlsSni, tlsExec);
     this.backend.channelKey.attach(this);
     this.id = format("%x", format("%s-%s",
-        client.getRawChannel().socket(),
-        backend.getRawChannel().socket()
+      client.getRawChannel().socket(),
+      backend.getRawChannel().socket()
     ).hashCode());
     this.bkSel.contextOf(backend.backend).trackConn(true);
   }

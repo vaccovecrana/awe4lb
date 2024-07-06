@@ -71,13 +71,27 @@ public class A4Lb implements Closeable {
     }
   }
 
+  private void initUdp(A4Server srv, A4Selector bkSel) {
+    var udpImpl = new A4UdpSrv(A4Io.newSelector(), srv, bkSel);
+    var taskId = format("%s-udp-cleanup", srv.id);
+    scheduler.schedulePermanent(udpImpl);
+    scheduler.scheduleFixed(taskId,
+      srv.udp.idleTimeoutMs, TimeUnit.MILLISECONDS,
+      udpImpl.createSessionCleanupTask(),
+      expiredSessions -> {
+        if (!expiredSessions.isEmpty() && log.isDebugEnabled()) {
+          log.debug("{} - expired [{}] UDP sessions", taskId, expiredSessions.size());
+        }
+      }
+    );
+  }
+
   public A4Lb open() {
     log.info("{} - starting", config.id);
     for (var srv : config.servers) {
       var bkSel = new A4Selector(srv.match);
-      if (srv.udp != null) { // TODO add a UDP session reaper periodic task
-        var udpImpl = new A4UdpSrv(A4Io.newSelector(), srv, bkSel);
-        scheduler.schedulePermanent(udpImpl);
+      if (srv.udp != null) {
+        this.initUdp(srv, bkSel);
       } else {
         var tcpImpl = new A4TcpSrv(A4Io.newSelector(), srv, bkSel);
         scheduler.schedulePermanent(tcpImpl);
