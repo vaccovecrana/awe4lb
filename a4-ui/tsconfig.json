@@ -12,5 +12,6 @@
     "typeRoots": ["node_modules/@types"],
     "allowJs": false,
     "baseUrl": "."
-  }
+  },
+  "exclude": ["./build"]
 }

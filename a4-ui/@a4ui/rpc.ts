@@ -38,7 +38,6 @@ export const enum A4BackendState {
 
 export interface A4Config {
   Seed: number;
-  active: boolean;
   id: string;
   description: string;
   servers: A4Server[];

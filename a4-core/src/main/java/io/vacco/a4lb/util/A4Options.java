@@ -29,8 +29,8 @@ public class A4Options {
         "  awe4lb [options]",
         "Options:",
         "  --config=string      Configuration path. Required.",
-        "                       - A file starts a single load balancer instance.",
-        "                       - A Directory starts the API/UI to manage multiple configurations.",
+        "                       - A file starts a load balancer configuration immediately.",
+        "                       - A directory starts the API/UI to select an active configuration.",
         "  --api-host=string    API/UI host IP address. Default: " + A4Options.DefaultHost,
         "  --api-port=number    API/UI host port. Default: " + A4Options.DefaultPort,
         "  --log-format=string  Log output format ('text' or 'json'). Default: " + A4Format.text,
@@ -63,6 +63,14 @@ public class A4Options {
         .port(port == null ? DefaultPort : Integer.parseInt(port));
 
     return A4Valid.validateOrFail(opt);
+  }
+
+  @Override public String toString() {
+    return String.format(
+      "[root: %s, api: %s, logFormat: %s, logLevel: %s]",
+      root != null ? root.getAbsolutePath() : "?",
+      api, logFormat, logLevel
+    );
   }
 
 }

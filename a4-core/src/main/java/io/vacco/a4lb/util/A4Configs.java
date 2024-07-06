@@ -97,10 +97,9 @@ public class A4Configs {
     return cfg0;
   }
 
-  public static A4Config syncFs(File configRoot, Gson g, A4Config config, boolean markActive) {
-    config.active = markActive;
+  public static A4Config syncFs(File configRoot, Gson g, A4Config config) {
     var cfgFile = configFileOf(configRoot, config.id);
-    var cfg0 = deflate(config, g).active(markActive);
+    var cfg0 = deflate(config, g);
     try (var fw = new FileWriter(cfgFile)) {
       g.toJson(cfg0, fw);
       return config;
@@ -129,7 +128,7 @@ public class A4Configs {
   public static ConstraintViolations save(File configRoot, Gson g, A4Config config) {
     var errors = A4Valid.validate(config);
     if (errors.isEmpty()) {
-      syncFs(configRoot, g, config, false);
+      syncFs(configRoot, g, config);
     }
     return errors;
   }

@@ -7,14 +7,8 @@ public class A4Config {
 
   public static final long Seed = 1984;
 
-  public boolean active;
   public String id, description;
   public List<A4Server> servers = new ArrayList<>();
-
-  public A4Config active(boolean active) {
-    this.active = active;
-    return this;
-  }
 
   public A4Config id(String id) {
     this.id = id;

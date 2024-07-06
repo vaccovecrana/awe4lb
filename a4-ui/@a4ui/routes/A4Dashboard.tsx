@@ -14,7 +14,7 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
   public componentDidMount(): void {
     const {dispatch: d} = this.props.s
     lockUi(true, d)
-      .then(() => apiV1ConfigGet(""))
+      .then(() => apiV1ConfigGet(undefined))
       .then(config => this.setState({config}))
       .then(() => lockUi(false, d))
   }

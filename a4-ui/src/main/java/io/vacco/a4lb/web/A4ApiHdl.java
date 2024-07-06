@@ -63,10 +63,10 @@ public class A4ApiHdl {
         ? service.setActive(null)
         : service.setActive(loadFromOrFail(configFileOf(configRoot, configId), gson));
     if (state.active != null) {
-      syncFs(configRoot, gson, state.active, true);
+      syncFs(configRoot, gson, state.active);
     }
     if (state.inactive != null) {
-      syncFs(configRoot, gson, state.inactive, false);
+      syncFs(configRoot, gson, state.inactive);
     }
     return state;
   }
