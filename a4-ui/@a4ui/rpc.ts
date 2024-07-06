@@ -54,6 +54,7 @@ export interface A4Disc {
   DefaultTimeoutMs: number;
   http: A4DiscHttp;
   exec: A4DiscExec;
+  k8s: A4DiscK8s;
   intervalMs: number;
   timeoutMs: number;
 }
@@ -67,6 +68,14 @@ export interface A4DiscExec {
 export interface A4DiscHttp {
   endpoint: string;
   format: A4Format;
+}
+
+export interface A4DiscK8s {
+  apiUri: string;
+  tokenPath: string;
+  namespace: string;
+  service: string;
+  port: number;
 }
 
 export const enum A4Format {

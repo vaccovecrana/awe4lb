@@ -30,6 +30,23 @@ const renderDiscover = (discover: A4Disc) => {
     )
   } else if (discover.exec) {
     return renderExec(discover.exec.command, discover.exec.args, discover.exec.format)
+  } else if (discover.k8s) {
+    return (
+      <div>
+        <div>
+          <i class="icon-organization mr4"></i>
+          <code>{discover.k8s.apiUri}</code>
+        </div>
+        <div>
+          <i class="icon-badge mr4" />
+          <code>{discover.k8s.tokenPath}</code>
+        </div>
+        <div>
+          <i class="icon-grid mr4" />
+          <code>{discover.k8s.namespace}|{discover.k8s.service}:{discover.k8s.port}</code>
+        </div>
+      </div>
+    )
   }
   return <div />
 }
