@@ -8,31 +8,30 @@ import java.net.*;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 public class A4Selector {
 
   private final List<A4Match> cfg;
-  private final Map<A4Pool, A4PoolState> poolStateIdx = new HashMap<>();
-  private final Map<A4Backend, A4BackendState> bkStateIdx = new HashMap<>();
+  private final Map<A4Pool, A4PoolContext> poolContextIdx = new HashMap<>();
+  private final Map<A4Backend, A4BackendContext> bkContextIdx = new HashMap<>();
 
   public A4Selector(List<A4Match> cfg) {
     this.cfg = Objects.requireNonNull(cfg);
     cfg.stream()
         .map(m -> m.pool)
-        .forEach(p -> poolStateIdx.put(p, new A4PoolState()));
+        .forEach(p -> poolContextIdx.put(p, new A4PoolContext()));
   }
 
   public A4Backend select(A4Pool pool, int clientIpHash) {
-    var poolState = poolStateIdx.computeIfAbsent(pool, p -> new A4PoolState());
+    var poolCtx = poolContextIdx.computeIfAbsent(pool, p -> new A4PoolContext());
     if (pool.type == null) {
-      return A4SelRandom.select(pool, poolState);
+      return A4SelRandom.select(pool, poolCtx);
     }
     switch (pool.type) {
-      case weight: return A4SelWeight.select(pool, poolState);
-      case roundRobin: return A4SelRRobin.select(pool, poolState);
+      case weight: return A4SelWeight.select(pool, poolCtx);
+      case roundRobin: return A4SelRRobin.select(pool, poolCtx);
       case ipHash: return A4SelIpHash.select(pool, clientIpHash);
-      case leastConn: return A4SelLConn.select(pool, bkStateIdx);
+      case leastConn: return A4SelLConn.select(pool, bkContextIdx);
       default: throw new IllegalStateException("Invalid pool type: " + pool.type);
     }
   }
@@ -50,7 +49,7 @@ public class A4Selector {
     var clientIp = clientAddr.getHostAddress();
     try {
       var pool = matches(clientIp, tlsSni).orElseThrow();
-      var bk = lockPoolAnd(pool, () -> select(pool, clientIp.hashCode()));
+      var bk = select(pool, clientIp.hashCode());
       var addr = new InetSocketAddress(bk.addr.host, bk.addr.port);
       return new A4TcpIo(addr, selector, pool.openTls != null && pool.openTls, tlsExec).backend(bk);
     } catch (Exception e) {
@@ -61,25 +60,15 @@ public class A4Selector {
   public A4UdpIo assign(Selector selector, InetSocketAddress client) {
     try {
       var pool = matches(client.getHostString(), null).orElseThrow();
-      var bk = lockPoolAnd(pool, () -> select(pool, client.hashCode()));
+      var bk = select(pool, client.hashCode());
       return new A4UdpIo(selector, bk, client);
     } catch (Exception e) {
       throw new A4Exceptions.A4SelectException(client.toString(), null, this.cfg, e);
     }
   }
 
-  public <T> T lockPoolAnd(A4Pool pool, Supplier<T> then) {
-    var pl = poolStateIdx.get(pool);
-    pl.lock.lock();
-    try {
-      return then.get();
-    } finally {
-      pl.lock.unlock();
-    }
-  }
-
-  public A4BackendState stateOf(A4Backend bk) {
-    return bkStateIdx.computeIfAbsent(bk, bk0 -> new A4BackendState());
+  public A4BackendContext contextOf(A4Backend bk) {
+    return bkContextIdx.computeIfAbsent(bk, bk0 -> new A4BackendContext());
   }
 
 }

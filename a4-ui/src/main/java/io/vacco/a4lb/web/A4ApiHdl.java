@@ -36,7 +36,8 @@ public class A4ApiHdl {
         var cfg = loadFromOrFail(configFileOf(configRoot, configId), gson);
         return res.withBody(deflate(cfg, gson));
       }
-      return res.withBody(service.instance != null ? service.instance.config : new A4Config());
+      var cfg = service.instance != null ? service.instance.config : new A4Config();
+      return res.withBody(cfg);
     } catch (Exception e) {
       return res.withStatus(Response.Status.NOT_FOUND);
     }

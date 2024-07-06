@@ -1,7 +1,7 @@
 package io.vacco.a4lb;
 
 import com.google.gson.Gson;
-import io.vacco.a4lb.cfg.A4Backend;
+import io.vacco.a4lb.cfg.A4BackendState;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.A4Configs;
 import j8spec.annotation.DefinedOrder;
@@ -19,7 +19,7 @@ public class A4SelectorTest {
       cfg.servers.stream()
           .flatMap(srv -> srv.match.stream())
           .flatMap(m -> m.pool.hosts.stream())
-          .forEach(bk -> bk.state = A4Backend.State.Up);
+          .forEach(bk -> bk.state(A4BackendState.Up));
       var matches = cfg.servers.get(3).match;
       var sel = new A4Selector(matches);
       var host = "172.16.0.111";

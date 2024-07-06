@@ -2,11 +2,9 @@ package io.vacco.a4lb.cfg;
 
 public class A4Backend {
 
-  public enum State { Up, Down, Unknown }
-
   public A4Sock addr;
   public Integer weight, priority;
-  public State state = State.Unknown;
+  public A4BackendState state = A4BackendState.Unknown;
 
   public A4Backend addr(A4Sock addr) {
     this.addr = addr;
@@ -23,7 +21,7 @@ public class A4Backend {
     return this;
   }
 
-  public A4Backend state(State state) {
+  public A4Backend state(A4BackendState state) {
     this.state = state;
     return this;
   }

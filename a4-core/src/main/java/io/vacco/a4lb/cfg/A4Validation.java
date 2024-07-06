@@ -12,4 +12,9 @@ public class A4Validation {
     v.message = Objects.requireNonNull(message);
     return v;
   }
+
+  @Override public String toString() {
+    return message != null ? message : "validation[?]";
+  }
+
 }

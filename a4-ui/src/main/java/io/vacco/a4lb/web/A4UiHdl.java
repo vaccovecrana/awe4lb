@@ -4,13 +4,10 @@ import io.vacco.murmux.http.*;
 import io.vacco.murmux.middleware.MxStatic;
 import java.io.File;
 import java.nio.file.Paths;
-import org.slf4j.*;
 
 import static io.vacco.a4lb.web.A4Route.*;
 
 public class A4UiHdl extends MxStatic {
-
-  private static final Logger log = LoggerFactory.getLogger(A4UiHdl.class);
 
   public static final String html = String.join("\n", "",
       "<!DOCTYPE html>",

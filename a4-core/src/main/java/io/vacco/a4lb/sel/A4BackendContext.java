@@ -2,7 +2,7 @@ package io.vacco.a4lb.sel;
 
 import io.vacco.a4lb.cfg.A4RxTx;
 
-public class A4BackendState {
+public class A4BackendContext {
 
   public A4RxTx rxTx = new A4RxTx();
   public int    connections = 0;

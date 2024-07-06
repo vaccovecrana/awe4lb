@@ -1,11 +1,12 @@
 package io.vacco.a4lb.impl;
 
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.util.A4Exceptions;
 import org.buildobjects.process.*;
 import org.slf4j.*;
 import java.net.*;
 import java.util.Arrays;
+
+import static io.vacco.a4lb.util.A4Logging.onError;
 
 public class A4HealthState {
 
@@ -26,7 +27,7 @@ public class A4HealthState {
     return args0;
   }
 
-  public static A4Backend.State stateOfExec(String serverId, A4Backend bk, A4HealthCheck hlt) {
+  public static A4BackendState stateOfExec(String serverId, A4Backend bk, A4HealthCheck hlt) {
     ProcResult res = null;
     var args = setVars(hlt.exec.args, bk);
     var argsStr = Arrays.toString(args);
@@ -41,46 +42,35 @@ public class A4HealthState {
       if (res.getExitValue() != 0) {
         throw new IllegalStateException();
       }
-      return A4Backend.State.Up;
+      return A4BackendState.Up;
     } catch (Exception e) {
       var stdOut = res != null ? res.getOutputString() : "";
       var stdErr = res != null ? res.getErrorString() : "";
       var msg = (stdOut.isEmpty() ? stdErr : stdOut).trim();
-      if (log.isDebugEnabled()) {
-        log.debug(
-            "{} - host down (exec) - {} {} {} {}",
-            serverId, bk.addr, hlt.exec.command, argsStr, msg, e
-        );
-      } else {
-        log.warn(
-            "{} - host down (exec) - {} {} {}",
-            serverId, bk.addr, msg, A4Exceptions.messageFor(e)
-        );
-      }
-      return A4Backend.State.Down;
+      onError(
+        log, "{} - host down (exec) - {} {} {} {}",
+        e, serverId, bk.addr, hlt.exec.command, argsStr, msg
+      );
+      return A4BackendState.Down;
     }
   }
 
-  public static A4Backend.State stateOfTcp(String serverId, A4Backend bk, A4HealthCheck hlt) {
+  public static A4BackendState stateOfTcp(String serverId, A4Backend bk, A4HealthCheck hlt) {
     try (var socket = new Socket()) {
       socket.connect(new InetSocketAddress(bk.addr.host, bk.addr.port), hlt.timeoutMs);
-      return A4Backend.State.Up;
+      return A4BackendState.Up;
     } catch (Exception e) {
-      if (log.isDebugEnabled()) {
-        log.debug("{} - {} - host down (tcp)", serverId, bk, e);
-      } else {
-        log.warn("{} - {} - host down (tcp) - {}", serverId, bk.addr, A4Exceptions.messageFor(e));
-      }
-      return A4Backend.State.Down;
+      onError(log, "{} - {} - host down (tcp)", e, serverId, bk);
+      return A4BackendState.Down;
     }
   }
 
-  public static A4Backend.State stateOf(String serverId, A4Backend bk, A4HealthCheck hlt) {
+  public static A4BackendState stateOf(String serverId, A4Backend bk, A4HealthCheck hlt) {
     var state = hlt.exec != null
         ? stateOfExec(serverId, bk, hlt)
         : stateOfTcp(serverId, bk, hlt);
-    if (log.isTraceEnabled()) {
-      log.trace("{} - backend state ({}): {} -> {}", serverId, hlt.exec != null ? "exec" : "tcp", bk, state);
+    if (bk.state != state) {
+      log.info("{} - backend state ({}): {} -> {}", serverId, hlt.exec != null ? "exec" : "tcp", bk, state);
     }
     return state;
   }

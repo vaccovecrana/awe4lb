@@ -1,4 +1,8 @@
-plugins { id("io.vacco.oss.gitflow") version "0.9.8" }
+plugins { id("io.vacco.oss.gitflow") }
+
+configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
+  sharedLibrary(true, false)
+}
 
 val api by configurations
 

@@ -1,16 +1,20 @@
 import com.github.gradle.node.npm.task.NpmTask
 
 plugins {
-  id("io.vacco.oss.gitflow") version "0.9.8"
-  id("io.vacco.ronove") version "1.2.3"
+  id("io.vacco.oss.gitflow")
+  id("io.vacco.ronove") version "1.2.6"
   id("com.github.node-gradle.node") version "7.0.1"
+}
+
+configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
+  sharedLibrary(true, false)
 }
 
 val api by configurations
 
 dependencies {
   api(project(":a4-core"))
-  api("io.vacco.ronove:rv-kit-murmux:1.2.3_2.2.2")
+  api("io.vacco.ronove:rv-kit-murmux:1.2.6_2.2.5")
 }
 
 configure<io.vacco.ronove.plugin.RvPluginExtension> {

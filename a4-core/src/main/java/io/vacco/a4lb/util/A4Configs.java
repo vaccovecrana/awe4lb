@@ -36,10 +36,10 @@ public class A4Configs {
           m.pool = new A4Pool();
         }
         if (m.pool.hosts == null) {
-          m.pool.hosts = new ArrayList<>();
+          m.pool.hosts(new ArrayList<>());
         }
         for (var bk : m.pool.hosts) {
-          bk.state = A4Backend.State.Unknown;
+          bk.state(A4BackendState.Unknown);
         }
       }
     }
@@ -68,7 +68,7 @@ public class A4Configs {
     for (var srv : cfg0.servers) {
       for (var m : allMatchesOf(srv)) {
         if (m.discover != null) {
-          m.pool.hosts = null;
+          m.pool.clear();
           if (m.pool.type == null) {
             m.pool = null;
           }
@@ -80,7 +80,7 @@ public class A4Configs {
         }
         if (m.pool != null && m.pool.hosts != null) {
           for (var bk : m.pool.hosts) {
-            bk.state = null;
+            bk.state(null);
           }
         }
         if (m.healthCheck != null

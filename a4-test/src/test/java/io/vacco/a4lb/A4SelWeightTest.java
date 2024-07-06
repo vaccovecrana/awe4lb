@@ -1,14 +1,11 @@
 package io.vacco.a4lb;
 
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.sel.A4BackendState;
-import io.vacco.a4lb.sel.A4PoolState;
-import io.vacco.a4lb.sel.A4SelWeight;
+import io.vacco.a4lb.sel.*;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
 
-import java.util.HashMap;
 import java.util.List;
 
 import static j8spec.J8Spec.*;
@@ -19,11 +16,11 @@ import static org.junit.Assert.*;
 public class A4SelWeightTest {
   static {
     it("Performs weighted random backend selection", () -> {
-      var bk0 = new A4Backend().addr(new A4Sock().host("bk00")).weight(1).priority(0).state(A4Backend.State.Up);
-      var bk1 = new A4Backend().addr(new A4Sock().host("bk01")).weight(1).priority(0).state(A4Backend.State.Up);
+      var bk0 = new A4Backend().addr(new A4Sock().host("bk00")).weight(1).priority(0).state(A4BackendState.Up);
+      var bk1 = new A4Backend().addr(new A4Sock().host("bk01")).weight(1).priority(0).state(A4BackendState.Up);
       var backends = List.of(bk0, bk1);
       var pool = new A4Pool().hosts(backends);
-      var ps = new A4PoolState();
+      var ps = new A4PoolContext();
 
       // Perform weighted random selection multiple times
       int host1Count = 0;

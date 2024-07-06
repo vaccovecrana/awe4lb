@@ -2,7 +2,7 @@ services:
   momo-discover-json-00:
     image: vacco/http-echo
     build: http-echo
-    command: '-text="[{\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4000}}, {\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4001}}, {\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4002}}]"'
+    command: '-text="{\"hosts\": [{\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4000}}, {\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4001}}, {\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4002}}]}"'
     ports: ["4010:5678"]
   momo-discover-txt-00:
     image: vacco/http-echo

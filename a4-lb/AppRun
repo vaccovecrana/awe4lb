@@ -1,3 +1,0 @@
-#!/bin/sh
-
-$APPDIR/jre/bin/java -cp "$APPDIR/lib/*" io.vacco.a4lb.A4LbMain $@

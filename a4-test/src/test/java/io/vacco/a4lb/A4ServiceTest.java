@@ -90,14 +90,21 @@ public class A4ServiceTest {
   }
 
   static {
+    beforeEach(() -> {
+      if (log != null) {
+        log.info("==========================================");
+      }
+    });
+
     it("Initializes the Load Balancer context", () -> {
       var fl = A4Options.from(new String[] {
-          flagOf(kLogLevel, "debug"),
+          flagOf(kLogLevel, "info"),
           flagOf(kConfig, "./src/test/resources")
       });
       ctx.init(fl);
       log = LoggerFactory.getLogger(A4ServiceTest.class);
-      Thread.sleep(5000); // Integer.MAX_VALUE
+      Thread.sleep(5000);
+      // Thread.sleep(Integer.MAX_VALUE);
     });
 
     it("Attempts to add an invalid configuration", () -> {

@@ -1,6 +1,7 @@
 package io.vacco.a4lb.udp;
 
 import io.vacco.a4lb.cfg.A4Server;
+import io.vacco.a4lb.impl.A4Srv;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.*;
 import org.slf4j.*;
@@ -9,11 +10,10 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.Callable;
 
-import static io.vacco.a4lb.util.A4Exceptions.messageFor;
+import static io.vacco.a4lb.util.A4Logging.onError;
 
-public class A4UdpSrv implements Callable<Void>, Closeable {
+public class A4UdpSrv implements A4Srv {
 
   public static final Logger log = LoggerFactory.getLogger(A4UdpSrv.class);
 
@@ -73,11 +73,7 @@ public class A4UdpSrv implements Callable<Void>, Closeable {
           A4Io.sessionMismatch(key);
         }
       } catch (Exception e) {
-        if (log.isDebugEnabled()) {
-          log.debug("{} - UDP update error - {}", srvConfig.id, messageFor(e));
-        } else if (log.isTraceEnabled()) {
-          log.trace("{} - UDP update error", srvConfig.id, e);
-        }
+        onError(log, "{} - UDP update error", e, srvConfig.id);
       }
     });
   }

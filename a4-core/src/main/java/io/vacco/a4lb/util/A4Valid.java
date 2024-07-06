@@ -3,12 +3,14 @@ package io.vacco.a4lb.util;
 import am.ik.yavi.builder.ValidatorBuilder;
 import am.ik.yavi.constraint.*;
 import am.ik.yavi.constraint.base.ContainerConstraintBase;
-import am.ik.yavi.core.Constraint;
-import am.ik.yavi.core.ConstraintViolations;
-import am.ik.yavi.core.Validator;
+import am.ik.yavi.core.*;
 import io.vacco.a4lb.cfg.*;
+import java.net.*;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static am.ik.yavi.core.NullAs.VALID;
+import static am.ik.yavi.core.ViolationMessage.Default.CHAR_SEQUENCE_URL;
 
 public class A4Valid {
 
@@ -26,6 +28,19 @@ public class A4Valid {
 
   public static boolean allNoNullLtEq(int ltEq, Object ... vals) {
     return Arrays.stream(vals).filter(Objects::nonNull).count() <= ltEq;
+  }
+
+  public static <T> CharSequenceConstraint<T, String> uri(CharSequenceConstraint<T, String> c) {
+    c.predicates().add(ConstraintPredicate.of(x -> {
+      try {
+        new URI(x);
+        return true;
+      }
+      catch (URISyntaxException e) {
+        return false;
+      }
+    }, CHAR_SEQUENCE_URL, () -> new Object[] {}, VALID));
+    return c;
   }
 
   private static final Validator<A4HealthExec> A4HealthExecVld = ValidatorBuilder.<A4HealthExec>of()
@@ -103,7 +118,7 @@ public class A4Valid {
 
   private static final Validator<A4DiscHttp> A4DiscHttpVld = ValidatorBuilder.<A4DiscHttp>of()
       ._object(h -> h.format, "format", Constraint::notNull)
-      ._string(h -> h.endpoint, "endpoint", c -> nnNeNb(c).url())
+      ._string(h -> h.endpoint, "endpoint", c -> uri(nnNeNb(c)))
       .build();
 
   private static final Validator<A4DiscExec> A4DiscExecVld = ValidatorBuilder.<A4DiscExec>of()
@@ -141,6 +156,22 @@ public class A4Valid {
       .forEach(A4Pool::hostList, "hosts", A4BackendVld)
       .build();
 
+  private static boolean discoverIntervalGreaterThanHealthCheckInterval(A4Match m) {
+    var test = m.discover != null
+      && m.discover.intervalMs != null
+      && m.healthCheck != null
+      && m.healthCheck.intervalMs != null;
+    return test;
+  }
+
+  private static boolean onlyOneOfDiscoverOrPoolHosts(A4Match m) {
+    var test = m.discover != null
+      && m.pool != null
+      && m.pool.hosts != null
+      && !m.pool.hosts.isEmpty();
+    return !test;
+  }
+
   private static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
       .constraintOnCondition(
           (m, cg) -> m.and != null,
@@ -154,14 +185,16 @@ public class A4Valid {
           "\"{0}\" only one of [and, or] allowed"
       )
       .constraintOnCondition(
-          (m, cg) ->
-              m.discover != null && m.discover.intervalMs != null
-                  && m.healthCheck != null && m.healthCheck.intervalMs != null,
+          (m, cg) -> discoverIntervalGreaterThanHealthCheckInterval(m),
           b -> b.constraintOnTarget(
             m -> m.discover.intervalMs > m.healthCheck.intervalMs, "intervalMs",
               "discover.intervalMs.isGreaterThan.healthCheck.intervalMs",
               "\"{0}\" \"discover.intervalMs\" must be greater than \"healthCheck.intervalMs\""
           )
+      )
+      .constraintOnTarget(
+        A4Valid::onlyOneOfDiscoverOrPoolHosts, "oneOf", "oneOf",
+        "\"{0}\" only one of [discover, pool.hosts] allowed"
       )
       .constraintOnCondition(
           (m, cg) -> m.discover == null,
@@ -189,6 +222,8 @@ public class A4Valid {
   private static final Validator<A4Udp> A4UdpVld = ValidatorBuilder.<A4Udp>of()
       ._integer(u -> u.bufferSize, "bufferSize", A4Valid::gtZero)
       .build();
+
+  // TODO verify that all server matches (label ids) are unique
 
   private static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
       ._string(s -> s.id, "id", A4Valid::nnNeNb)
@@ -223,6 +258,8 @@ public class A4Valid {
               )
       )
       .build();
+
+  // TODO verify that all server names are unique (to keep health check/discovery tasks consistent)
 
   private static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
       ._string(c -> c.id, "id", A4Valid::nnNeNb)

@@ -10,6 +10,11 @@ import io.vacco.ronove.murmux.RvMxAdapter;
 import org.slf4j.*;
 import java.io.*;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+
+import static java.lang.String.format;
+import static java.lang.Integer.toHexString;
+import static io.vacco.a4lb.util.A4Logging.onError;
 
 public class A4Api implements Closeable {
 
@@ -20,15 +25,16 @@ public class A4Api implements Closeable {
 
   public A4Api(File configRoot, A4Service service, A4Options fl, Gson g) {
     this.fl = Objects.requireNonNull(fl);
-    this.mx = new Murmux(fl.api.host);
+    this.mx = new Murmux(
+      fl.api.host,
+      Executors.newCachedThreadPool(
+        r -> new Thread(r, format("a4lb-api-%s", toHexString(r.hashCode())))
+      )
+    );
     var apiHdl = new A4ApiHdl(configRoot, service, g);
     var uiHdl = new A4UiHdl();
     var rpc = new RvMxAdapter<>(apiHdl, (xc, e) -> {
-      if (log.isDebugEnabled()) {
-        log.debug("ui - request handling error", e);
-      } else {
-        log.warn("ui - request handling error {}", e.getMessage());
-      }
+      onError(log, "ui - request handling error - {}", e, xc.getPath());
       xc.withStatus(MxStatus._500);
       xc.commit();
     }, g::fromJson, g::toJson).build();

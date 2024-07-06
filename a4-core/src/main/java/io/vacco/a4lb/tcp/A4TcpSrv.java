@@ -1,19 +1,21 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Server;
+import io.vacco.a4lb.impl.A4Srv;
 import io.vacco.a4lb.niossl.*;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.A4Io;
 import org.slf4j.*;
 import javax.net.ssl.SSLContext;
-import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class A4TcpSrv implements Callable<Void>, Closeable {
+import static java.lang.String.format;
+
+public class A4TcpSrv implements A4Srv {
 
   public static final Logger log = LoggerFactory.getLogger(A4TcpSrv.class);
 
@@ -25,7 +27,7 @@ public class A4TcpSrv implements Callable<Void>, Closeable {
   private final A4Server srvConfig;
   private final A4Selector bkSel;
 
-  public A4TcpSrv(Selector selector, A4Server srv, A4Selector bkSel, ExecutorService tlsExec) {
+  public A4TcpSrv(Selector selector, A4Server srv, A4Selector bkSel) {
     try {
       this.selector = Objects.requireNonNull(selector);
       this.channel = ServerSocketChannel.open();
@@ -37,7 +39,7 @@ public class A4TcpSrv implements Callable<Void>, Closeable {
       if (srv.tls != null) {
         log.info("{} - initializing SSL context", srv.id);
         this.sslContext = SSLCertificates.contextFrom(srv.tls);
-        this.tlsExec = Objects.requireNonNull(tlsExec);
+        this.tlsExec = Executors.newCachedThreadPool(r -> new Thread(r, format("%s-tls", srv.id)));
       } else {
         this.sslContext = null;
         this.tlsExec = null;
@@ -96,6 +98,9 @@ public class A4TcpSrv implements Callable<Void>, Closeable {
   }
 
   @Override public void close() {
+    if (this.tlsExec != null) {
+      this.tlsExec.shutdownNow();
+    }
     A4Io.close(channel);
     A4Io.close(selector);
     log.info("{} - {} - TCP ingress closed", srvConfig.id, this.channel.socket());

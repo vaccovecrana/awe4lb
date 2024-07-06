@@ -78,14 +78,14 @@ public class A4Io {
     throw new IllegalStateException("key/session mismatch " + key);
   }
 
-  public static InputStream openStream(URL url, int timeoutMs) throws IOException {
-    var conn = url.openConnection();
+  public static InputStream openStream(URI uri, int timeoutMs) throws IOException {
+    var conn = uri.toURL().openConnection();
     conn.setConnectTimeout(timeoutMs);
     conn.setReadTimeout(timeoutMs);
     return conn.getInputStream();
   }
 
-  public static String loadContent(URL u, int timeoutMs) {
+  public static String loadContent(URI u, int timeoutMs) {
     try (var in = openStream(u, timeoutMs)) {
       var reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
       return reader.lines().collect(Collectors.joining(System.lineSeparator()));

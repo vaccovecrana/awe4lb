@@ -1,11 +1,11 @@
 import * as React from "preact/compat"
-import { A4Backend, A4Disc, A4Format, A4Match, State } from "@a4ui/rpc"
+import { A4Backend, A4Disc, A4Format, A4Match, A4BackendState } from "@a4ui/rpc"
 import { matchLabel } from "@a4ui/util"
 
 interface A4McProps { match: A4Match }
 
 const renderBkState = (bk: A4Backend) => {
-  const clazz = bk.state === State.Up ? "pill pill-green" : "pill pill-red"
+  const clazz = bk.state === A4BackendState.Up ? "pill pill-green" : "pill pill-red"
   return <span class={clazz}>{bk.state}</span>
 }
 

@@ -13,18 +13,18 @@ public class A4Pool {
   public List<A4Backend> hosts;
   public Boolean openTls;
 
-  public A4Pool type(Type type) {
-    this.type = type;
-    return this;
-  }
-
   public A4Pool hosts(List<A4Backend> hosts) {
     this.hosts = new ArrayList<>(hosts);
     return this;
   }
 
   public A4Pool hosts(A4Backend ... hosts) {
-    return hosts(new ArrayList<>(Arrays.asList(hosts)));
+    return hosts(Arrays.asList(hosts));
+  }
+
+  public A4Pool clear() {
+    this.hosts = null;
+    return this;
   }
 
   public List<A4Backend> hostList() {
@@ -33,7 +33,7 @@ public class A4Pool {
 
   public List<A4Backend> upHosts() {
     return hosts.stream()
-        .filter(bk -> bk.state == A4Backend.State.Up)
+        .filter(bk -> bk.state == A4BackendState.Up)
         .collect(Collectors.toList());
   }
 

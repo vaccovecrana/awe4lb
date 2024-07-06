@@ -52,10 +52,18 @@ public class A4Match {
         .collect(Collectors.joining(String.format(" %s ", opLabel)));
   }
 
-  @Override public String toString() {
+  public String matchLabel() {
     return (and == null && or == null)
-        ? "any"
-        : toStringOp(and != null ? "and" : "or", and != null ? and : or);
+      ? "any"
+      : toStringOp(and != null ? "and" : "or", and != null ? and : or);
+  }
+
+  @Override public String toString() {
+    return matchLabel();
+  }
+
+  @Override public int hashCode() {
+    return matchLabel().hashCode();
   }
 
 }

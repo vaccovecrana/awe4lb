@@ -46,9 +46,7 @@ public class A4ValidTest {
               )
           );
       var constraints = A4Valid.validate(a4Cfg);
-      for (var cnt : constraints) {
-        System.out.println(cnt.message());
-      }
+      System.out.println(A4Valid.validationsOf(constraints));
     });
     it("Validates a JSON configuration", () -> {
       System.out.println("============================");

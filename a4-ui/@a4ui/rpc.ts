@@ -13,91 +13,40 @@ const doJsonIo = <I, O>(url: string, method: string, body: I,
   }
   headers.forEach((v, k) => options.headers[k] = v)
   return fetch(url, options)
-    .then(response => response.json())
-    .then(jData => Promise.resolve(jData as O))
+    .then(response => Promise
+      .resolve(response.json() as O)
+      .catch(cause => Promise.reject({ response, cause }))
+    )
 }
 
 /* ====================================== */
 /* ============= RPC types ============== */
 /* ====================================== */
 
-export interface A4Sock {
-  host: string;
-  port: number;
-  
-  
-}
-
-export interface A4StringOp {
-  equals: string;
-  contains: string;
-  startsWith: string;
-  endsWith: string;
-  
-  
-}
-
-export interface A4MatchOp {
-  sni: A4StringOp;
-  host: A4StringOp;
-  
-  
-}
-
-export const enum Type {
-  
-  roundRobin = "roundRobin",
-  leastConn = "leastConn",
-  ipHash = "ipHash",
-  weight = "weight",
-  
-}
-
-export const enum State {
-  
-  Up = "Up",
-  Down = "Down",
-  Unknown = "Unknown",
-  
-}
-
 export interface A4Backend {
   addr: A4Sock;
   weight: number;
   priority: number;
-  state: State;
-  
-  
+  state: A4BackendState;
 }
 
-export interface A4Pool {
-  type: Type;
-  hosts: A4Backend[];
-  openTls: boolean;
-  
-  
+export const enum A4BackendState {
+  Up = "Up",
+  Down = "Down",
+  Unknown = "Unknown",
 }
 
-export const enum A4Format {
-  
-  text = "text",
-  json = "json",
-  
+export interface A4Config {
+  Seed: number;
+  active: boolean;
+  id: string;
+  description: string;
+  servers: A4Server[];
 }
 
-export interface A4DiscHttp {
-  endpoint: string;
-  format: A4Format;
-  
-  
-}
-
-export interface A4DiscExec {
-  command: string;
-  args: string[];
-  format: A4Format;
-  
-  
+export interface A4ConfigState {
+  active: A4Config;
+  inactive: A4Config;
 }
 
 export interface A4Disc {
@@ -107,15 +56,22 @@ export interface A4Disc {
   exec: A4DiscExec;
   intervalMs: number;
   timeoutMs: number;
-  
-  
 }
 
-export interface A4HealthExec {
+export interface A4DiscExec {
   command: string;
   args: string[];
-  
-  
+  format: A4Format;
+}
+
+export interface A4DiscHttp {
+  endpoint: string;
+  format: A4Format;
+}
+
+export const enum A4Format {
+  text = "text",
+  json = "json",
 }
 
 export interface A4HealthCheck {
@@ -124,8 +80,11 @@ export interface A4HealthCheck {
   intervalMs: number;
   timeoutMs: number;
   exec: A4HealthExec;
-  
-  
+}
+
+export interface A4HealthExec {
+  command: string;
+  args: string[];
 }
 
 export interface A4Match {
@@ -134,25 +93,17 @@ export interface A4Match {
   pool: A4Pool;
   discover: A4Disc;
   healthCheck: A4HealthCheck;
-  
-  
 }
 
-export interface A4Tls {
-  certPath: string;
-  keyPath: string;
-  protocols: string[];
-  ciphers: string[];
-  
-  
+export interface A4MatchOp {
+  sni: A4StringOp;
+  host: A4StringOp;
 }
 
-export interface A4Udp {
-  bufferSize: number;
-  idleTimeoutMs: number;
-  maxSessions: number;
-  
-  
+export interface A4Pool {
+  type: Type;
+  hosts: A4Backend[];
+  openTls: boolean;
 }
 
 export interface A4Server {
@@ -161,25 +112,31 @@ export interface A4Server {
   match: A4Match[];
   tls: A4Tls;
   udp: A4Udp;
-  
-  
 }
 
-export interface A4Config {
-  Seed: number;
-  active: boolean;
-  id: string;
-  description: string;
-  servers: A4Server[];
-  
-  
+export interface A4Sock {
+  host: string;
+  port: number;
 }
 
-export interface A4ConfigState {
-  active: A4Config;
-  inactive: A4Config;
-  
-  
+export interface A4StringOp {
+  equals: string;
+  contains: string;
+  startsWith: string;
+  endsWith: string;
+}
+
+export interface A4Tls {
+  certPath: string;
+  keyPath: string;
+  protocols: string[];
+  ciphers: string[];
+}
+
+export interface A4Udp {
+  bufferSize: number;
+  idleTimeoutMs: number;
+  maxSessions: number;
 }
 
 export interface A4Validation {
@@ -188,8 +145,13 @@ export interface A4Validation {
   key: string;
   name: string;
   message: string;
-  
-  
+}
+
+export const enum Type {
+  roundRobin = "roundRobin",
+  leastConn = "leastConn",
+  ipHash = "ipHash",
+  weight = "weight",
 }
 
 
@@ -206,19 +168,12 @@ Source controllers:
 
 export const apiV1ConfigDelete = (configId: string): Promise<boolean> => {
   let path = "/api/v1/config"
-  
-  
-    const qParams = new URLSearchParams()
-    
-      qParams.append("configId", configId.toString())
-  
-    
-    path = `${path}?${qParams.toString()}`
-  
-  
-  
+  const qParams = new URLSearchParams()
+  if (configId) {
+    qParams.append("configId", configId.toString())
+  }
+  path = `${path}?${qParams.toString()}`
   return doJsonIo(path, "DELETE",
-    
       undefined
     ,
     new Map(),
@@ -228,19 +183,12 @@ export const apiV1ConfigDelete = (configId: string): Promise<boolean> => {
 
 export const apiV1ConfigGet = (configId: string): Promise<A4Config> => {
   let path = "/api/v1/config"
-  
-  
-    const qParams = new URLSearchParams()
-    
-      qParams.append("configId", configId.toString())
-  
-    
-    path = `${path}?${qParams.toString()}`
-  
-  
-  
+  const qParams = new URLSearchParams()
+  if (configId) {
+    qParams.append("configId", configId.toString())
+  }
+  path = `${path}?${qParams.toString()}`
   return doJsonIo(path, "GET",
-    
       undefined
     ,
     new Map(),
@@ -250,12 +198,7 @@ export const apiV1ConfigGet = (configId: string): Promise<A4Config> => {
 
 export const apiV1ConfigListGet = (): Promise<A4Config[]> => {
   let path = "/api/v1/config/list"
-  
-  
-  
-  
   return doJsonIo(path, "GET",
-    
       undefined
     ,
     new Map(),
@@ -265,19 +208,12 @@ export const apiV1ConfigListGet = (): Promise<A4Config[]> => {
 
 export const apiV1ConfigSelectGet = (configId: string): Promise<A4ConfigState> => {
   let path = "/api/v1/config/select"
-  
-  
-    const qParams = new URLSearchParams()
-    
-      qParams.append("configId", configId.toString())
-  
-    
-    path = `${path}?${qParams.toString()}`
-  
-  
-  
+  const qParams = new URLSearchParams()
+  if (configId) {
+    qParams.append("configId", configId.toString())
+  }
+  path = `${path}?${qParams.toString()}`
   return doJsonIo(path, "GET",
-    
       undefined
     ,
     new Map(),
@@ -287,23 +223,15 @@ export const apiV1ConfigSelectGet = (configId: string): Promise<A4ConfigState> =
 
 export const apiV1ConfigPost = (configId: string, arg1: A4Config): Promise<A4Validation[]> => {
   let path = "/api/v1/config"
-  
-  
-    const qParams = new URLSearchParams()
-    
-      qParams.append("configId", configId.toString())
-  
-    
-    path = `${path}?${qParams.toString()}`
-  
-  
-  
+  const qParams = new URLSearchParams()
+  if (configId) {
+    qParams.append("configId", configId.toString())
+  }
+  path = `${path}?${qParams.toString()}`
   return doJsonIo(path, "POST",
-    
       JSON.stringify(arg1)
     ,
     new Map(),
     undefined
   )
 }
-

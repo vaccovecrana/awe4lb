@@ -1,4 +1,4 @@
-plugins { id("io.vacco.oss.gitflow") version "0.9.8" apply(false) }
+plugins { id("io.vacco.oss.gitflow") version "1.0.1" apply(false) }
 
 subprojects {
   apply(plugin = "io.vacco.oss.gitflow")
@@ -7,7 +7,6 @@ subprojects {
 
   configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
     addClasspathHell()
-    sharedLibrary(true, false)
   }
 
   configure<io.vacco.cphell.ChPluginExtension> {

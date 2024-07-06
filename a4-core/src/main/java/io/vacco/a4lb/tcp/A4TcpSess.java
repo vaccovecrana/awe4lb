@@ -11,8 +11,8 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
+import static io.vacco.a4lb.util.A4Logging.*;
 import static io.vacco.a4lb.util.A4Io.*;
-import static io.vacco.a4lb.util.A4Exceptions.rootCauseOf;
 import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher {
@@ -65,7 +65,7 @@ public class A4TcpSess extends SNIMatcher {
     if (client != null) { client.close(); }
     if (backend != null) {
       backend.close();
-      bkSel.stateOf(backend.backend).trackConn(false);
+      bkSel.contextOf(backend.backend).trackConn(false);
     }
     cltQ.clear();
     bckQ.clear();
@@ -130,10 +130,10 @@ public class A4TcpSess extends SNIMatcher {
 
   private void syncOps(SelectionKey key, IOOp op, int bytes) {
     if (op == IOOp.Read && backend != null && key == backend.channelKey && bytes > 0) {
-      bkSel.stateOf(backend.backend).trackRxTx(false, bytes);
+      bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
     }
     if (op == IOOp.Write && backend != null && key == backend.channelKey && bytes > 0) {
-      bkSel.stateOf(backend.backend).trackRxTx(true, bytes);
+      bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
     }
     if (op == IOOp.Read && key == client.channelKey && bytes > 0 && backend == null) {
       initBackend(key);
@@ -198,7 +198,7 @@ public class A4TcpSess extends SNIMatcher {
         client.getRawChannel().socket(),
         backend.getRawChannel().socket()
     ).hashCode());
-    this.bkSel.stateOf(backend.backend).trackConn(true);
+    this.bkSel.contextOf(backend.backend).trackConn(true);
   }
 
   private void tcpUpdate(SelectionKey key) throws IOException {
