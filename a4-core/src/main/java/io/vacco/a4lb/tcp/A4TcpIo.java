@@ -7,7 +7,7 @@ import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 import static io.vacco.a4lb.util.A4Io.*;
@@ -15,19 +15,23 @@ import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
 
-  public final String         id;
-  public final SelectionKey   channelKey;
-  public final SocketChannel  channel;
+  public final String id;
+  public final SelectionKey channelKey;
+  public final SocketChannel channel;
 
-  public ByteBuffer buffer;
-  public A4Backend  backend;
+  private final Queue<ByteBuffer> bufferPool = new LinkedList<>();
+  public  final Queue<ByteBuffer> bufferQueue = new LinkedList<>();
+  private final int bufferSize;
+
+  public A4Backend backend;
 
   public A4TcpIo(SelectionKey channelKey, SocketChannel rawChannel) {
     try {
       this.channel = Objects.requireNonNull(rawChannel);
       this.channelKey = Objects.requireNonNull(channelKey);
       this.id = this.channel.socket().toString();
-      this.buffer = ByteBuffer.allocateDirect(rawChannel.socket().getReceiveBufferSize());
+      this.bufferSize = rawChannel.socket().getReceiveBufferSize();
+      allocateBuffer();
     } catch (Exception e) {
       throw new IllegalStateException("Client-Server channel initialization error - " + rawChannel.socket(), e);
     }
@@ -48,18 +52,52 @@ public class A4TcpIo implements Closeable {
       this.channel.configureBlocking(false);
       this.channelKey = chn.register(selector, SelectionKey.OP_READ);
       this.id = channel.socket().toString();
-      this.buffer = ByteBuffer.allocateDirect(chn.socket().getReceiveBufferSize());
+      this.bufferSize = chn.socket().getReceiveBufferSize();
+      allocateBuffer();
     } catch (Exception e) {
       throw new IllegalStateException("Server-Backend channel initialization error - " + dest, e);
     }
   }
 
+  private void allocateBuffer() {
+    bufferPool.offer(ByteBuffer.allocateDirect(bufferSize));
+  }
+
+  private ByteBuffer getBuffer() {
+    ByteBuffer buffer = bufferPool.poll();
+    if (buffer == null) {
+      buffer = ByteBuffer.allocateDirect(bufferSize);
+    } else {
+      buffer.clear();
+    }
+    return buffer;
+  }
+
   public int read() {
-    return eofRead(this.channel, this.buffer);
+    var buffer = getBuffer();
+    int bytesRead = eofRead(this.channel, buffer);
+    if (bytesRead > 0) {
+      bufferQueue.offer(buffer);
+    } else {
+      bufferPool.offer(buffer);
+    }
+    return bytesRead;
   }
 
   public int writeTo(ByteChannel channel) {
-    return eofWrite(channel, this.buffer);
+    int totalBytesWritten = 0;
+    while (!bufferQueue.isEmpty()) {
+      var buffer = bufferQueue.peek();
+      int bytesWritten = eofWrite(channel, buffer);
+      totalBytesWritten += bytesWritten;
+      if (!buffer.hasRemaining()) {
+        bufferQueue.poll();
+        bufferPool.offer(buffer);
+      } else {
+        break;
+      }
+    }
+    return totalBytesWritten;
   }
 
   public A4TcpIo backend(A4Backend backend) {
@@ -69,8 +107,8 @@ public class A4TcpIo implements Closeable {
 
   public SocketChannel getRawChannel() {
     return channel instanceof SSLSocketChannel
-        ? ((SSLSocketChannel) channel).getWrappedSocketChannel()
-        : channel;
+      ? ((SSLSocketChannel) channel).getWrappedSocketChannel()
+      : channel;
   }
 
   @Override public void close() {
@@ -78,7 +116,8 @@ public class A4TcpIo implements Closeable {
     channelKey.cancel();
     A4Io.close(channel);
     this.backend = null;
-    this.buffer = null;
+    bufferPool.clear();
+    bufferQueue.clear();
   }
 
   @Override public String toString() {
@@ -88,14 +127,15 @@ public class A4TcpIo implements Closeable {
       ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
       : c.socket();
     return format(
-      "[%s, %08d, %02d, %02d, %s %s %s]",
+      "[%s, bq%03d, bp%03d, %02d, %02d, %s %s %s]",
       format("%s%s%s%s",
         k.isReadable() ? "r" : "",
         k.isWritable() ? "w" : "",
         k.isConnectable() ? "c" : "",
         k.isAcceptable() ? "a" : ""
       ),
-      buffer.remaining(),
+      bufferQueue.size(),
+      bufferPool.size(),
       k.interestOps(), k.readyOps(),
       sck.getLocalSocketAddress(),
       k.isReadable() ? "<--" : k.isWritable() ? "-->" : "<- ? ->",

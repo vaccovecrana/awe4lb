@@ -15,6 +15,8 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher {
 
+  public static final int MaxBackendBuffers = 10;
+
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
   public  A4TcpSrv owner;
@@ -33,12 +35,6 @@ public class A4TcpSess extends SNIMatcher {
     this.bkSel = Objects.requireNonNull(bkSel);
     this.tlsClient = tlsClient;
     this.tlsExec = tlsExec;
-  }
-
-  private void logState(Integer bytes) {
-    if (log.isDebugEnabled()) {
-      log.debug("{} - {}, cl{} bk{}", id, format("%06d", bytes), client, backend != null ? backend : "?");
-    }
   }
 
   private void tearDown(Exception e) {
@@ -94,6 +90,26 @@ public class A4TcpSess extends SNIMatcher {
       bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
    */
 
+  private String iv(boolean v) {
+    return v ? "1" : "0";
+  }
+
+  private String logOpBitsOf(boolean isCl, boolean isClRd, boolean isClWr,
+                             boolean isBk, boolean isBkRd, boolean isBkWr) {
+    return format(
+      "c: %s %s %s, b: %s %s %s",
+      iv(isCl), iv(isClRd), iv(isClWr),
+      iv(isBk), iv(isBkRd), iv(isBkWr)
+    );
+  }
+
+  private String logState(Integer bytes) {
+    return format(
+      "%s - %s cl%s bk%s",
+      id, format("%06d", bytes), client, backend != null ? backend : "?"
+    );
+  }
+
   private void tcpUpdate(SelectionKey key) {
     var isCl = client.channelKey == key;
     var isBk = backend != null && backend.channelKey == key;
@@ -107,13 +123,27 @@ public class A4TcpSess extends SNIMatcher {
       bytes = client.read();
     } else if (isClWr) {
       bytes = backend.writeTo(client.channel);
+      if (backend.channelKey.interestOps() == 0) {
+        if (log.isDebugEnabled()) {
+          log.debug("GO   {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+        }
+        backend.channelKey.interestOps(SelectionKey.OP_READ);
+      }
     } else if (isBkRd) {
       bytes = backend.read();
+      if (backend.bufferQueue.size() > MaxBackendBuffers) {
+        backend.channelKey.interestOps(0);
+        if (client.channelKey.interestOps() == SelectionKey.OP_READ) {
+          client.channelKey.interestOps(SelectionKey.OP_WRITE);
+        }
+        if (log.isDebugEnabled()) {
+          log.debug("STOP {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+        }
+        return;
+      }
     } else if (isBkWr) {
       bytes = client.writeTo(backend.channel);
     }
-
-    logState(bytes);
 
     if (bytes != null) {
       if (bytes > 0) {
