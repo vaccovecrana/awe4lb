@@ -10,6 +10,8 @@ import java.nio.channels.*;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
+import static io.vacco.a4lb.util.A4Io.*;
+
 import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
@@ -51,6 +53,14 @@ public class A4TcpIo implements Closeable {
     } catch (Exception e) {
       throw new IllegalStateException("Server-Backend channel initialization error - " + dest, e);
     }
+  }
+
+  public int read() {
+    return eofRead(this.channel, this.buffer);
+  }
+
+  public int writeTo(ByteChannel channel) {
+    return eofWrite(channel, this.buffer);
   }
 
   public A4TcpIo backend(A4Backend backend) {

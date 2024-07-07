@@ -94,23 +94,6 @@ public class A4TcpSess extends SNIMatcher {
       bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
    */
 
-  private int tcpRead(SelectionKey key) {
-    if (backend != null && backend.channelKey == key) {
-      return eofRead(backend.channel, backend.buffer);
-    }
-    return eofRead(client.channel, client.buffer);
-  }
-
-  private Integer tcpWrite(SelectionKey key) {
-    if (client.channelKey == key && backend != null) {
-      return eofWrite(client.channel, backend.buffer);
-    }
-    if (backend != null && backend.channelKey == key) {
-      return eofWrite(backend.channel, client.buffer);
-    }
-    return null; // wat??
-  }
-
   private void tcpUpdate(SelectionKey key) {
     var isCl = client.channelKey == key;
     var isBk = backend != null && backend.channelKey == key;
@@ -121,9 +104,9 @@ public class A4TcpSess extends SNIMatcher {
     var bytes = (Integer) null;
 
     if (key.isReadable()) {
-      bytes = tcpRead(key);
-    } else {
-      bytes = tcpWrite(key);
+      bytes = isCl ? client.read() : backend.read();
+    } else if (key.isWritable()) {
+      bytes = isCl ? backend.writeTo(client.channel) : client.writeTo(backend.channel);
     }
 
     logState(bytes, isCl ? client : backend);
