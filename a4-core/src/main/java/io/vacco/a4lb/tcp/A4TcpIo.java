@@ -127,7 +127,7 @@ public class A4TcpIo implements Closeable {
       ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
       : c.socket();
     return format(
-      "[%s, bq%03d, bp%03d, %02d, %02d, %s %s %s]",
+      "[%s, bq%02d, bp%02d, %02d, %02d, %s %s %s]",
       format("%s%s%s%s",
         k.isReadable() ? "r" : "",
         k.isWritable() ? "w" : "",
@@ -138,7 +138,7 @@ public class A4TcpIo implements Closeable {
       bufferPool.size(),
       k.interestOps(), k.readyOps(),
       sck.getLocalSocketAddress(),
-      k.isReadable() ? "<--" : k.isWritable() ? "-->" : "<- ? ->",
+      k.isReadable() ? "<-" : k.isWritable() ? "->" : "<- ? ->",
       sck.getRemoteSocketAddress()
     );
   }

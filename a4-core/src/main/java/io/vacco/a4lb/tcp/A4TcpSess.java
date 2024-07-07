@@ -112,8 +112,13 @@ public class A4TcpSess extends SNIMatcher {
     var isBkRd = key.isReadable() && isBk;
     var isBkWr = key.isWritable() && isBk;
     var bytes = (Integer) null;
+    var doLog = true;
 
     if (isClRd) {
+      // TODO
+      //   I have the slight suspicion that a similar stop/go mechanism will be needed
+      //   for load balancing scenarios where the client is uploading data quickly
+      //   (i.e. file uploads). But I'll have to find a real use case need to implement this.
       bytes = client.read();
     } else if (isClWr) {
       bytes = backend.writeTo(client.channel);
@@ -122,6 +127,7 @@ public class A4TcpSess extends SNIMatcher {
           log.debug("GO   {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
         }
         backend.channelKey.interestOps(SelectionKey.OP_READ);
+        doLog = false;
       }
     } else if (isBkRd) {
       bytes = backend.read();
@@ -139,6 +145,10 @@ public class A4TcpSess extends SNIMatcher {
     } else if (isBkWr) {
       bytes = client.writeTo(backend.channel);
       bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
+    }
+
+    if (doLog && log.isDebugEnabled()) {
+      log.debug(logState(bytes));
     }
 
     if (bytes != null) {
