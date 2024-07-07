@@ -84,12 +84,6 @@ public class A4TcpSess extends SNIMatcher {
     return false;
   }
 
-  /*
-    TODO
-      bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
-      bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
-   */
-
   private String iv(boolean v) {
     return v ? "1" : "0";
   }
@@ -141,8 +135,10 @@ public class A4TcpSess extends SNIMatcher {
         }
         return;
       }
+      bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
     } else if (isBkWr) {
       bytes = client.writeTo(backend.channel);
+      bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
     }
 
     if (bytes != null) {
