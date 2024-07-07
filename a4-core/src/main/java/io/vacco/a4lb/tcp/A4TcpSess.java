@@ -2,11 +2,9 @@ package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.niossl.*;
 import io.vacco.a4lb.sel.A4Selector;
+import io.vacco.a4lb.util.A4Io;
 import org.slf4j.*;
 import javax.net.ssl.*;
-import java.io.IOException;
-import java.net.SocketException;
-import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -16,8 +14,6 @@ import static io.vacco.a4lb.util.A4Io.*;
 import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher {
-
-  public enum IOOp { Read, Write }
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
@@ -31,12 +27,6 @@ public class A4TcpSess extends SNIMatcher {
   private final ExecutorService tlsExec;
   private final boolean tlsClient;
 
-  private final Queue<ByteBuffer> cltQ = new ArrayDeque<>();
-  private final Queue<ByteBuffer> bckQ = new ArrayDeque<>();
-
-  private static final int POOL_SIZE = 2048; // TODO should this be configurable?
-  private static final Queue<ByteBuffer> bufferPool = new LinkedBlockingQueue<>(POOL_SIZE);
-
   public A4TcpSess(A4TcpSrv owner, A4Selector bkSel, boolean tlsClient, ExecutorService tlsExec) {
     super(0);
     this.owner = Objects.requireNonNull(owner);
@@ -45,156 +35,47 @@ public class A4TcpSess extends SNIMatcher {
     this.tlsExec = tlsExec;
   }
 
-  private void tearDown(Exception e) {
-    if (e != null) {
-      var x = rootCauseOf(e);
-      if (log.isDebugEnabled()) {
-        log.debug("!! [{}, {}] {} - {} - {}",
-          client != null ? client.id : "?",
-          backend != null ? backend.id : "?",
-          e.getClass().getSimpleName(), x.getClass().getSimpleName(),
-          e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
-        );
-      } else if (log.isTraceEnabled()) {
-        log.trace("!! [{}, {}] {} - {} - {}",
-          client != null ? client.id : "?",
-          backend != null ? backend.id : "?",
-          e.getClass().getSimpleName(), x.getClass().getSimpleName(),
-          e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage()),
-          x
-        );
-      }
+  private void logState(Integer bytes, A4TcpIo io) {
+    if (log.isDebugEnabled()) {
+      log.debug("{} - {}, {}", id, bytes, io);
     }
-    if (client != null) { client.close(); }
+  }
+
+  private void tearDown(Exception e) {
+    if (e != null && log.isDebugEnabled()) {
+      var x = rootCauseOf(e);
+      log.debug(format("!! [%s, %s] - %s - %s - %s",
+        client != null ? client.id : "?",
+        backend != null ? backend.id : "?",
+        e.getClass().getSimpleName(), x.getClass().getSimpleName(),
+        e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
+      ));
+    }
+    A4Io.close(client);
+    A4Io.close(backend);
     if (backend != null) {
-      backend.close();
       bkSel.contextOf(backend.backend).trackConn(false);
     }
-    cltQ.clear();
-    bckQ.clear();
     this.owner = null;
     if (log.isDebugEnabled()) {
       log.debug("------------------------------");
     }
   }
 
-  private void logState(int bytes, ByteChannel c, IOOp op) {
-    if (log.isDebugEnabled() && bytes != 0) {
-      var sck = c instanceof SSLSocketChannel
-        ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
-        : ((SocketChannel) c).socket();
-      log.debug("{}: {} (i/o: {}), c[{},{},{}] b[{},{},{}] {} {} {}",
-        this.id != null ? id : '?',
-        op == IOOp.Read ? 'r' : 'w',
-        format("%06d", bytes),
-        format("%02d", client.channelKey.interestOps()),
-        format("%02d", client.channelKey.readyOps()),
-        format("%02d", cltQ.size()),
-        backend != null ? format("%02d", backend.channelKey.interestOps()) : "?",
-        backend != null ? format("%02d", backend.channelKey.readyOps()) : "?",
-        format("%02d", bckQ.size()),
-        sck.getLocalSocketAddress(),
-        op == IOOp.Read ? "<<" : ">>",
-        sck.getRemoteSocketAddress()
-      );
-    }
-  }
-
-  private ByteBuffer acquireBuffer(int bufferSize) {
-    var buffer = bufferPool.poll();
-    if (buffer == null) {
-      buffer = ByteBuffer.allocateDirect(bufferSize);
-    } else {
-      buffer.clear();
-    }
-    return buffer;
-  }
-
-  private void releaseBuffer(ByteBuffer buffer) {
-    if (bufferPool.size() < POOL_SIZE) {
-      bufferPool.offer(buffer);
-    }
-  }
-
-  private int doTcpRead(String channelId, ByteChannel from, Queue<ByteBuffer> target, int bufferSize) {
-    var bb = acquireBuffer(bufferSize);
-    var bytes = eofRead(channelId, from, bb);
-    logState(bytes, from, IOOp.Read);
-    if (bytes > 0) {
-      target.add(bb);
-    } else {
-      releaseBuffer(bb);
-    }
-    return bytes;
-  }
-
-  private int doTcpWrite(ByteChannel to, Queue<ByteBuffer> source) throws IOException {
-    var bb = source.peek();
-    if (bb != null) {
-      var bytes = to.write(bb);
-      logState(bytes, to, IOOp.Write);
-      if (!bb.hasRemaining()) {
-        source.remove();
-        releaseBuffer(bb);
-      }
-      return bytes;
-    }
-    throw new IllegalStateException(to + " - no data available for writing");
-  }
-
-  private void updateQueue(Queue<ByteBuffer> q, SelectionKey k) {
-    if (!q.isEmpty()) {
-      k.interestOps(SelectionKey.OP_WRITE);
-    } else if (k.interestOps() != 0) {
-      k.interestOps(SelectionKey.OP_READ);
-    }
-  }
-
-  private void syncOps(SelectionKey key, IOOp op, int bytes) {
-    if (op == IOOp.Read && backend != null && key == backend.channelKey && bytes > 0) {
-      bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
-    }
-    if (op == IOOp.Write && backend != null && key == backend.channelKey && bytes > 0) {
-      bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
-    }
-    if (bytes == -1) {
-      if (client.channelKey == key) {
-        client.channelKey.interestOps(0);
-      } else if (backend != null && backend.channelKey == key) {
-        backend.channelKey.interestOps(0);
-      }
+  private void initBackend() {
+    if (this.backend != null) {
       return;
     }
-    updateQueue(cltQ, client.channelKey);
-    if (backend != null) {
-      updateQueue(bckQ, backend.channelKey);
+    if (tlsClient && tlsSni == null) {
+      return;
     }
-  }
-
-  private void onTcpRead(SelectionKey key) throws SocketException {
-    var bytes = -1;
-    if (key == client.channelKey) {
-      int rcv = client.channel.socket().getReceiveBufferSize();
-      bytes = doTcpRead(client.id, client.channel, bckQ, rcv); // reverse targets, this is intentional
-    } else if (key == backend.channelKey) {
-      int rcv = backend.channel.socket().getReceiveBufferSize();
-      bytes = doTcpRead(backend.id, backend.channel, cltQ, rcv);
-    } else {
-      sessionMismatch(key);
-    }
-    syncOps(key, IOOp.Read, bytes);
-  }
-
-  private void onTcpWrite(SelectionKey key) throws IOException {
-    int bytes = -1;
-    if (key == client.channelKey) {
-      bytes = doTcpWrite(client.channel, cltQ);
-    } else if (key == backend.channelKey) {
-      bytes = doTcpWrite(backend.channel, bckQ);
-    } else {
-      sessionMismatch(key);
-    }
-    syncOps(key, IOOp.Write, bytes);
+    this.backend = bkSel.assign(client.channelKey.selector(), client.channel, tlsSni, tlsExec);
+    this.backend.channelKey.attach(this);
+    this.id = format("%x", format("%s-%s",
+      client.getRawChannel().socket(),
+      backend.getRawChannel().socket()
+    ).hashCode());
+    this.bkSel.contextOf(backend.backend).trackConn(true);
   }
 
   @Override public boolean matches(SNIServerName sn) {
@@ -207,49 +88,88 @@ public class A4TcpSess extends SNIMatcher {
     return false;
   }
 
-  protected void initBackend(SelectionKey key) {
-    if (tlsClient && tlsSni == null) {
-      return;
+  /*
+    TODO
+      bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
+      bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
+   */
+
+  private int tcpRead(SelectionKey key) {
+    if (backend != null && backend.channelKey == key) {
+      return eofRead(backend.channel, backend.buffer);
     }
-    this.backend = bkSel.assign(key.selector(), client.channel, tlsSni, tlsExec);
-    this.backend.channelKey.attach(this);
-    this.id = format("%x", format("%s-%s",
-      client.getRawChannel().socket(),
-      backend.getRawChannel().socket()
-    ).hashCode());
-    this.bkSel.contextOf(backend.backend).trackConn(true);
+    return eofRead(client.channel, client.buffer);
   }
 
-  private void tcpUpdate(SelectionKey key) throws IOException {
-    if (key.isReadable()) {
-      onTcpRead(key);
-    } else if (key.isWritable()) {
-      onTcpWrite(key);
-    } else {
-      throw new IllegalStateException(((SocketChannel) key.channel()).socket() + " - Unexpected channel key state");
+  private Integer tcpWrite(SelectionKey key) {
+    if (client.channelKey == key && backend != null) {
+      return eofWrite(client.channel, backend.buffer);
     }
-    if (client.channelKey.interestOps() == 0 && backend != null && backend.channelKey.interestOps() == 0) {
-      tearDown(null);
-    } else if (client.channelKey.interestOps() == 0 && cltQ.isEmpty()) {
-      tearDown(null);
+    if (backend != null && backend.channelKey == key) {
+      return eofWrite(backend.channel, client.buffer);
+    }
+    return null; // wat??
+  }
+
+  private void tcpUpdate(SelectionKey key) {
+    var isCl = client.channelKey == key;
+    var isBk = backend != null && backend.channelKey == key;
+    var isClRd = key.isReadable() && isCl;
+    var isClWr = key.isWritable() && isCl;
+    var isBkRd = key.isReadable() && isBk;
+    var isBkWr = key.isWritable() && isBk;
+    var bytes = (Integer) null;
+
+    if (key.isReadable()) {
+      bytes = tcpRead(key);
+    } else {
+      bytes = tcpWrite(key);
+    }
+
+    logState(bytes, isCl ? client : backend);
+
+    if (bytes != null) {
+      if (bytes > 0) {
+        if (isBkRd) {
+          client.channelKey.interestOps(SelectionKey.OP_WRITE);
+        }
+        if (isBkWr) {
+          backend.channelKey.interestOps(SelectionKey.OP_READ);
+        }
+        if (isClRd && backend != null) {
+          backend.channelKey.interestOps(SelectionKey.OP_WRITE);
+        }
+        if (isClWr) {
+          client.channelKey.interestOps(SelectionKey.OP_READ);
+        }
+      } else if (bytes == 0 && tlsClient) {
+        initBackend();
+      } else if (bytes == -1) {
+        tearDown(null);
+      }
     }
   }
 
   public void update(SelectionKey key) {
     try {
+      if (key.isAcceptable()) {
+        initBackend();
+        return;
+      }
       if (key.attachment() == this) {
         tcpUpdate(key);
-      } else {
-        sessionMismatch(key);
+        return;
       }
+      sessionMismatch(key);
     } catch (Exception e) {
       tearDown(e);
     }
   }
 
-  public void setClient(A4TcpIo client) {
+  public A4TcpSess withClient(A4TcpIo client) {
     this.client = Objects.requireNonNull(client);
     this.client.channelKey.attach(this);
+    return this;
   }
 
   /*

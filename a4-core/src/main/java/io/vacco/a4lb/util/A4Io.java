@@ -28,20 +28,29 @@ public class A4Io {
     }
   }
 
-  public static int eofRead(String channelId, ByteChannel sc, ByteBuffer bb) {
+  public static int eofRead(ByteChannel c, ByteBuffer bb) {
     try {
       bb.clear();
-      int bytesRead = sc.read(bb);
+      int bytesRead = c.read(bb);
       if (bytesRead == -1) {
         if (log.isDebugEnabled()) {
-          log.debug("{} - channel EOF", channelId);
+          log.debug("{} - channel EOF", c);
         }
       } else if (bytesRead > 0) {
         bb.flip();
       }
       return bytesRead;
     } catch (IOException ioe) {
-      var msg = String.format("Unable to read data from channel %s", channelId);
+      var msg = String.format("Unable to read data from channel %s", c);
+      throw new IllegalStateException(msg, ioe);
+    }
+  }
+
+  public static int eofWrite(ByteChannel c, ByteBuffer bb) {
+    try {
+      return c.write(bb);
+    } catch (IOException ioe) {
+      var msg = String.format("Unable to write data to channel %s", c);
       throw new IllegalStateException(msg, ioe);
     }
   }
@@ -68,7 +77,7 @@ public class A4Io {
             log.trace("{} - Invalid key state", key);
           }
         } catch (Exception e) {
-          log.error("Unhandled key processing error. Discarding. - {}", key, e);
+          log.error("Unhandled key processing error. Closing. - {}", key, e);
           key.cancel();
         }
       }

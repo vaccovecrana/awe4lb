@@ -51,7 +51,7 @@ public class A4TcpSrv implements A4Srv {
     }
   }
 
-  private void initSession() {
+  private A4TcpSess initSession() {
     SocketChannel clientChannel = null;
     SelectionKey clientKey;
     try {
@@ -69,32 +69,31 @@ public class A4TcpSrv implements A4Srv {
         clientChannel.configureBlocking(false);
         clientKey = clientChannel.register(selector, SelectionKey.OP_READ);
       }
-      sess.setClient(new A4TcpIo(clientKey, clientChannel));
-      sess.initBackend(clientKey);
+      return sess.withClient(new A4TcpIo(clientKey, clientChannel));
     } catch (Exception ioe) {
       log.error("{} - Unable to initialize tcp session", channel.socket(), ioe);
       if (clientChannel != null) {
         A4Io.close(clientChannel);
       }
+      return null;
     }
-  }
-
-  public void update() {
-    A4Io.select(selector, key -> {
-      if (key.channel() == this.channel && key.isAcceptable()) {
-        initSession();
-      } else if (key.attachment() instanceof A4TcpSess) {
-        var sess = (A4TcpSess) key.attachment();
-        if (sess.owner == this) {
-          sess.update(key);
-        } // else not one of our sessions
-      }
-    });
   }
 
   @Override public Void call() {
     while (true) {
-      update();
+      A4Io.select(selector, key -> {
+        if (key.channel() == this.channel && key.isAcceptable()) {
+          var sess = initSession();
+          if (sess != null) {
+            sess.update(key);
+          }
+        } else if (key.attachment() instanceof A4TcpSess) {
+          var sess = (A4TcpSess) key.attachment();
+          if (sess.owner == this) {
+            sess.update(key);
+          } // else not one of our sessions
+        }
+      });
     }
   }
 
