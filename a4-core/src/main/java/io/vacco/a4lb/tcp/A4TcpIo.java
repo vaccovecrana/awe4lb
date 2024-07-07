@@ -11,7 +11,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 import static io.vacco.a4lb.util.A4Io.*;
-
 import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
@@ -49,7 +48,7 @@ public class A4TcpIo implements Closeable {
       this.channel.configureBlocking(false);
       this.channelKey = chn.register(selector, SelectionKey.OP_READ);
       this.id = channel.socket().toString();
-      this.buffer = ByteBuffer.allocateDirect(8388608);
+      this.buffer = ByteBuffer.allocateDirect(chn.socket().getReceiveBufferSize());
     } catch (Exception e) {
       throw new IllegalStateException("Server-Backend channel initialization error - " + dest, e);
     }

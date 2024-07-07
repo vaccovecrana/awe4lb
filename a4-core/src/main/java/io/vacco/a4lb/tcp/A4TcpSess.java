@@ -103,10 +103,14 @@ public class A4TcpSess extends SNIMatcher {
     var isBkWr = key.isWritable() && isBk;
     var bytes = (Integer) null;
 
-    if (key.isReadable()) {
-      bytes = isCl ? client.read() : backend.read();
-    } else if (key.isWritable()) {
-      bytes = isCl ? backend.writeTo(client.channel) : client.writeTo(backend.channel);
+    if (isClRd) {
+      bytes = client.read();
+    } else if (isClWr) {
+      bytes = backend.writeTo(client.channel);
+    } else if (isBkRd) {
+      bytes = backend.read();
+    } else if (isBkWr) {
+      bytes = client.writeTo(backend.channel);
     }
 
     logState(bytes, isCl ? client : backend);
