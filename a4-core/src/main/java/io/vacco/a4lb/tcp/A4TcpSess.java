@@ -35,9 +35,9 @@ public class A4TcpSess extends SNIMatcher {
     this.tlsExec = tlsExec;
   }
 
-  private void logState(Integer bytes, A4TcpIo io) {
+  private void logState(Integer bytes) {
     if (log.isDebugEnabled()) {
-      log.debug("{} - {}, {}", id, bytes, io);
+      log.debug("{} - {}, cl{} bk{}", id, format("%06d", bytes), client, backend != null ? backend : "?");
     }
   }
 
@@ -113,7 +113,7 @@ public class A4TcpSess extends SNIMatcher {
       bytes = client.writeTo(backend.channel);
     }
 
-    logState(bytes, isCl ? client : backend);
+    logState(bytes);
 
     if (bytes != null) {
       if (bytes > 0) {
