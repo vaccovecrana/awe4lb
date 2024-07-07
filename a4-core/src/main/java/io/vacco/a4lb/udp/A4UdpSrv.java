@@ -70,8 +70,6 @@ public class A4UdpSrv implements A4Srv {
       try {
         if (key.isReadable()) {
           onUdpRead(key);
-        } else {
-          A4Io.sessionMismatch(key);
         }
       } catch (Exception e) {
         onError(log, "{} - UDP update error", e, srvConfig.id);

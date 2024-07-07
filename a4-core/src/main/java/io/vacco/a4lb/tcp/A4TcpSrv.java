@@ -26,6 +26,7 @@ public class A4TcpSrv implements A4Srv {
 
   private final A4Server srvConfig;
   private final A4Selector bkSel;
+  private final Map<String, A4TcpSess> sessions = new ConcurrentHashMap<>();
 
   public A4TcpSrv(Selector selector, A4Server srv, A4Selector bkSel) {
     try {
@@ -56,7 +57,13 @@ public class A4TcpSrv implements A4Srv {
     SelectionKey clientKey;
     try {
       // TODO check for connection limits here.
-      var sess = new A4TcpSess(this, this.bkSel, sslContext != null, tlsExec);
+      var isTls = sslContext != null;
+      var sess = new A4TcpSess(
+        this.bkSel,
+        s0 -> { if (s0.id != null) sessions.put(s0.id, s0); },
+        s0 -> { if (s0.id != null) sessions.remove(s0.id); },
+        isTls, tlsExec
+      );
       if (sslContext != null) {
         clientChannel = new SSLServerSocketChannel(
             this.channel, sslContext, tlsExec, sess,
@@ -89,9 +96,7 @@ public class A4TcpSrv implements A4Srv {
           }
         } else if (key.attachment() instanceof A4TcpSess) {
           var sess = (A4TcpSess) key.attachment();
-          if (sess.owner == this) {
-            sess.update(key);
-          } // else not one of our sessions
+          sess.update(key);
         }
       });
     }
@@ -103,7 +108,15 @@ public class A4TcpSrv implements A4Srv {
     }
     A4Io.close(channel);
     A4Io.close(selector);
-    log.info("{} - {} - TCP ingress closed", srvConfig.id, this.channel.socket());
+
+    int sessCount = this.sessions.size();
+    this.sessions.values().forEach(A4Io::close);
+    this.sessions.clear();
+    log.info(
+      "{} - {} - TCP ingress closed{}",
+      srvConfig.id, this.channel.socket(),
+      sessCount > 0 ? " (" + sessCount + ") sessions" : ""
+    );
   }
 
 }

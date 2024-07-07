@@ -5,36 +5,40 @@ import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.A4Io;
 import org.slf4j.*;
 import javax.net.ssl.*;
+import java.io.Closeable;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 import static io.vacco.a4lb.util.A4Logging.*;
-import static io.vacco.a4lb.util.A4Io.*;
 import static java.lang.String.format;
 
-public class A4TcpSess extends SNIMatcher {
+public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static final int MaxBackendBuffers = 10;
+  public static final int MaxBackendBuffers = 16;
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
-  public  A4TcpSrv owner;
-  private final A4Selector bkSel;
-
+  private A4Selector bkSel;
   private A4TcpIo client, backend;
-  private String id;
+  public  String id;
 
   private String tlsSni;
-  private final ExecutorService tlsExec;
+  private ExecutorService tlsExec;
   private final boolean tlsClient;
 
-  public A4TcpSess(A4TcpSrv owner, A4Selector bkSel, boolean tlsClient, ExecutorService tlsExec) {
+  private Consumer<A4TcpSess> onInit, onTearDown;
+
+  public A4TcpSess(A4Selector bkSel,
+                   Consumer<A4TcpSess> onInit, Consumer<A4TcpSess> onTearDown,
+                   boolean tlsClient, ExecutorService tlsExec) {
     super(0);
-    this.owner = Objects.requireNonNull(owner);
     this.bkSel = Objects.requireNonNull(bkSel);
     this.tlsClient = tlsClient;
     this.tlsExec = tlsExec;
+    this.onInit = Objects.requireNonNull(onInit);
+    this.onTearDown = Objects.requireNonNull(onTearDown);
   }
 
   private void tearDown(Exception e) {
@@ -52,7 +56,15 @@ public class A4TcpSess extends SNIMatcher {
     if (backend != null) {
       bkSel.contextOf(backend.backend).trackConn(false);
     }
-    this.owner = null;
+    this.onTearDown.accept(this);
+    this.client = null;
+    this.backend = null;
+    this.bkSel = null;
+    this.tlsExec = null;
+    this.tlsSni = null;
+    this.id = null;
+    this.onInit = null;
+    this.onTearDown = null;
     if (log.isDebugEnabled()) {
       log.debug("------------------------------");
     }
@@ -72,6 +84,7 @@ public class A4TcpSess extends SNIMatcher {
       backend.getRawChannel().socket()
     ).hashCode());
     this.bkSel.contextOf(backend.backend).trackConn(true);
+    this.onInit.accept(this);
   }
 
   @Override public boolean matches(SNIServerName sn) {
@@ -181,9 +194,7 @@ public class A4TcpSess extends SNIMatcher {
       }
       if (key.attachment() == this) {
         tcpUpdate(key);
-        return;
       }
-      sessionMismatch(key);
     } catch (Exception e) {
       tearDown(e);
     }
@@ -193,6 +204,10 @@ public class A4TcpSess extends SNIMatcher {
     this.client = Objects.requireNonNull(client);
     this.client.channelKey.attach(this);
     return this;
+  }
+
+  @Override public void close() {
+    this.tearDown(null);
   }
 
   /*
