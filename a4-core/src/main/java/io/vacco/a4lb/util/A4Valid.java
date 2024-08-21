@@ -9,6 +9,7 @@ import io.vacco.a4lb.cfg.*;
 import java.io.File;
 import java.net.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static am.ik.yavi.core.NullAs.VALID;
@@ -16,7 +17,7 @@ import static am.ik.yavi.core.ViolationMessage.Default.CHAR_SEQUENCE_URL;
 
 public class A4Valid {
 
-  public static String anyOf = "anyOF", oneOf = "oneOf";
+  public static String anyOf = "anyOF", oneOf = "oneOf", unique = "unique";
 
   public static <T> IntegerConstraint<T> gtZero(IntegerConstraint<T> c) {
     return c.notNull().greaterThan(0);
@@ -62,8 +63,18 @@ public class A4Valid {
       } catch (Exception e) {
         return false;
       }
-    }, ViolationMessage.of("file.exists", "\"{0}\" not found"), () -> new Object[] {}, VALID));
+    }, ViolationMessage.of("file.exists", "\"{0}\" file does not exist"), () -> new Object[] {}, VALID));
     return c;
+  }
+
+  private static <T> boolean uniqueEntries(List<T> items, Function<T, String> keyOf) {
+    var keys = new HashSet<String>();
+    for (T it : items) {
+      if (!keys.add(keyOf.apply(it))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static final Validator<A4HealthExec> A4HealthExecVld = ValidatorBuilder.<A4HealthExec>of()
@@ -255,8 +266,6 @@ public class A4Valid {
     ._integer(u -> u.bufferSize, "bufferSize", A4Valid::gtZero)
     .build();
 
-  // TODO verify that all server matches (label ids) are unique
-
   private static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
     ._string(s -> s.id, "id", A4Valid::nnNeNb)
     .nest(s -> s.addr, "addr", A4SockVld)
@@ -264,6 +273,10 @@ public class A4Valid {
     .nestIfPresent(s -> s.udp, "udp", A4UdpVld)
     .constraint(A4Configs::allMatchesOf, "match", c -> c.notNull().notEmpty())
     .forEach(A4Configs::allMatchesOf, "match", A4MatchVld)
+    .constraintOnTarget(
+      s -> uniqueEntries(s.match, A4Match::matchLabel),
+      "server.matchLabel", unique, "\"{0}\" must contain unique match labels"
+    )
     .constraintOnTarget(
       s -> allNoNullLtEq(1, s.tls, s.udp),
       oneOf, oneOf,
@@ -291,13 +304,19 @@ public class A4Valid {
     )
     .build();
 
-  // TODO verify that all server names are unique (to keep health check/discovery tasks consistent)
-
   private static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
     ._string(c -> c.id, "id", A4Valid::nnNeNb)
     ._string(c -> c.description, "description", A4Valid::nnNeNb)
     .constraint(A4Config::serverList, "servers", c -> c.notNull().notEmpty())
     .forEach(A4Config::serverList, "servers", A4ServerVld)
+    .constraintOnTarget(
+      c -> uniqueEntries(c.servers, s -> s.id),
+      "server.id", unique, "\"{0}\" must contain unique server ids"
+    )
+    .constraintOnTarget(
+      c -> uniqueEntries(c.servers, s -> s.addr.id()),
+      "server.addr.id", unique, "\"{0}\" must contain unique host/port definitions"
+    )
     .build();
 
   private static final Validator<A4Options> A4FlagsVld = ValidatorBuilder.<A4Options>of()
