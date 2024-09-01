@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static io.vacco.a4lb.service.A4Service.New;
 import static io.vacco.a4lb.util.A4Configs.*;
 import static io.vacco.a4lb.web.A4Route.*;
 
@@ -32,7 +33,10 @@ public class A4ApiHdl {
   public RvResponse<A4Config> apiV1ConfigGet(@QueryParam(pConfigId) String configId) {
     var res = new RvResponse<A4Config>().withStatus(Response.Status.OK);
     try {
-      if (configId != null && !configId.isEmpty()) {
+      if (configId != null) {
+        if (configId.equals(New)) {
+          return res.withBody(new A4Config());
+        }
         var cfg = loadFromOrFail(configFileOf(configRoot, configId), gson);
         return res.withBody(deflate(cfg, gson));
       }

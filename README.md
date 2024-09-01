@@ -14,6 +14,8 @@
 
 ## Testing
 
+> Note: the docker compose dependent tests can run on MacOS, but the networking setup is too cumbersome. So just run tests inside a Linux machine, much simpler.
+
 Generate a self-signed SSL certificate for local subdomains:
 
 ```

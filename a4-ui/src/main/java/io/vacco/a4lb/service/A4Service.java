@@ -14,6 +14,8 @@ import static java.lang.String.format;
 
 public class A4Service implements Closeable {
 
+  public static final String New = "new";
+
   private final ReentrantLock instanceLock = new ReentrantLock();
   private final Gson gson;
 
@@ -49,7 +51,10 @@ public class A4Service implements Closeable {
   }
 
   public Collection<A4Validation> update(File configRoot, String configId, A4Config config) {
-    if (config == null || !configId.equals(config.id)) {
+    if (configId.equals(New)) {
+      configId = config.id;
+    }
+    if (config == null || configId == null || !configId.equals(config.id)) {
       return List.of(A4Validation.ofMessage(format("Config id mismatch: [%s, %s]", configId, config.id)));
     }
     var errList = A4Configs.save(configRoot, gson, config);

@@ -1,24 +1,22 @@
 import * as React from "preact/compat"
 
-import A4Logo from "./A4Logo"
 import { uiConfigList, uiRoot } from "@a4ui/util"
+import { A4Config, A4Logo, A4Status } from "./A4Icons"
 
 const A4MenuLeft = () => (
-  <div id="menuLeft">
+  <div class="p16">
     <div class="txc">
       <div class="logo mv16">
-        <A4Logo />
+        <A4Logo maxHeight={42} />
       </div>
-      <div class="pv8">
-        <a href={uiRoot}>
-          <i class="icon-layers" /><br />
-          <small>Status</small>
+      <div class="m8 pt8">
+        <a class="btn small secondary block" href={uiRoot}>
+          <A4Status maxHeight={24} /> Status
         </a>
       </div>
-      <div class="pv8">
-        <a href={uiConfigList}>
-          <i class="icon-grid" /><br />
-          <small>Configurations</small>
+      <div class="m8 pt8">
+        <a class="btn small secondary block" href={uiConfigList}>
+          <A4Config maxHeight={24} /> Configs
         </a>
       </div>
     </div>

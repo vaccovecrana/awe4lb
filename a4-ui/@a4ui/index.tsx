@@ -1,6 +1,5 @@
 import "nord-ui"
 import "nord-ui/dist/dark-theme.css"
-import "simple-line-icons/css/simple-line-icons.css"
 
 import "../res/ui-lock.css"
 import "../res/main.scss"
@@ -23,14 +22,14 @@ class A4Shell extends React.Component {
         <A4UiLock>
           <div id="app">
             <div class="row">
-              <div class="col sm-1 lg-1 xl-1 sm-down-hide">
+              <div class="col md-2 lg-2 xl-2 sm-down-hide">
                 <A4MenuLeft />
               </div>
               <div class="col xs-12 sm-12 md-12 md-up-hide">
                 <A4MenuTop />
               </div>
-              <div class="col xs-12 sm-12 md-11 lg-11 xl-11">
-                <div id="appFrame">
+              <div class="col auto">
+                <div class="p16">
                   <Router>
                     <A4Dashboard path={uiRoot} />
                     <A4Configs path={uiConfigList} />
