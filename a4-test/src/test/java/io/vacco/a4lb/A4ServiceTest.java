@@ -13,6 +13,7 @@ import org.buildobjects.process.ProcBuilder;
 import org.junit.runner.RunWith;
 import org.slf4j.*;
 import javax.net.ssl.SSLContext;
+import java.awt.*;
 import java.io.IOException;
 
 import static io.vacco.a4lb.web.A4Route.*;
@@ -90,96 +91,100 @@ public class A4ServiceTest {
   }
 
   static {
-    beforeEach(() -> {
-      if (log != null) {
-        log.info("==========================================");
-      }
-    });
+    if (GraphicsEnvironment.isHeadless()) {
+      log.info("CI/CD. Skipping.");
+    } else {
+      beforeEach(() -> {
+        if (log != null) {
+          log.info("==========================================");
+        }
+      });
 
-    it("Initializes the Load Balancer context", () -> {
-      var fl = A4Options.from(new String[] {
+      it("Initializes the Load Balancer context", () -> {
+        var fl = A4Options.from(new String[] {
           flagOf(kLogLevel, "debug"),
           flagOf(kConfig, "./src/test/resources")
+        });
+        ctx.init(fl);
+        log = LoggerFactory.getLogger(A4ServiceTest.class);
+        Thread.sleep(5000);
+        // Thread.sleep(Integer.MAX_VALUE);
       });
-      ctx.init(fl);
-      log = LoggerFactory.getLogger(A4ServiceTest.class);
-      Thread.sleep(5000);
-      // Thread.sleep(Integer.MAX_VALUE);
-    });
 
-    it("Attempts to add an invalid configuration", () -> {
-      var cfg = new A4Config();
-      var query = format("%s?configId=%s", A4Route.apiV1Config, cfg.id);
-      var res = doPost(apiClient, query, cfg);
-      log.info(res);
-      assertNotNull(res);
-      assertFalse(res.isEmpty());
-    });
+      it("Attempts to add an invalid configuration", () -> {
+        var cfg = new A4Config();
+        var query = format("%s?configId=%s", A4Route.apiV1Config, cfg.id);
+        var res = doPost(apiClient, query, cfg);
+        log.info(res);
+        assertNotNull(res);
+        assertFalse(res.isEmpty());
+      });
 
-    it("Adds a new configuration", () -> {
-      log.info(tempConfig.toString());
-      var query = format("%s?configId=%s", A4Route.apiV1Config, tempConfig.id);
-      var res = doPost(apiClient, query, tempConfig);
-      log.info(res);
-      assertNotNull(res);
-      assertEquals("[]", res);
-    });
+      it("Adds a new configuration", () -> {
+        log.info(tempConfig.toString());
+        var query = format("%s?configId=%s", A4Route.apiV1Config, tempConfig.id);
+        var res = doPost(apiClient, query, tempConfig);
+        log.info(res);
+        assertNotNull(res);
+        assertEquals("[]", res);
+      });
 
-    it("Opens the new configuration", () -> {
-      doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, tempConfigId));
-      // Thread.sleep(Integer.MAX_VALUE);
-    });
+      it("Opens the new configuration", () -> {
+        doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, tempConfigId));
+        // Thread.sleep(Integer.MAX_VALUE);
+      });
 
-    it("Closes the new configuration", () -> doGet(apiClient, apiV1ConfigSelect));
+      it("Closes the new configuration", () -> doGet(apiClient, apiV1ConfigSelect));
 
-    it("Opens the initial configuration", () -> {
-      doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, testConfigId));
-      if (ctx.service.instance != null) {
-        for (var srv : ctx.service.instance.config.servers) {
-          for (var m : A4Configs.allMatchesOf(srv)) {
-            log.info(m.toString());
+      it("Opens the initial configuration", () -> {
+        doGet(apiClient, format("%s?%s=%s", apiV1ConfigSelect, pConfigId, testConfigId));
+        if (ctx.service.instance != null) {
+          for (var srv : ctx.service.instance.config.servers) {
+            for (var m : A4Configs.allMatchesOf(srv)) {
+              log.info(m.toString());
+            }
           }
         }
-      }
-      Thread.sleep(10000);
-    });
+        Thread.sleep(10000);
+      });
 
-    it("Deletes the new configuration", () -> {
-      // Thread.sleep(Integer.MAX_VALUE);
-      var req = MutableRequest.create()
+      it("Deletes the new configuration", () -> {
+        // Thread.sleep(Integer.MAX_VALUE);
+        var req = MutableRequest.create()
           .uri(format("%s?%s=%s", apiV1Config, pConfigId, tempConfigId))
           .method("DELETE", BodyPublishers.ofString(""));
-      doRequest(apiClient, req, 0);
-    });
+        doRequest(apiClient, req, 0);
+      });
 
-    it("Requests the active configuration", () -> log.info(doGet(apiClient, A4Route.apiV1Config)));
+      it("Requests the active configuration", () -> log.info(doGet(apiClient, A4Route.apiV1Config)));
 
-    it("Requests all configurations", () -> log.info(doGet(apiClient, A4Route.apiV1ConfigList)));
+      it("Requests all configurations", () -> log.info(doGet(apiClient, A4Route.apiV1ConfigList)));
 
-    it("Sends UDP requests", () -> {
-      var msg = "Hello UDP";
-      doUdpGet(msg, 3, 4000);
-      doUdpGet(msg, 3, 400);
-    });
+      it("Sends UDP requests", () -> {
+        var msg = "Hello UDP";
+        doUdpGet(msg, 3, 4000);
+        doUdpGet(msg, 3, 400);
+      });
 
-    it("Sends plain HTTP requests", () -> {
-      doGet("http://127.0.0.1:8080", 20);
-      doGet("http://127.0.0.1:8090", 20);
-      doGet("https://momo.localhost:8443", 20);
-      doGet("https://sdr.localhost:8443", 20);
-    });
+      it("Sends plain HTTP requests", () -> {
+        doGet("http://127.0.0.1:8080", 20);
+        doGet("http://127.0.0.1:8090", 20);
+        doGet("https://momo.localhost:8443", 20);
+        doGet("https://sdr.localhost:8443", 20);
+      });
 
-    it("Sends a curl request", () -> {
-      var res = ProcBuilder.run("curl", "--verbose", "http://127.0.0.1:8080");
-      log.info(res);
-    });
+      it("Sends a curl request", () -> {
+        var res = ProcBuilder.run("curl", "--verbose", "http://127.0.0.1:8080");
+        log.info(res);
+      });
 
-    // TODO Remaining tests
-    //   - Retrieve performance metrics
+      // TODO Remaining tests
+      //   - Retrieve performance metrics
 
-    it("Closes the initial configuration", () -> doGet(apiClient, apiV1ConfigSelect));
+      it("Closes the initial configuration", () -> doGet(apiClient, apiV1ConfigSelect));
 
-    it("Stops the Load Balancer context", () -> ctx.close());
+      it("Stops the Load Balancer context", () -> ctx.close());
+    }
   }
 
 }
