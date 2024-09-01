@@ -40,4 +40,4 @@ jobs:
           context: ./a4-lb
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/awe4lb:${{ github.ref_name }}
-          file: Dockerfile
+          file: ./a4-lb/Dockerfile
