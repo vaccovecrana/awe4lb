@@ -28,3 +28,17 @@ jobs:
           tag: ${{ github.ref }}
           file: a4-lb/build/native/nativeCompile/a4lb-*
           file_glob: true
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./a4-lb
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/$(basename ${{ github.repository }}):${{ github.ref_name }}
+          file: Dockerfile
