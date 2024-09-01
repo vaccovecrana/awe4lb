@@ -31,7 +31,6 @@ public class A4TcpIo implements Closeable {
       this.channelKey = Objects.requireNonNull(channelKey);
       this.id = this.channel.socket().toString();
       this.bufferSize = rawChannel.socket().getReceiveBufferSize();
-      allocateBuffer();
     } catch (Exception e) {
       throw new IllegalStateException("Client-Server channel initialization error - " + rawChannel.socket(), e);
     }
@@ -53,14 +52,9 @@ public class A4TcpIo implements Closeable {
       this.channelKey = chn.register(selector, SelectionKey.OP_READ);
       this.id = channel.socket().toString();
       this.bufferSize = chn.socket().getReceiveBufferSize();
-      allocateBuffer();
     } catch (Exception e) {
       throw new IllegalStateException("Server-Backend channel initialization error - " + dest, e);
     }
-  }
-
-  private void allocateBuffer() {
-    bufferPool.offer(ByteBuffer.allocateDirect(bufferSize));
   }
 
   private ByteBuffer getBuffer() {
@@ -127,7 +121,7 @@ public class A4TcpIo implements Closeable {
       ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
       : c.socket();
     return format(
-      "[%s, bq%02d, bp%02d, %02d, %02d, %s %s %s]",
+      "[%s, bq%02d, bp%02d, i%02d, r%02d, %s %s %s]",
       format("%s%s%s%s",
         k.isReadable() ? "r" : "",
         k.isWritable() ? "w" : "",

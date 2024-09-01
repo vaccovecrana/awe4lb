@@ -180,6 +180,9 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         }
       } else if (bytes == 0 && tlsClient) {
         initBackend();
+      } else if (bytes == -1 && isBk && !backend.bufferQueue.isEmpty()) {
+        client.channelKey.interestOps(SelectionKey.OP_WRITE);
+        backend.channelKey.interestOps(0);
       } else if (bytes == -1) {
         tearDown(null);
       }
