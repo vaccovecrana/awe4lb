@@ -92,7 +92,7 @@ public class A4ServiceTest {
 
   static {
     if (GraphicsEnvironment.isHeadless()) {
-      log.info("CI/CD. Skipping.");
+      System.out.println("CI/CD. Skipping.");
     } else {
       beforeEach(() -> {
         if (log != null) {
