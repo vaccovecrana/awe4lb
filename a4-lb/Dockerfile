@@ -10,5 +10,6 @@ COPY --from=builder /usr/local/lib/libz.so* /lib/
 FROM scratch
 COPY ./build/native/nativeCompile/a4lb-linux-amd64 /a4lb-linux-amd64
 COPY --from=runtime /lib/* /lib/
+COPY --from=runtime /lib64/* /lib64/
 
 ENTRYPOINT ["/a4lb-linux-amd64"]
