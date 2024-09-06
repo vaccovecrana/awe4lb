@@ -7,5 +7,6 @@ RUN ./configure --prefix=/usr/local && make && make install
 FROM busybox:stable-glibc as runtime
 COPY --from=builder /usr/local/lib/libz.so* /lib/
 COPY ./build/native/nativeCompile/a4lb-linux-amd64 /a4lb-linux-amd64
+RUN rm -rfv /bin/*
 
 ENTRYPOINT ["/a4lb-linux-amd64"]
