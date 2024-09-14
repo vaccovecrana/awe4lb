@@ -109,9 +109,16 @@ export interface A4MatchOp {
 }
 
 export interface A4Pool {
-  type: Type;
+  type: A4PoolType;
   hosts: A4Backend[];
   openTls: boolean;
+}
+
+export const enum A4PoolType {
+  roundRobin = "roundRobin",
+  leastConn = "leastConn",
+  ipHash = "ipHash",
+  weight = "weight",
 }
 
 export interface A4Server {
@@ -153,13 +160,6 @@ export interface A4Validation {
   key: string;
   name: string;
   message: string;
-}
-
-export const enum Type {
-  roundRobin = "roundRobin",
-  leastConn = "leastConn",
-  ipHash = "ipHash",
-  weight = "weight",
 }
 
 

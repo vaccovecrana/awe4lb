@@ -50,7 +50,7 @@ public class A4Discover implements Callable<List<A4Backend>> {
   private List<A4Backend> discoverValid() {
     var bkl = new ArrayList<A4Backend>();
     for (var bk : discover()) {
-      if (match.pool.type == A4Pool.Type.weight) {
+      if (match.pool.type == A4PoolType.weight) {
         if (bk.weight == null || bk.priority == null) {
           bk.weight(1).priority(1);
           onError(log, "{} - backend entry missing weight/priority, assigned defaults - {}", null, serverId, bk);

@@ -5,11 +5,7 @@ import java.util.stream.Collectors;
 
 public class A4Pool {
 
-  public enum Type {
-    roundRobin, leastConn, ipHash, weight
-  }
-
-  public Type type;
+  public A4PoolType type;
   public List<A4Backend> hosts;
   public Boolean openTls;
 

@@ -288,7 +288,7 @@ public class A4Valid {
         b.forEach(
           A4Configs::allPoolsOf, "udpPool",
           pb -> pb.constraintOnTarget(
-            p -> p.type != A4Pool.Type.leastConn, "poolType", "poolType",
+            p -> p.type != A4PoolType.leastConn, "poolType", "poolType",
             "\"{0}\" cannot use [leastConn] for UDP backend assignment"
           )
         ).forEach(
