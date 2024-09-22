@@ -59,26 +59,27 @@ public class A4DiscoverK8s {
       for (var item : items) {
         var pod = item.getAsJsonObject();
         var podSpec = pod.getAsJsonObject("spec");
-        var nodeName = podSpec.get("nodeName").getAsString();
-        var nodeUri = format("%s/api/v1/nodes/%s", apiServerUri, nodeName);
-        var node = JsonParser.parseString(nodeJsonFn.apply(nodeUri)).getAsJsonObject();
-        var status = node.getAsJsonObject("status");
-        var addresses = status.getAsJsonArray("addresses");
-
-        String nodeIp = null;
-        for (var address : addresses) {
-          var addr = address.getAsJsonObject();
-          if (addr.get("type").getAsString().equals("InternalIP")) {
-            nodeIp = addr.get("address").getAsString();
-            break;
+        if (podSpec != null && podSpec.get("nodeName") != null) {
+          var nodeName = podSpec.get("nodeName").getAsString();
+          var nodeUri = format("%s/api/v1/nodes/%s", apiServerUri, nodeName);
+          var node = JsonParser.parseString(nodeJsonFn.apply(nodeUri)).getAsJsonObject();
+          var status = node.getAsJsonObject("status");
+          var addresses = status.getAsJsonArray("addresses");
+          String nodeIp = null;
+          for (var address : addresses) {
+            var addr = address.getAsJsonObject();
+            if (addr.get("type").getAsString().equals("InternalIP")) {
+              nodeIp = addr.get("address").getAsString();
+              break;
+            }
           }
+          nodes.add(
+            new A4Backend()
+              .state(A4BackendState.Unknown)
+              .addr(new A4Sock().host(nodeIp).port(nodePort))
+              .weight(1).priority(1)
+          );
         }
-        nodes.add(
-          new A4Backend()
-            .state(A4BackendState.Unknown)
-            .addr(new A4Sock().host(nodeIp).port(nodePort))
-            .weight(1).priority(1)
-        );
       }
     }
 
