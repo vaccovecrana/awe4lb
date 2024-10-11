@@ -132,7 +132,7 @@ public class A4TcpIo implements Closeable {
       bufferPool.size(),
       k.interestOps(), k.readyOps(),
       sck.getLocalSocketAddress(),
-      k.isReadable() ? "<-" : k.isWritable() ? "->" : "<- ? ->",
+      k.isReadable() ? "<" : k.isWritable() ? ">" : "<?>",
       sck.getRemoteSocketAddress()
     );
   }

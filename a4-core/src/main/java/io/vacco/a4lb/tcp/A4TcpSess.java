@@ -16,7 +16,8 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static final int MaxBackendBuffers = 16;
+  public static int MaxBackendBuffers = 4;
+  public static int MaxClientBuffers = 4;
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
@@ -128,16 +129,22 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     var doLog = true;
 
     if (isClRd) {
-      // TODO
-      //   I have the slight suspicion that a similar stop/go mechanism will be needed
-      //   for load balancing scenarios where the client is uploading data quickly
-      //   (i.e. file uploads). But I'll have to find a real use case need to implement this.
       bytes = client.read();
+      if (client.bufferQueue.size() > MaxClientBuffers) {
+        client.channelKey.interestOps(0);
+        if (backend.channelKey.interestOps() == SelectionKey.OP_READ) {
+          backend.channelKey.interestOps(SelectionKey.OP_WRITE);
+        }
+        if (log.isDebugEnabled()) {
+          log.debug("CL STOP {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+        }
+        return;
+      }
     } else if (isClWr) {
       bytes = backend.writeTo(client.channel);
       if (backend.channelKey.interestOps() == 0) {
         if (log.isDebugEnabled()) {
-          log.debug("GO   {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+          log.debug("BK GO   {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
         }
         backend.channelKey.interestOps(SelectionKey.OP_READ);
         doLog = false;
@@ -150,13 +157,20 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
           client.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
         if (log.isDebugEnabled()) {
-          log.debug("STOP {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+          log.debug("BK STOP {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
         }
         return;
       }
       bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
     } else if (isBkWr) {
       bytes = client.writeTo(backend.channel);
+      if (client.channelKey.interestOps() == 0) {
+        if (log.isDebugEnabled()) {
+          log.debug("CL GO   {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+        }
+        client.channelKey.interestOps(SelectionKey.OP_READ);
+        doLog = false;
+      }
       bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
     }
 
