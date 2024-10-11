@@ -136,7 +136,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
           backend.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
         if (log.isDebugEnabled()) {
-          log.debug("CL STOP {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+          log.debug("{} CL STOP {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
         }
         return;
       }
@@ -144,7 +144,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       bytes = backend.writeTo(client.channel);
       if (backend.channelKey.interestOps() == 0) {
         if (log.isDebugEnabled()) {
-          log.debug("BK GO   {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+          log.debug("{} BK GO   {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
         }
         backend.channelKey.interestOps(SelectionKey.OP_READ);
         doLog = false;
@@ -157,7 +157,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
           client.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
         if (log.isDebugEnabled()) {
-          log.debug("BK STOP {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+          log.debug("{} BK STOP {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
         }
         return;
       }
@@ -166,7 +166,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       bytes = client.writeTo(backend.channel);
       if (client.channelKey.interestOps() == 0) {
         if (log.isDebugEnabled()) {
-          log.debug("CL GO   {} {}", logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr), logState(bytes));
+          log.debug("{} CL GO   {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
         }
         client.channelKey.interestOps(SelectionKey.OP_READ);
         doLog = false;
