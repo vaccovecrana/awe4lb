@@ -27,7 +27,7 @@ public class A4DiscoverK8s {
                                         String namespace, String serviceName, int port,
                                         Function<String, String> podJsonFn,
                                         Function<String, String> nodeJsonFn) {
-    var nodes = new ArrayList<A4Backend>();
+    var nodes = new HashMap<String, A4Backend>();
     var service = JsonParser.parseString(serviceJson).getAsJsonObject();
     var spec = service.getAsJsonObject("spec");
 
@@ -73,7 +73,8 @@ public class A4DiscoverK8s {
               break;
             }
           }
-          nodes.add(
+          var nodeKey = format("%s-%d", nodeIp, nodePort);
+          nodes.put(nodeKey,
             new A4Backend()
               .state(A4BackendState.Unknown)
               .addr(new A4Sock().host(nodeIp).port(nodePort))
@@ -83,7 +84,7 @@ public class A4DiscoverK8s {
       }
     }
 
-    return nodes;
+    return new ArrayList<>(nodes.values());
   }
 
   private static List<A4Backend> nodesOf(HttpClient client, String apiServerUri, String authToken,

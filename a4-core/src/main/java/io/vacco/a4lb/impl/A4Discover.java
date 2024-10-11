@@ -18,11 +18,15 @@ import static io.vacco.a4lb.impl.A4DiscoverK8s.k8sDiscover;
 
 public class A4Discover implements Callable<List<A4Backend>> {
 
+  public static Integer MaxDiscoveryErrorLogs = 1024;
+  public static int LogIntervalMultiplier = 10;
+
   private static final Logger log = LoggerFactory.getLogger(A4Discover.class);
 
   private final String serverId;
   private final A4Match match;
   private final Gson gson;
+  private final A4TtlMap<Integer, String> errorLogIdx = new A4TtlMap<>(MaxDiscoveryErrorLogs, msg -> {});
   private final HttpClient client = HttpClient
     .newBuilder()
     .sslContext(SSLCertificates.trustAllContext())
@@ -86,7 +90,11 @@ public class A4Discover implements Callable<List<A4Backend>> {
         return bkl;
       }
     } catch (Exception e) {
-      onError(log, "{} - backend discovery error for match [{}]", e, serverId, match);
+      var msg = String.format("%s - backend discovery error for match [%s]", serverId, match);
+      if (errorLogIdx.get(msg.hashCode()) == null) {
+        onError(log, msg, e);
+        errorLogIdx.put(msg.hashCode(), msg, match.discover.intervalMs * LogIntervalMultiplier);
+      }
     }
     return null;
   }
