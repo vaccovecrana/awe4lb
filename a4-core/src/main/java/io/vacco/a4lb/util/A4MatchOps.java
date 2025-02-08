@@ -52,13 +52,13 @@ public class A4MatchOps {
     return false;
   }
 
-  public static Optional<A4Pool> eval(String sni, String host, List<A4Match> rules) {
+  public static Optional<A4Match> eval(String sni, String host, List<A4Match> rules) {
     for (var rule : rules) {
       var out = rule.and != null
           ? evalAnd(sni, host, rule.and)
           : rule.or == null || evalOr(sni, host, rule.or);
       if (out) {
-        return Optional.of(rule.pool);
+        return Optional.of(rule);
       }
     }
     return Optional.empty();

@@ -215,6 +215,11 @@ public class A4Valid {
     return !test;
   }
 
+  private static final Validator<A4MatchTls> A4MatchTlsVld = ValidatorBuilder.<A4MatchTls>of()
+    ._string(t -> t.certPath, "certPath", c -> file(nnNeNb(c)))
+    ._string(t -> t.keyPath, "keyPath", c -> file(nnNeNb(c)))
+    .build();
+
   private static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
     .constraintOnCondition(
       (m, cg) -> m.and != null,
@@ -247,17 +252,16 @@ public class A4Valid {
       )
     )
     .nest(m -> m.pool, "pool", A4PoolVld)
-    .nestIfPresent(p -> p.discover, "discover", A4DiscVld)
-    .nestIfPresent(s -> s.healthCheck, "healthCheck", A4HealthCheckVld)
+    .nestIfPresent(m -> m.discover, "discover", A4DiscVld)
+    .nestIfPresent(m -> m.healthCheck, "healthCheck", A4HealthCheckVld)
+    .nestIfPresent(m -> m.tls, "tls", A4MatchTlsVld)
     .build();
 
-  private static final Validator<A4Tls> A4TlsVld = ValidatorBuilder.<A4Tls>of()
-    ._string(t -> t.certPath, "certPath", c -> file(nnNeNb(c)))
-    ._string(t -> t.keyPath, "keyPath", c -> file(nnNeNb(c)))
-    .forEach(A4Tls::protocolList, "protocols.version",
+  private static final Validator<A4ServerTls> A4TlsVld = ValidatorBuilder.<A4ServerTls>of()
+    .forEach(A4ServerTls::protocolList, "protocols.version",
       svb -> svb._string(s -> s, "value", A4Valid::nnNeNb)
     )
-    .forEach(A4Tls::cipherList, "ciphers.cipher",
+    .forEach(A4ServerTls::cipherList, "ciphers.cipher",
       svb -> svb._string(s -> s, "value", A4Valid::nnNeNb)
     )
     .build();

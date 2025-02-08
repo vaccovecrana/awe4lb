@@ -7,7 +7,6 @@ public class A4Pool {
 
   public A4PoolType type;
   public List<A4Backend> hosts;
-  public Boolean openTls;
 
   public A4Pool hosts(List<A4Backend> hosts) {
     this.hosts = new ArrayList<>(hosts);

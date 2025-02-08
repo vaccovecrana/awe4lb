@@ -20,11 +20,9 @@ public class A4ValidTest {
               .id("momo-tls")
               .addr(new A4Sock().host("0.0.0.0").port(75000))
               .tls(
-                  new A4Tls()
-                      .certPath("/etc/momo/momo.pem")
-                      .keyPath("/etc/momo/momo-key.pem")
-                      .protocols(" ")
-                      .ciphers("momo-cipher")
+                  new A4ServerTls()
+                      .protocols("momo-protocol")
+                      .ciphers("momo-cipher-cha-cha-cha")
               )
               .match(
                   new A4Match()

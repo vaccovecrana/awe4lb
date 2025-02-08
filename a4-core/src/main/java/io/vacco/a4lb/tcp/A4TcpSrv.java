@@ -22,11 +22,11 @@ public class A4TcpSrv implements A4Srv {
   private final Selector selector;
   private final SSLContext sslContext;
   private final ServerSocketChannel channel;
-  private final ExecutorService tlsExec;
 
   private final A4Server srvConfig;
   private final A4Selector bkSel;
   private final Map<String, A4TcpSess> sessions = new ConcurrentHashMap<>();
+  private final ExecutorService tlsExec;
 
   public A4TcpSrv(Selector selector, A4Server srv, A4Selector bkSel) {
     try {
@@ -37,9 +37,9 @@ public class A4TcpSrv implements A4Srv {
       this.channel.register(selector, SelectionKey.OP_ACCEPT);
       this.bkSel = Objects.requireNonNull(bkSel);
       this.srvConfig = Objects.requireNonNull(srv);
-      if (srv.tls != null) {
+      if (srvConfig.tls != null) {
         log.info("{} - initializing SSL context", srv.id);
-        this.sslContext = SSLCertificates.contextFrom(srv.tls);
+        this.sslContext = SSLCertificates.forServer(srv);
         this.tlsExec = Executors.newCachedThreadPool(r -> new Thread(r, format("%s-tls", srv.id)));
       } else {
         this.sslContext = null;
@@ -57,7 +57,7 @@ public class A4TcpSrv implements A4Srv {
     SelectionKey clientKey;
     try {
       // TODO check for connection limits here.
-      var isTls = sslContext != null;
+      var isTls = srvConfig.tls != null;
       var sess = new A4TcpSess(
         this.bkSel,
         s0 -> { if (s0.id != null) sessions.put(s0.id, s0); },

@@ -72,13 +72,13 @@ public class A4MatchOpsTest {
         new A4Match().or(hostOp).pool(pool)
       );
 
-      Optional<A4Pool> result = A4MatchOps.eval("example.com", "hostname", rules);
+      var result = A4MatchOps.eval("example.com", "hostname", rules);
       assertTrue(result.isPresent());
-      assertEquals(result.get(), pool);
+      assertEquals(result.get().pool, pool);
 
       result = A4MatchOps.eval("fail.com", "hostname", rules);
       assertTrue(result.isPresent());
-      assertEquals(result.get(), pool);
+      assertEquals(result.get().pool, pool);
 
       result = A4MatchOps.eval("fail.com", "failname", rules);
       assertFalse(result.isPresent());

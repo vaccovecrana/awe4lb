@@ -2,7 +2,7 @@ import * as React from "preact/compat"
 
 import { useContext } from "preact/hooks"
 import { lockUi, A4Context, A4Store } from "@a4ui/store"
-import { A4Backend, A4BackendState, A4Config, A4Disc, A4HealthCheck, A4Match, A4Server, A4Tls, A4Udp, apiV1ConfigGet } from "@a4ui/rpc"
+import { A4Backend, A4BackendState, A4Config, A4Disc, A4HealthCheck, A4Match, A4MatchTls, A4Server, A4ServerTls, A4Udp, apiV1ConfigGet } from "@a4ui/rpc"
 import { RenderableProps } from "preact"
 
 import { A4Router } from "@a4ui/components/A4Icons"
@@ -132,19 +132,15 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
     )
   }
 
-  public renderTlsTable(tls: A4Tls) {
+  public renderTlsTable(tls: A4ServerTls) {
     return (
       <table class="table small">
         <thead>
-          <th>Certificate</th>
-          <th>Key</th>
           <th>Protocols</th>
           <th>Ciphers</th>
         </thead>
         <tbody>
           <tr>
-            <td>{tls.certPath}</td>
-            <td>{tls.keyPath}</td>
             <td>{tls.protocols}</td>
             <td>{tls.ciphers}</td>
           </tr>
@@ -190,6 +186,25 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
     )
   }
 
+  public renderMatchTlsTable(tls: A4MatchTls) {
+    return (
+      <table class="table small">
+        <thead>
+          <th>Cert path</th>
+          <th>Key path</th>
+          <th>Backend trust</th>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{tls.certPath}</td>
+            <td>{tls.keyPath}</td>
+            <td>{tls.open ? tls.open : false}</td>
+          </tr>
+        </tbody>
+      </table>
+    )
+  }
+
   public renderServerCard(srv: A4Server) {
     return (
       <div class="card minimal mt16 p8">
@@ -215,6 +230,7 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
             <div class="matchLabel">
               Match: <code>{matchLabelOf(match)} :: {match.pool.type ? match.pool.type : "random"}</code>
             </div>
+            {match.tls ? this.renderMatchTlsTable(match.tls) : []}
             {match.healthCheck ? this.renderHealthCheckTable(match.healthCheck) : []}
             {match.discover ? this.renderDiscover(match.discover) : []}
             {this.renderPoolHostsTable(match)}

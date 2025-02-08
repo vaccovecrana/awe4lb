@@ -101,6 +101,7 @@ export interface A4Match {
   pool: A4Pool;
   discover: A4Disc;
   healthCheck: A4HealthCheck;
+  tls: A4MatchTls;
 }
 
 export interface A4MatchOp {
@@ -108,10 +109,15 @@ export interface A4MatchOp {
   host: A4StringOp;
 }
 
+export interface A4MatchTls {
+  certPath: string;
+  keyPath: string;
+  open: boolean;
+}
+
 export interface A4Pool {
   type: A4PoolType;
   hosts: A4Backend[];
-  openTls: boolean;
 }
 
 export const enum A4PoolType {
@@ -125,8 +131,13 @@ export interface A4Server {
   id: string;
   addr: A4Sock;
   match: A4Match[];
-  tls: A4Tls;
+  tls: A4ServerTls;
   udp: A4Udp;
+}
+
+export interface A4ServerTls {
+  protocols: string[];
+  ciphers: string[];
 }
 
 export interface A4Sock {
@@ -139,13 +150,6 @@ export interface A4StringOp {
   contains: string;
   startsWith: string;
   endsWith: string;
-}
-
-export interface A4Tls {
-  certPath: string;
-  keyPath: string;
-  protocols: string[];
-  ciphers: string[];
 }
 
 export interface A4Udp {

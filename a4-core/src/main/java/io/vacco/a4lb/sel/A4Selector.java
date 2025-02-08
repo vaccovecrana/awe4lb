@@ -36,11 +36,11 @@ public class A4Selector {
     }
   }
 
-  public Optional<A4Pool> matches(String hostAddress, String tlsSni) {
+  public Optional<A4Match> matches(String hostAddress, String tlsSni) {
     return A4MatchOps.eval(tlsSni, hostAddress, cfg);
   }
 
-  public Optional<A4Pool> matches(SocketChannel client, String tlsSni) {
+  public Optional<A4Match> matches(SocketChannel client, String tlsSni) {
     return matches(client.socket().getInetAddress().getHostAddress(), tlsSni);
   }
 
@@ -48,10 +48,11 @@ public class A4Selector {
     var clientAddr = client.socket().getInetAddress();
     var clientIp = clientAddr.getHostAddress();
     try {
-      var pool = matches(clientIp, tlsSni).orElseThrow();
-      var bk = select(pool, clientIp.hashCode());
+      var match = matches(clientIp, tlsSni).orElseThrow();
+      var bk = select(match.pool, clientIp.hashCode());
       var addr = new InetSocketAddress(bk.addr.host, bk.addr.port);
-      return new A4TcpIo(addr, selector, pool.openTls != null && pool.openTls, tlsExec).backend(bk);
+      var openTls = match.tls != null && match.tls.open != null && match.tls.open;
+      return new A4TcpIo(addr, selector, openTls, tlsExec).backend(bk);
     } catch (Exception e) {
       throw new A4Exceptions.A4SelectException(clientIp, tlsSni, this.cfg, e);
     }
@@ -59,8 +60,8 @@ public class A4Selector {
 
   public A4UdpIo assign(Selector selector, InetSocketAddress client) {
     try {
-      var pool = matches(client.getHostString(), null).orElseThrow();
-      var bk = select(pool, client.hashCode());
+      var match = matches(client.getHostString(), null).orElseThrow();
+      var bk = select(match.pool, client.hashCode());
       return new A4UdpIo(selector, bk, client);
     } catch (Exception e) {
       throw new A4Exceptions.A4SelectException(client.toString(), null, this.cfg, e);

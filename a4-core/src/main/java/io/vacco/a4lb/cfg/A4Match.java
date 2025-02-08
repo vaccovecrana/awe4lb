@@ -11,6 +11,7 @@ public class A4Match {
   public A4Pool         pool;
   public A4Disc         discover;
   public A4HealthCheck  healthCheck;
+  public A4MatchTls     tls;
 
   public A4Match and(A4MatchOp ... and) {
     this.and = and;

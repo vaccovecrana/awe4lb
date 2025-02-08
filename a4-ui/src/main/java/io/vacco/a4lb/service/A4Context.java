@@ -4,7 +4,6 @@ import com.google.gson.*;
 import io.vacco.a4lb.cfg.A4Format;
 import io.vacco.a4lb.util.*;
 import io.vacco.a4lb.web.A4Api;
-import org.slf4j.Logger;
 import java.io.Closeable;
 import java.util.*;
 
@@ -24,7 +23,7 @@ public class A4Context implements Closeable {
     setSysProp(IO_VACCO_SHAX_PRETTYPRINT, "true");
     setSysProp(IO_VACCO_SHAX_DEVMODE, fl.logFormat == A4Format.text ? "true" : "false");
     setSysProp(IO_VACCO_SHAX_LOGLEVEL, fl.logLevel.toString());
-    Logger log = org.slf4j.LoggerFactory.getLogger(A4Service.class);
+    var log = org.slf4j.LoggerFactory.getLogger(A4Service.class);
     log.info(
         join("\n", "",
             "                       __ __  ____  ",

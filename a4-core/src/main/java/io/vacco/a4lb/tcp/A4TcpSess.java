@@ -1,5 +1,6 @@
 package io.vacco.a4lb.tcp;
 
+import io.vacco.a4lb.cfg.A4Match;
 import io.vacco.a4lb.niossl.*;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.A4Io;
@@ -26,6 +27,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   public  String id;
 
   private String tlsSni;
+  private A4Match tlsMatch;
   private ExecutorService tlsExec;
   private final boolean tlsClient;
 
@@ -63,6 +65,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     this.bkSel = null;
     this.tlsExec = null;
     this.tlsSni = null;
+    this.tlsMatch = null;
     this.id = null;
     this.onInit = null;
     this.onTearDown = null;
@@ -93,6 +96,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     var op = bkSel.matches(client.channel, sni);
     if (op.isPresent()) {
       this.tlsSni = sni;
+      this.tlsMatch = op.get();
       return true;
     }
     return false;
@@ -225,6 +229,10 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
   @Override public void close() {
     this.tearDown(null);
+  }
+
+  public A4Match getTlsMatch() {
+    return tlsMatch;
   }
 
   /*

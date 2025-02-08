@@ -12,22 +12,6 @@
 - Do not allow public access to the REST api, since it allows for full management. Expose it only within a trusted network perimeter.
 - Most applications and use cases should work fine with the default TCP buffer size. However, applications which stream large amounts of data should make sure that the underlying hardware has enough memory capacity to handle backpressure from either clients or backends.
 
-## Testing
-
-> Note: the docker compose dependent tests can run on MacOS, but the networking setup is too cumbersome. So just run tests inside a Linux machine, much simpler.
-
-Generate a self-signed SSL certificate for local subdomains:
-
-```
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -addext "subjectAltName = DNS:*.localhost" \
-  -keyout ./awe4lb.key -out ./awe4lb.pem
-```
-
-## Security checks
-
-1. Generate UDP connections in large numbers. This should exercise the LB's capability to clear out expired UDP sessions (TTL timeout).
-
 ## Implementation items
 
 ### TCP
@@ -46,12 +30,13 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 - [ ] DNS records.
 - [x] Exec return value.
+- [x] Kubernetes.
 - [ ] Any others provided by `gobetween`.
 
 ### Monitoring
 
 - [ ] Metrics capturing.
-  - [ ] Bytes sent/received (global).
+  - [x] Bytes sent/received (global).
   - [ ] Whichever other metrics `gobetween` exposes.
 - [ ] Metrics access (prometheus endpoint).
 
@@ -77,10 +62,5 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 - https://bugs.openjdk.org/browse/JDK-8202625
 - https://github.com/yyyar/gobetween/issues/335
 - https://github.com/felipejfc/go-udp-echo-server
-
-Test audio:
-
-- https://archive.org/details/MusopenCollectionAsFlac/Bach_GoldbergVariations/JohannSebastianBach-16-GoldbergVariationsBwv.988-Variation15.CanonOnTheFifth.flac
-- https://ia800307.us.archive.org/34/items/MusopenCollectionAsFlac/Bach_GoldbergVariations/JohannSebastianBach-16-GoldbergVariationsBwv.988-Variation15.CanonOnTheFifth.flac
 
 In memory of James Perry McCaffrey (March 27, 1958 – December 17, 2023).

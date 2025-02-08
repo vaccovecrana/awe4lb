@@ -10,7 +10,7 @@ public class A4Server {
   public A4Sock addr;
   public List<A4Match> match;
 
-  public A4Tls tls;
+  public A4ServerTls tls;
   public A4Udp udp;
 
   public A4Server id(String id) {
@@ -23,7 +23,7 @@ public class A4Server {
     return this;
   }
 
-  public A4Server tls(A4Tls tls) {
+  public A4Server tls(A4ServerTls tls) {
     this.tls = tls;
     return this;
   }

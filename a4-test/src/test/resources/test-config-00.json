@@ -80,6 +80,10 @@
               "endpoint": "http://127.0.0.1:4011",
               "format": "text"
             }
+          },
+          "tls": {
+            "certPath": "./src/test/resources/certs/awe4lb.pem",
+            "keyPath": "./src/test/resources/certs/awe4lb.key"
           }
         },
         {
@@ -101,12 +105,14 @@
               ],
               "format": "text"
             }
+          },
+          "tls": {
+            "certPath": "./src/test/resources/certs/awe4lb.pem",
+            "keyPath": "./src/test/resources/certs/awe4lb.key"
           }
         }
       ],
       "tls": {
-        "certPath": "./src/test/resources/certs/awe4lb.pem",
-        "keyPath": "./src/test/resources/certs/awe4lb.key",
         "ciphers": [
           "TLS_AES_128_GCM_SHA256"
         ]
