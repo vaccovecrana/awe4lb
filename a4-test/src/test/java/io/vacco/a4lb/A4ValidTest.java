@@ -16,33 +16,36 @@ public class A4ValidTest {
   static {
     it("Validates a configuration", () -> {
       var a4Cfg = new A4Config()
-          .server(new A4Server()
-              .id("momo-tls")
-              .addr(new A4Sock().host("0.0.0.0").port(75000))
-              .tls(
-                  new A4ServerTls()
-                      .protocols("momo-protocol")
-                      .ciphers("momo-cipher-cha-cha-cha")
-              )
-              .match(
-                  new A4Match()
-                      .and(new A4MatchOp().sni(new A4StringOp().equals("ci.gopher.io")))
-                      .or(new A4MatchOp().host(new A4StringOp().contains("momo")))
-                      .pool(
-                          new A4Pool().hosts(
-                              new A4Backend().addr(
-                                  new A4Sock().host("tct00.gopher.io").port(8080)
-                              ).weight(1).priority(0)
-                          )
-                      ).healthCheck(
-                          new A4HealthCheck().intervalMs(3000).timeoutMs(5000)
-                      ),
-                  new A4Match()
-                      .and(new A4MatchOp().host(new A4StringOp().startsWith("172.16")))
-                      .pool(new A4Pool())
-                      .discover(new A4Disc())
-              )
-          );
+        .server(new A4Server()
+          .id("momo-tls")
+          .addr(new A4Sock().host("0.0.0.0").port(75000))
+          .tls(
+            new A4ServerTls()
+              .protocols("momo-protocol")
+              .ciphers("momo-cipher-cha-cha-cha")
+          )
+          .match(
+            new A4Match()
+              .op(
+                new A4MatchOp()
+                  .sni(new A4StringOp().equals("ci.gopher.io"))
+                  .host(new A4StringOp().endsWith("momo"))
+              ).pool(
+                new A4Pool().hosts(
+                  new A4Backend()
+                    .addr(new A4Sock().host("tct00.gopher.io").port(8080))
+                    .weight(1)
+                    .priority(0)
+                )
+              ).healthCheck(
+                new A4HealthCheck().intervalMs(3000).timeoutMs(5000)
+              ),
+            new A4Match()
+              .op(new A4MatchOp().host(new A4StringOp().startsWith("172.16")))
+              .pool(new A4Pool())
+              .discover(new A4Disc())
+          )
+        );
       var constraints = A4Valid.validate(a4Cfg);
       System.out.println(A4Valid.validationsOf(constraints));
     });

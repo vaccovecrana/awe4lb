@@ -15,10 +15,13 @@ public class A4MatchOp {
   }
 
   @Override public String toString() {
-    return
-        sni != null ? String.format("sni %s", sni)
-        : host != null ? String.format("host %s", host)
-        : "A4MatchOp - ?";
+    if (sni != null && host != null) {
+      return String.format("sni %s and host %s", sni, host);
+    }
+    if (sni != null) {
+      return String.format("sni %s", sni);
+    }
+    return String.format("host %s", host);
   }
 
 }

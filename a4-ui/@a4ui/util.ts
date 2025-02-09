@@ -11,13 +11,11 @@ const stringOpLabelOf = (op: A4StringOp): string => {
     return "?"
   }
   const opId =
-    op.contains ? "contains" :
     op.endsWith ? "endsWith" :
     op.equals   ? "equals"   :
     op.startsWith ? "startsWith" :
     "?"
   const opVal = 
-    op.contains ? op.contains :
     op.endsWith ? op.endsWith :
     op.equals ? op.equals :
     op.startsWith ? op.startsWith :
@@ -34,12 +32,10 @@ const matchOpLabelOf = (op: A4MatchOp): string => {
 }
 
 export const matchLabelOf = (match: A4Match): string => {
-  if (match.and === undefined && match.or === undefined) {
+  if (match.op === undefined) {
     return "any"
   }
-  const sep = match.and ? "and" : "or"
-  const vals = (match.and || match.or).map(matchOpLabelOf)
-  return vals.join(sep)
+  return matchOpLabelOf(match.op)
 }
 
 export const serverTypeOf = (srv: A4Server) => {

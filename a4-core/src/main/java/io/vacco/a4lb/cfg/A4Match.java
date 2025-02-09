@@ -1,34 +1,16 @@
 package io.vacco.a4lb.cfg;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 public class A4Match {
 
-  public A4MatchOp[]    and, or;
+  public A4MatchOp      op;
   public A4Pool         pool;
   public A4Disc         discover;
   public A4HealthCheck  healthCheck;
   public A4MatchTls     tls;
 
-  public A4Match and(A4MatchOp ... and) {
-    this.and = and;
+  public A4Match op(A4MatchOp op) {
+    this.op = op;
     return this;
-  }
-
-  public List<A4MatchOp> andOps() {
-    return Arrays.asList(and);
-  }
-
-  public A4Match or(A4MatchOp ... or) {
-    this.or = or;
-    return this;
-  }
-
-  public List<A4MatchOp> orOps() {
-    return Arrays.asList(or);
   }
 
   public A4Match pool(A4Pool pool) {
@@ -46,17 +28,8 @@ public class A4Match {
     return this;
   }
 
-  public String toStringOp(String opLabel, A4MatchOp[] ops) {
-    return Arrays.stream(ops)
-        .filter(Objects::nonNull)
-        .map(A4MatchOp::toString)
-        .collect(Collectors.joining(String.format(" %s ", opLabel)));
-  }
-
   public String matchLabel() {
-    return (and == null && or == null)
-      ? "any"
-      : toStringOp(and != null ? "and" : "or", and != null ? and : or);
+    return op == null ? "any" : op.toString();
   }
 
   @Override public String toString() {

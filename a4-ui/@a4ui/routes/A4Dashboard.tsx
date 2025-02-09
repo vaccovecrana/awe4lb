@@ -198,7 +198,7 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
           <tr>
             <td>{tls.certPath}</td>
             <td>{tls.keyPath}</td>
-            <td>{tls.open ? tls.open : false}</td>
+            <td>{tls.open ? tls.open : "false"}</td>
           </tr>
         </tbody>
       </table>

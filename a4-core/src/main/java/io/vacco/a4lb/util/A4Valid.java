@@ -5,7 +5,6 @@ import am.ik.yavi.constraint.*;
 import am.ik.yavi.constraint.base.ContainerConstraintBase;
 import am.ik.yavi.core.*;
 import io.vacco.a4lb.cfg.*;
-
 import java.io.File;
 import java.net.*;
 import java.util.*;
@@ -111,30 +110,28 @@ public class A4Valid {
         "weightPriority", "weightPriority.allOf",
         "\"{0}\" must specify all of [weight, priority]"
       )
-    ).nest(b -> b.addr, "addr", A4SockVld)
+    )
+    .nest(b -> b.addr, "addr", A4SockVld)
     .build();
 
   private static final Validator<A4StringOp> A4StringOpVld = ValidatorBuilder.<A4StringOp>of()
     .constraintOnCondition(
       (op, cg) -> op.equals != null,
-      b -> b._string(op -> op.equals, "equals", A4Valid::nnNeNb)
-    ).constraintOnCondition(
-      (op, cg) -> op.contains != null,
-      b -> b._string(op -> op.contains, "contains", A4Valid::nnNeNb)
+      b -> b._string(op -> op.equals, A4MatchOps.OpEquals, A4Valid::nnNeNb)
     ).constraintOnCondition(
       (op, cg) -> op.startsWith != null,
-      b -> b._string(op -> op.startsWith, "startsWith", A4Valid::nnNeNb)
+      b -> b._string(op -> op.startsWith, A4MatchOps.OpStartsWith, A4Valid::nnNeNb)
     ).constraintOnCondition(
       (op, cg) -> op.endsWith != null,
-      b -> b._string(op -> op.endsWith, "endsWith", A4Valid::nnNeNb)
+      b -> b._string(op -> op.endsWith, A4MatchOps.OpEndsWith, A4Valid::nnNeNb)
     ).constraintOnTarget(
-      op -> op.equals != null || op.contains != null || op.startsWith != null || op.endsWith != null,
+      op -> op.equals != null || op.endsWith != null || op.startsWith != null,
       anyOf, anyOf,
-      "\"{0}\" missing any of [equals, contains, startsWith, endsWith]"
+      "\"{0}\" missing any of " + Arrays.toString(A4MatchOps.Ops)
     ).constraintOnTarget(
-      op -> allNoNullLtEq(1, op.equals, op.contains, op.startsWith, op.endsWith),
+      op -> allNoNullLtEq(1, op.equals, op.endsWith, op.startsWith),
       oneOf, oneOf,
-      "\"{0}\" only one of [equals, contains, startsWith, endsWith] allowed"
+      "\"{0}\" only one of " + Arrays.toString(A4MatchOps.Ops) + " allowed"
     ).build();
 
   private static final Validator<A4MatchOp> A4MatchOpVld = ValidatorBuilder.<A4MatchOp>of()
@@ -144,10 +141,6 @@ public class A4Valid {
       mo -> mo.host != null || mo.sni != null,
       anyOf, anyOf,
       "\"{0}\" missing any of [host, sni]"
-    ).constraintOnTarget(
-      mo -> allNoNullLtEq(1, mo.host, mo.sni),
-      oneOf, oneOf,
-      "\"{0}\" only one of [host, sni] allowed"
     ).build();
 
   private static final Validator<A4DiscHttp> A4DiscHttpVld = ValidatorBuilder.<A4DiscHttp>of()
@@ -215,23 +208,22 @@ public class A4Valid {
     return !test;
   }
 
+  private static boolean matchSniCanOnlyBeEquals(A4Match m) {
+    if (m.op == null) {
+      return true;
+    }
+    if (m.op.sni == null) {
+      return true;
+    }
+    return m.op.sni.equals != null;
+  }
+
   private static final Validator<A4MatchTls> A4MatchTlsVld = ValidatorBuilder.<A4MatchTls>of()
     ._string(t -> t.certPath, "certPath", c -> file(nnNeNb(c)))
     ._string(t -> t.keyPath, "keyPath", c -> file(nnNeNb(c)))
     .build();
 
   private static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
-    .constraintOnCondition(
-      (m, cg) -> m.and != null,
-      b -> b.forEach(A4Match::andOps, "match.andOps", A4MatchOpVld)
-    ).constraintOnCondition(
-      (m, cg) -> m.or != null,
-      b -> b.forEach(A4Match::orOps, "match.orOps", A4MatchOpVld)
-    ).constraintOnTarget(
-      m -> allNoNullLtEq(1, m.and, m.or),
-      oneOf, oneOf,
-      "\"{0}\" only one of [and, or] allowed"
-    )
     .constraintOnCondition(
       (m, cg) -> discoverIntervalGreaterThanHealthCheckInterval(m),
       b -> b.constraintOnTarget(
@@ -240,10 +232,6 @@ public class A4Valid {
         "\"{0}\" \"discover.intervalMs\" must be greater than \"healthCheck.intervalMs\""
       )
     )
-    .constraintOnTarget(
-      A4Valid::onlyOneOfDiscoverOrPoolHosts, oneOf, oneOf,
-      "\"{0}\" only one of [discover, pool.hosts] allowed"
-    )
     .constraintOnCondition(
       (m, cg) -> m.discover == null,
       b -> b.nest(
@@ -251,10 +239,19 @@ public class A4Valid {
         b0 -> b0.constraint(A4Pool::hostList, "list", ContainerConstraintBase::notEmpty)
       )
     )
+    .constraintOnTarget(
+      A4Valid::onlyOneOfDiscoverOrPoolHosts, oneOf, oneOf,
+      "\"{0}\" only one of [discover, pool.hosts] allowed"
+    )
+    .constraintOnTarget(
+      A4Valid::matchSniCanOnlyBeEquals,
+      "match.op.sni", "op.sni", "\"{0}\" SNI match op can only be " + A4MatchOps.OpEquals
+    )
     .nest(m -> m.pool, "pool", A4PoolVld)
     .nestIfPresent(m -> m.discover, "discover", A4DiscVld)
     .nestIfPresent(m -> m.healthCheck, "healthCheck", A4HealthCheckVld)
     .nestIfPresent(m -> m.tls, "tls", A4MatchTlsVld)
+    .nestIfPresent(m -> m.op, "op", A4MatchOpVld)
     .build();
 
   private static final Validator<A4ServerTls> A4TlsVld = ValidatorBuilder.<A4ServerTls>of()

@@ -96,8 +96,7 @@ export interface A4HealthExec {
 }
 
 export interface A4Match {
-  and: A4MatchOp[];
-  or: A4MatchOp[];
+  op: A4MatchOp;
   pool: A4Pool;
   discover: A4Disc;
   healthCheck: A4HealthCheck;
@@ -147,9 +146,8 @@ export interface A4Sock {
 
 export interface A4StringOp {
   equals: string;
-  contains: string;
-  startsWith: string;
   endsWith: string;
+  startsWith: string;
 }
 
 export interface A4Udp {
