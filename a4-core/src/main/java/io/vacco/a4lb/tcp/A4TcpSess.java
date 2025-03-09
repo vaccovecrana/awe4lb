@@ -17,8 +17,8 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static int MaxBackendBuffers = 4;
-  public static int MaxClientBuffers = 4;
+  public static int MaxBackendBuffers = 32;
+  public static int MaxClientBuffers = 32;
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
