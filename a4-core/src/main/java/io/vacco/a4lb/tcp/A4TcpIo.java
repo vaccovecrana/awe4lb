@@ -32,7 +32,7 @@ public class A4TcpIo implements Closeable {
       this.id = this.channel.socket().toString();
       this.bufferSize = rawChannel.socket().getReceiveBufferSize();
     } catch (Exception e) {
-      throw new IllegalStateException("Client-Server channel initialization error - " + rawChannel.socket(), e);
+      throw new IllegalStateException("Client > Server channel initialization error - " + rawChannel.socket(), e);
     }
   }
 
@@ -53,12 +53,12 @@ public class A4TcpIo implements Closeable {
       this.id = channel.socket().toString();
       this.bufferSize = chn.socket().getReceiveBufferSize();
     } catch (Exception e) {
-      throw new IllegalStateException("Server-Backend channel initialization error - " + dest, e);
+      throw new IllegalStateException("Server > Backend channel initialization error - " + dest, e);
     }
   }
 
   private ByteBuffer getBuffer() {
-    ByteBuffer buffer = bufferPool.poll();
+    var buffer = bufferPool.poll();
     if (buffer == null) {
       buffer = ByteBuffer.allocateDirect(bufferSize);
     } else {
