@@ -15,15 +15,26 @@ import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
 
+  private static final long AdjustIntervalMs = 1000;
+  private static final int  MinBufferSize = 32 * 1024;   // 32KB
+  private static final int  MaxBufferSize = 1024 * 1024; // 1MB
+
   public final String id;
   public final SelectionKey channelKey;
   public final SocketChannel channel;
 
   private final Queue<ByteBuffer> bufferPool = new LinkedList<>();
   public  final Queue<ByteBuffer> bufferQueue = new LinkedList<>();
-  private final int bufferSize;
+  private int bufferSize;
 
   public A4Backend backend;
+
+  // Metrics for dynamic sizing
+  private long totalBytesRead = 0;
+  private long totalBytesWritten = 0;
+  private long readCount = 0;
+  private long writeCount = 0;
+  private long lastAdjustTime = System.currentTimeMillis();
 
   public A4TcpIo(SelectionKey channelKey, SocketChannel rawChannel) {
     try {
@@ -57,9 +68,39 @@ public class A4TcpIo implements Closeable {
     }
   }
 
-  private ByteBuffer getBuffer() {
+  private void adjustBufferSize() {
+    var now = System.currentTimeMillis();
+    if (now - lastAdjustTime < AdjustIntervalMs) {
+      return;
+    }
+    lastAdjustTime = now;
+
+    var avgBytesPerRead = readCount > 0 ? (double) totalBytesRead / readCount : 0;
+    var avgBytesPerWrite = writeCount > 0 ? (double) totalBytesWritten / writeCount : 0;
+    var queuePressure = bufferQueue.size();
+
+    // Estimate Bandwidth-Delay Product (1 Gbps * 20ms default RTT)
+    int rttMs = 20; // TODO: Replace with real RTT if measurable
+    int bdp = 125000 * rttMs / 1000; // 125000 bytes/ms = 1 Gbps
+    int targetSize = Math.max((int) avgBytesPerRead, bdp); // Max of avg transfer or BDP, plus queue headroom
+
+    targetSize = Math.max(targetSize, (int) avgBytesPerWrite);
+    targetSize += queuePressure * 4096; // 4KB per queued buffer
+    targetSize = Math.max(MinBufferSize, Math.min(MaxBufferSize, targetSize));
+
+    if (Math.abs(targetSize - bufferSize) > bufferSize * 0.25) { // adjust if significant change (25% diff)
+      if (log.isDebugEnabled()) {
+        log.debug("[{}] Adjusting bufferSize: {} -> {} (rdAvg={}, wrAvg={}, q={})",
+          id, bufferSize, targetSize, avgBytesPerRead, avgBytesPerWrite, queuePressure);
+      }
+      bufferSize = targetSize;
+    }
+  }
+
+  private ByteBuffer getBuffer() { // Create new if size mismatch
+    adjustBufferSize();
     var buffer = bufferPool.poll();
-    if (buffer == null) {
+    if (buffer == null || buffer.capacity() != bufferSize) {
       buffer = ByteBuffer.allocateDirect(bufferSize);
     } else {
       buffer.clear();
@@ -72,6 +113,8 @@ public class A4TcpIo implements Closeable {
     int bytesRead = eofRead(this.channel, buffer);
     if (bytesRead > 0) {
       bufferQueue.offer(buffer);
+      totalBytesRead += bytesRead;
+      readCount++;
     } else {
       bufferPool.offer(buffer);
     }
@@ -90,6 +133,10 @@ public class A4TcpIo implements Closeable {
       } else {
         break;
       }
+    }
+    if (totalBytesWritten > 0) {
+      this.totalBytesWritten += totalBytesWritten;
+      writeCount++;
     }
     return totalBytesWritten;
   }
@@ -121,7 +168,7 @@ public class A4TcpIo implements Closeable {
       ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
       : c.socket();
     return format(
-      "[%s, bq%02d, bp%02d, i%02d, r%02d, %s %s %s]",
+      "[%s, bq%02d, bp%02d, i%02d, r%02d, %s %s %s, bs%d]",
       format("%s%s%s%s",
         k.isReadable() ? "r" : "",
         k.isWritable() ? "w" : "",
@@ -133,7 +180,8 @@ public class A4TcpIo implements Closeable {
       k.interestOps(), k.readyOps(),
       sck.getLocalSocketAddress(),
       k.isReadable() ? "<" : k.isWritable() ? ">" : "<?>",
-      sck.getRemoteSocketAddress()
+      sck.getRemoteSocketAddress(),
+      bufferSize
     );
   }
 
