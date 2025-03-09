@@ -84,7 +84,7 @@
     "allDeclaredFields": true
   },
   {
-    "name": "io.vacco.a4lb.cfg.A4MatchTls,",
+    "name": "io.vacco.a4lb.cfg.A4MatchTls",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true,
     "allDeclaredFields": true
