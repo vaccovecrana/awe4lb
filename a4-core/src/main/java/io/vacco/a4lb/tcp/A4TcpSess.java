@@ -130,80 +130,79 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     var isBkRd = key.isReadable() && isBk;
     var isBkWr = key.isWritable() && isBk;
     var bytes = (Integer) null;
-    var doLog = true;
 
+    // Read from client
     if (isClRd) {
       bytes = client.read();
-      if (client.bufferQueue.size() > MaxClientBuffers) {
-        client.channelKey.interestOps(0);
-        if (backend.channelKey.interestOps() == SelectionKey.OP_READ) {
-          backend.channelKey.interestOps(SelectionKey.OP_WRITE);
+      if (bytes == -1) {
+        if (client.bufferQueue.isEmpty()) {
+          tearDown(null); // Client closed, no data to flush
+        } else {
+          client.channelKey.interestOps(0); // Stop reading, flush to backend
+          if (backend != null) backend.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
-        if (log.isDebugEnabled()) {
-          log.debug("{} CL STOP {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
-        }
-        return;
-      }
-    } else if (isClWr) {
-      bytes = backend.writeTo(client.channel);
-      if (backend.channelKey.interestOps() == 0) {
-        if (log.isDebugEnabled()) {
-          log.debug("{} BK GO   {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
-        }
-        backend.channelKey.interestOps(SelectionKey.OP_READ);
-        doLog = false;
-      }
-    } else if (isBkRd) {
-      bytes = backend.read();
-      if (backend.bufferQueue.size() > MaxBackendBuffers) {
-        backend.channelKey.interestOps(0);
-        if (client.channelKey.interestOps() == SelectionKey.OP_READ) {
-          client.channelKey.interestOps(SelectionKey.OP_WRITE);
-        }
-        if (log.isDebugEnabled()) {
-          log.debug("{} BK STOP {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
-        }
-        return;
-      }
-      bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
-    } else if (isBkWr) {
-      bytes = client.writeTo(backend.channel);
-      if (client.channelKey.interestOps() == 0) {
-        if (log.isDebugEnabled()) {
-          log.debug("{} CL GO   {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
-        }
-        client.channelKey.interestOps(SelectionKey.OP_READ);
-        doLog = false;
-      }
-      bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
-    }
-
-    if (doLog && log.isDebugEnabled()) {
-      log.debug(logState(bytes));
-    }
-
-    if (bytes != null) {
-      if (bytes > 0) {
-        if (isBkRd) {
-          client.channelKey.interestOps(SelectionKey.OP_WRITE);
-        }
-        if (isBkWr) {
-          backend.channelKey.interestOps(SelectionKey.OP_READ);
-        }
-        if (isClRd && backend != null) {
-          backend.channelKey.interestOps(SelectionKey.OP_WRITE);
-        }
-        if (isClWr) {
-          client.channelKey.interestOps(SelectionKey.OP_READ);
+      } else if (bytes > 0 && backend != null) {
+        backend.channelKey.interestOps(SelectionKey.OP_WRITE); // Data to send
+        if (client.bufferQueue.size() >= MaxClientBuffers) {
+          client.channelKey.interestOps(SelectionKey.OP_WRITE); // Pause read, allow write
+        } else {
+          client.channelKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE); // Keep reading
         }
       } else if (bytes == 0 && tlsClient) {
-        initBackend();
-      } else if (bytes == -1 && isBk && !backend.bufferQueue.isEmpty()) {
-        client.channelKey.interestOps(SelectionKey.OP_WRITE);
-        backend.channelKey.interestOps(0);
-      } else if (bytes == -1) {
-        tearDown(null);
+        initBackend(); // TLS handshake step
       }
+    }
+
+    // Write to client from backend
+    else if (isClWr) {
+      bytes = client.writeTo(backend.channel);
+      if (bytes > 0) {
+        bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
+        if (backend.bufferQueue.isEmpty()) {
+          backend.channelKey.interestOps(SelectionKey.OP_READ); // Resume backend read
+          client.channelKey.interestOps(SelectionKey.OP_READ); // Client can read more
+        } else {
+          client.channelKey.interestOps(SelectionKey.OP_WRITE); // More to write
+        }
+      }
+    }
+
+    // Read from backend
+    else if (isBkRd) {
+      bytes = backend.read();
+      if (bytes == -1) {
+        if (backend.bufferQueue.isEmpty()) {
+          tearDown(null); // Backend closed, no data to flush
+        } else {
+          backend.channelKey.interestOps(0); // Stop reading, flush to client
+          client.channelKey.interestOps(SelectionKey.OP_WRITE);
+        }
+      } else if (bytes > 0) {
+        bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
+        client.channelKey.interestOps(SelectionKey.OP_WRITE); // Data to send
+        if (backend.bufferQueue.size() >= MaxBackendBuffers) {
+          backend.channelKey.interestOps(SelectionKey.OP_WRITE); // Pause read, allow write
+        } else {
+          backend.channelKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE); // Keep reading
+        }
+      }
+    }
+
+    // Write to backend from client
+    else if (isBkWr) {
+      bytes = backend.writeTo(client.channel);
+      if (bytes > 0) {
+        if (client.bufferQueue.isEmpty()) {
+          client.channelKey.interestOps(SelectionKey.OP_READ); // Resume client read
+          backend.channelKey.interestOps(SelectionKey.OP_READ); // Backend can read more
+        } else {
+          backend.channelKey.interestOps(SelectionKey.OP_WRITE); // More to write
+        }
+      }
+    }
+
+    if (log.isDebugEnabled() && bytes != null) {
+      log.debug("{} {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
     }
   }
 
