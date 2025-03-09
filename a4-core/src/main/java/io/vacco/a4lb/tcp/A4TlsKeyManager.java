@@ -1,7 +1,6 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Match;
-import io.vacco.a4lb.util.A4MatchOps;
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.Socket;
@@ -63,22 +62,39 @@ public class A4TlsKeyManager extends X509ExtendedKeyManager {
     return certificates;
   }
 
+  private PrivateKey tryLoadKey(PKCS8EncodedKeySpec keySpec, String filePath) {
+    try {
+      return KeyFactory.getInstance("EC").generatePrivate(keySpec);
+    } catch (Exception e) {
+      try {
+        return KeyFactory.getInstance("RSA").generatePrivate(keySpec);
+      } catch (Exception e2) {
+        try {
+          return KeyFactory.getInstance("Ed25519").generatePrivate(keySpec);
+        } catch (Exception e3) {
+          try {
+            return KeyFactory.getInstance("DSA").generatePrivate(keySpec);
+          } catch (Exception e4) {
+            throw new IllegalStateException("Unsupported key type in: " + filePath, e4);
+          }
+        }
+      }
+    }
+  }
+
   public PrivateKey loadKey(File pemKey) {
     try {
-      var keyInputStream = new FileInputStream(pemKey);
-      var keyBytes = new byte[keyInputStream.available()];
-      keyInputStream.read(keyBytes);
-      keyInputStream.close();
-
-      var keyPEM = new String(keyBytes);
-      var privateKeyPEM = keyPEM.replace("-----BEGIN PRIVATE KEY-----", "")
+      byte[] keyBytes;
+      try (FileInputStream keyInputStream = new FileInputStream(pemKey)) {
+        keyBytes = keyInputStream.readAllBytes();
+      }
+      var keyPEM = new String(keyBytes)
+        .replace("-----BEGIN PRIVATE KEY-----", "")
         .replace("-----END PRIVATE KEY-----", "")
-        .replace("\n", "");
-
-      var encodedKey = Base64.getDecoder().decode(privateKeyPEM);
-      var keySpec = new PKCS8EncodedKeySpec(encodedKey);
-      var keyFactory = KeyFactory.getInstance("RSA");
-      return keyFactory.generatePrivate(keySpec);
+        .replaceAll("\\s+", "");
+      var pkcs8Key = Base64.getDecoder().decode(keyPEM);
+      var keySpec = new PKCS8EncodedKeySpec(pkcs8Key);
+      return tryLoadKey(keySpec, pemKey.getAbsolutePath());
     } catch (Exception e) {
       throw new IllegalStateException("Unable to load private key: " + pemKey.getAbsolutePath(), e);
     }
