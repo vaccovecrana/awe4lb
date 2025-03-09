@@ -17,9 +17,6 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static int MaxBackendBuffers = 4;
-  public static int MaxClientBuffers = 4;
-
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
   private A4Selector bkSel;
@@ -118,7 +115,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   private String logState(Integer bytes) {
     return format(
       "%s - %s cl%s bk%s",
-      id, format("%06d", bytes), client, backend != null ? backend : "?"
+      id == null ? "????????" : id,
+      format("%06d", bytes), client, backend != null ? backend : "?"
     );
   }
 
@@ -134,7 +132,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
     if (isClRd) {
       bytes = client.read();
-      if (client.bufferQueue.size() > MaxClientBuffers) {
+      if (client.isStalling()) {
         client.channelKey.interestOps(0);
         if (backend.channelKey.interestOps() == SelectionKey.OP_READ) {
           backend.channelKey.interestOps(SelectionKey.OP_WRITE);
@@ -155,7 +153,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       }
     } else if (isBkRd) {
       bytes = backend.read();
-      if (backend.bufferQueue.size() > MaxBackendBuffers) {
+      if (backend.isStalling()) {
         backend.channelKey.interestOps(0);
         if (client.channelKey.interestOps() == SelectionKey.OP_READ) {
           client.channelKey.interestOps(SelectionKey.OP_WRITE);

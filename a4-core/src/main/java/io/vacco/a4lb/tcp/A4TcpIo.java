@@ -5,6 +5,7 @@ import io.vacco.a4lb.niossl.*;
 import io.vacco.a4lb.util.A4Io;
 import java.io.Closeable;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
@@ -15,9 +16,16 @@ import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
 
-  private static final long AdjustIntervalMs = 1000;
-  private static final int  MinBufferSize = 32 * 1024;   // 32KB
-  private static final int  MaxBufferSize = 1024 * 1024; // 1MB
+  private static final long   AdjustIntervalMs = 1000;
+  private static final int    MinBufferSize = 32 * 1024;   // 32KB
+  private static final int    MaxBufferSize = 1024 * 1024; // 1MB
+
+  private static final int    QueuePressureIncrement = 4096;    // 4KB per queued buffer
+  private static final int    MaxQueuePressureBoost = 32 * 1024; // 32KB max queue boost
+  private static final double BufferSizeChangeThreshold = 0.25; // 25% change to adjust
+
+  public static int MaxBackendBuffers = 8;  // Max queued buffers for backend
+  public static int MaxClientBuffers = 8;  // Max queued buffers for client
 
   public final String id;
   public final SelectionKey channelKey;
@@ -25,8 +33,9 @@ public class A4TcpIo implements Closeable {
 
   private final Queue<ByteBuffer> bufferPool = new LinkedList<>();
   public  final Queue<ByteBuffer> bufferQueue = new LinkedList<>();
-  private int bufferSize;
 
+  private int sendBufferSize;
+  private int receiveBufferSize;
   public A4Backend backend;
 
   // Metrics for dynamic sizing
@@ -41,7 +50,8 @@ public class A4TcpIo implements Closeable {
       this.channel = Objects.requireNonNull(rawChannel);
       this.channelKey = Objects.requireNonNull(channelKey);
       this.id = this.channel.socket().toString();
-      this.bufferSize = rawChannel.socket().getReceiveBufferSize();
+      this.sendBufferSize = rawChannel.socket().getSendBufferSize();
+      this.receiveBufferSize = rawChannel.socket().getReceiveBufferSize();
     } catch (Exception e) {
       throw new IllegalStateException("Client > Server channel initialization error - " + rawChannel.socket(), e);
     }
@@ -62,7 +72,8 @@ public class A4TcpIo implements Closeable {
       this.channel.configureBlocking(false);
       this.channelKey = chn.register(selector, SelectionKey.OP_READ);
       this.id = channel.socket().toString();
-      this.bufferSize = chn.socket().getReceiveBufferSize();
+      this.sendBufferSize = chn.socket().getSendBufferSize();
+      this.receiveBufferSize = chn.socket().getReceiveBufferSize();
     } catch (Exception e) {
       throw new IllegalStateException("Server > Backend channel initialization error - " + dest, e);
     }
@@ -70,7 +81,10 @@ public class A4TcpIo implements Closeable {
 
   private void adjustBufferSize() {
     var now = System.currentTimeMillis();
-    if (now - lastAdjustTime < AdjustIntervalMs) {
+    var timeElapsed = now - lastAdjustTime >= AdjustIntervalMs;
+    var maxBuffers = (backend != null) ? MaxBackendBuffers : MaxClientBuffers;
+    var highPressure = bufferQueue.size() > (maxBuffers * .75); // 75% of max
+    if (!timeElapsed && !highPressure) {
       return;
     }
     lastAdjustTime = now;
@@ -79,29 +93,49 @@ public class A4TcpIo implements Closeable {
     var avgBytesPerWrite = writeCount > 0 ? (double) totalBytesWritten / writeCount : 0;
     var queuePressure = bufferQueue.size();
 
-    // Estimate Bandwidth-Delay Product (1 Gbps * 20ms default RTT)
-    int rttMs = 20; // TODO: Replace with real RTT if measurable
-    int bdp = 125000 * rttMs / 1000; // 125000 bytes/ms = 1 Gbps
-    int targetSize = Math.max((int) avgBytesPerRead, bdp); // Max of avg transfer or BDP, plus queue headroom
+    var targetReceiveSize = (int) Math.max(avgBytesPerRead, MinBufferSize);
+    var targetSendSize = (int) Math.max(avgBytesPerWrite, MinBufferSize);
 
-    targetSize = Math.max(targetSize, (int) avgBytesPerWrite);
-    targetSize += queuePressure * 4096; // 4KB per queued buffer
-    targetSize = Math.max(MinBufferSize, Math.min(MaxBufferSize, targetSize));
+    targetReceiveSize += Math.min(queuePressure * QueuePressureIncrement, MaxQueuePressureBoost);
+    targetSendSize += Math.min(queuePressure * QueuePressureIncrement, MaxQueuePressureBoost);
+    targetReceiveSize = Math.max(MinBufferSize, Math.min(MaxBufferSize, targetReceiveSize));
+    targetSendSize = Math.max(MinBufferSize, Math.min(MaxBufferSize, targetSendSize));
 
-    if (Math.abs(targetSize - bufferSize) > bufferSize * 0.25) { // adjust if significant change (25% diff)
-      if (log.isDebugEnabled()) {
-        log.debug("[{}] Adjusting bufferSize: {} -> {} (rdAvg={}, wrAvg={}, q={})",
-          id, bufferSize, targetSize, avgBytesPerRead, avgBytesPerWrite, queuePressure);
+    var adjustReceive = Math.abs(targetReceiveSize - receiveBufferSize) > receiveBufferSize * BufferSizeChangeThreshold;
+    var adjustSend = Math.abs(targetSendSize - sendBufferSize) > sendBufferSize * BufferSizeChangeThreshold;
+
+    if (adjustReceive || adjustSend) {
+      try {
+        if (adjustReceive) {
+          this.channel.socket().setReceiveBufferSize(targetReceiveSize);
+        }
+        if (adjustSend) {
+          this.channel.socket().setSendBufferSize(targetSendSize);
+        }
+        if (log.isDebugEnabled()) {
+          log.debug("[{}] Adjusting buffers: rcv {} -> {} | snd {} -> {} (rdAvg={}, wrAvg={}, q={}, sndBuf={}, rcvBuf={})",
+            id, receiveBufferSize, targetReceiveSize, sendBufferSize, targetSendSize,
+            avgBytesPerRead, avgBytesPerWrite, queuePressure,
+            this.channel.socket().getSendBufferSize(), this.channel.socket().getReceiveBufferSize());
+        }
+        if (adjustReceive) {
+          receiveBufferSize = targetReceiveSize;
+        }
+        if (adjustSend) {
+          sendBufferSize = targetSendSize;
+        }
+      } catch (SocketException e) {
+        log.warn("[{}] Failed to adjust socket buffer sizes (rcv={}, snd={}): {}",
+          id, targetReceiveSize, targetSendSize, e.getMessage());
       }
-      bufferSize = targetSize;
     }
   }
 
-  private ByteBuffer getBuffer() { // Create new if size mismatch
+  private ByteBuffer getBuffer() { // Sized for reading
     adjustBufferSize();
     var buffer = bufferPool.poll();
-    if (buffer == null || buffer.capacity() != bufferSize) {
-      buffer = ByteBuffer.allocateDirect(bufferSize);
+    if (buffer == null || buffer.capacity() != receiveBufferSize) {
+      buffer = ByteBuffer.allocateDirect(receiveBufferSize);
     } else {
       buffer.clear();
     }
@@ -129,7 +163,7 @@ public class A4TcpIo implements Closeable {
       totalBytesWritten += bytesWritten;
       if (!buffer.hasRemaining()) {
         bufferQueue.poll();
-        bufferPool.offer(buffer);
+        bufferPool.offer(buffer); // Keep as-is, sized for receive
       } else {
         break;
       }
@@ -139,6 +173,11 @@ public class A4TcpIo implements Closeable {
       writeCount++;
     }
     return totalBytesWritten;
+  }
+
+  public boolean isStalling() {
+    int maxBuffers = (backend != null) ? MaxBackendBuffers : MaxClientBuffers;
+    return bufferQueue.size() >= maxBuffers;
   }
 
   public A4TcpIo backend(A4Backend backend) {
@@ -168,7 +207,7 @@ public class A4TcpIo implements Closeable {
       ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
       : c.socket();
     return format(
-      "[%s, bq%02d, bp%02d, i%02d, r%02d, %s %s %s, bs%d]",
+      "[%s, bq%02d, bp%02d, i%02d, r%02d, %s %s %s, snd%d, rcv%d]",
       format("%s%s%s%s",
         k.isReadable() ? "r" : "",
         k.isWritable() ? "w" : "",
@@ -181,7 +220,7 @@ public class A4TcpIo implements Closeable {
       sck.getLocalSocketAddress(),
       k.isReadable() ? "<" : k.isWritable() ? ">" : "<?>",
       sck.getRemoteSocketAddress(),
-      bufferSize
+      sendBufferSize, receiveBufferSize
     );
   }
 
