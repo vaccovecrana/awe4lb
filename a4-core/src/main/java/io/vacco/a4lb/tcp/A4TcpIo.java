@@ -113,7 +113,7 @@ public class A4TcpIo implements Closeable {
           this.channel.socket().setSendBufferSize(targetSendSize);
         }
         if (log.isDebugEnabled()) {
-          log.debug("[{}] Adjusting buffers: rcv {} -> {} | snd {} -> {} (rdAvg={}, wrAvg={}, q={}, sndBuf={}, rcvBuf={})",
+          log.debug("[{}] Adjusting buffers: rx {} -> {} | tx {} -> {} (rxAvg={}, txAvg={}, q={}, txBuf={}, rxBuf={})",
             id, receiveBufferSize, targetReceiveSize, sendBufferSize, targetSendSize,
             avgBytesPerRead, avgBytesPerWrite, queuePressure,
             this.channel.socket().getSendBufferSize(), this.channel.socket().getReceiveBufferSize());
@@ -125,7 +125,7 @@ public class A4TcpIo implements Closeable {
           sendBufferSize = targetSendSize;
         }
       } catch (SocketException e) {
-        log.warn("[{}] Failed to adjust socket buffer sizes (rcv={}, snd={}): {}",
+        log.warn("[{}] Failed to adjust socket buffer sizes (rx={}, tx={}): {}",
           id, targetReceiveSize, targetSendSize, e.getMessage());
       }
     }
@@ -207,7 +207,7 @@ public class A4TcpIo implements Closeable {
       ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
       : c.socket();
     return format(
-      "[%s, bq%02d, bp%02d, i%02d, r%02d, %s %s %s, snd%d, rcv%d]",
+      "[%s, bq%02d, bp%02d, i%02d, r%02d, %s %s %s, tx%d, rx%d]",
       format("%s%s%s%s",
         k.isReadable() ? "r" : "",
         k.isWritable() ? "w" : "",

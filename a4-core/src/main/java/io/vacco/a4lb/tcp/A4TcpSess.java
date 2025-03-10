@@ -99,25 +99,20 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     return false;
   }
 
-  private String iv(boolean v) {
-    return v ? "1" : "0";
-  }
-
-  private String logOpBitsOf(boolean isCl, boolean isClRd, boolean isClWr,
-                             boolean isBk, boolean isBkRd, boolean isBkWr) {
-    return format(
-      "c: %s %s %s, b: %s %s %s",
-      iv(isCl), iv(isClRd), iv(isClWr),
-      iv(isBk), iv(isBkRd), iv(isBkWr)
-    );
-  }
-
-  private String logState(Integer bytes) {
-    return format(
-      "%s - %s cl%s bk%s",
-      id == null ? "????????" : id,
-      format("%06d", bytes), client, backend != null ? backend : "?"
-    );
+  private void logState(boolean isClRd, boolean isClWr,
+                        boolean isBkRd, boolean isBkWr,
+                        boolean earlyRet, Integer bytes) {
+    if (log.isDebugEnabled()) {
+      var op = isClRd ? "cr" : isClWr ? "cw" : isBkRd ? "br" : isBkWr ? "bw" : "??";
+      log.debug(
+        "{} - {} {} cl{} bk{}{}",
+        id == null ? "????????" : id,
+        format("%06d", bytes),
+        op, client,
+        backend != null ? backend : "?",
+        earlyRet ? " !" : ""
+      );
+    }
   }
 
   private void tcpUpdate(SelectionKey key) {
@@ -128,56 +123,39 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     var isBkRd = key.isReadable() && isBk;
     var isBkWr = key.isWritable() && isBk;
     var bytes = (Integer) null;
-    var doLog = true;
 
-    if (isClRd) {
+    if (isClRd) { // client has data for us to read
       bytes = client.read();
       if (client.isStalling()) {
         client.channelKey.interestOps(0);
         if (backend.channelKey.interestOps() == SelectionKey.OP_READ) {
           backend.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
-        if (log.isDebugEnabled()) {
-          log.debug("{} CL STOP {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
-        }
+        logState(isClRd, isClWr, isBkRd, isBkWr, true, bytes);
         return;
       }
-    } else if (isClWr) {
+    } else if (isClWr) { // client is ready to receive data
       bytes = backend.writeTo(client.channel);
       if (backend.channelKey.interestOps() == 0) {
-        if (log.isDebugEnabled()) {
-          log.debug("{} BK GO   {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
-        }
         backend.channelKey.interestOps(SelectionKey.OP_READ);
-        doLog = false;
       }
-    } else if (isBkRd) {
+    } else if (isBkRd) { // backend has data for us to read
       bytes = backend.read();
       if (backend.isStalling()) {
         backend.channelKey.interestOps(0);
         if (client.channelKey.interestOps() == SelectionKey.OP_READ) {
           client.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
-        if (log.isDebugEnabled()) {
-          log.debug("{} BK STOP {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
-        }
+        logState(isClRd, isClWr, isBkRd, isBkWr, true, bytes);
         return;
       }
       bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
-    } else if (isBkWr) {
+    } else if (isBkWr) { // backend is ready to receive data
       bytes = client.writeTo(backend.channel);
       if (client.channelKey.interestOps() == 0) {
-        if (log.isDebugEnabled()) {
-          log.debug("{} CL GO   {}", logState(bytes), logOpBitsOf(isCl, isClRd, isClWr, isBk, isBkRd, isBkWr));
-        }
         client.channelKey.interestOps(SelectionKey.OP_READ);
-        doLog = false;
       }
       bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
-    }
-
-    if (doLog && log.isDebugEnabled()) {
-      log.debug(logState(bytes));
     }
 
     if (bytes != null) {
@@ -186,13 +164,21 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
           client.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
         if (isBkWr) {
-          backend.channelKey.interestOps(SelectionKey.OP_READ);
+          if (!client.bufferQueue.isEmpty()) {
+            backend.channelKey.interestOps(SelectionKey.OP_WRITE);
+          } else {
+            backend.channelKey.interestOps(SelectionKey.OP_READ);
+          }
         }
         if (isClRd && backend != null) {
           backend.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
         if (isClWr) {
-          client.channelKey.interestOps(SelectionKey.OP_READ);
+          if (backend != null && !backend.bufferQueue.isEmpty()) {
+            client.channelKey.interestOps(SelectionKey.OP_WRITE);
+          } else {
+            client.channelKey.interestOps(SelectionKey.OP_READ);
+          }
         }
       } else if (bytes == 0 && tlsClient) {
         initBackend();
@@ -201,8 +187,11 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         backend.channelKey.interestOps(0);
       } else if (bytes == -1) {
         tearDown(null);
+        return;
       }
     }
+
+    logState(isClRd, isClWr, isBkRd, isBkWr, false, bytes);
   }
 
   public void update(SelectionKey key) {
