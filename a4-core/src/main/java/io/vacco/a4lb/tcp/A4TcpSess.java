@@ -105,12 +105,12 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (log.isDebugEnabled()) {
       var op = isClRd ? "cr" : isClWr ? "cw" : isBkRd ? "br" : isBkWr ? "bw" : "??";
       log.debug(
-        "{} - {} {} cl{} bk{}{}",
+        "{} {} {} {} cl{} bk{}",
         id == null ? "????????" : id,
+        earlyRet ? "!" : "-",
         format("%06d", bytes),
         op, client,
-        backend != null ? backend : "?",
-        earlyRet ? " !" : ""
+        backend != null ? backend : "?"
       );
     }
   }
@@ -170,10 +170,12 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
           backend.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
         if (isClWr) {
-          if (backend != null && !backend.bufferQueue.isEmpty()) {
-            client.channelKey.interestOps(SelectionKey.OP_WRITE);
-          } else {
-            client.channelKey.interestOps(SelectionKey.OP_READ);
+          if (backend != null) {
+            if (backend.bufferQueue.isEmpty()) {
+              client.channelKey.interestOps(SelectionKey.OP_READ);
+            } else {
+              client.channelKey.interestOps(SelectionKey.OP_WRITE);
+            }
           }
         }
       } else if (bytes == 0 && tlsClient) {
