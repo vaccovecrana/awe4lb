@@ -80,7 +80,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
     this.backend = bkSel.assign(client.channelKey.selector(), client.channel, tlsSni, tlsExec);
     this.backend.channelKey.attach(this);
-    this.id = format("%x", format("%s-%s",
+    this.id = format("%08x", format("%s-%s",
       client.getRawChannel().socket(),
       backend.getRawChannel().socket()
     ).hashCode());
@@ -152,21 +152,19 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
 
     if (bytes > 0) {
-      if (isCr) {
+      if (isCr || isBr) {
+        client.channelKey.interestOps(SelectionKey.OP_WRITE);
         backend.channelKey.interestOps(SelectionKey.OP_WRITE);
       }
       if (isCw) {
-        client.channelKey.interestOps(client.channelKey.readyOps());
+        backend.channelKey.interestOps(SelectionKey.OP_READ);
         if (backend.channelKey.interestOps() == 0 && !backend.isStalling()) {
           backend.channelKey.interestOps(SelectionKey.OP_READ);
           client.channelKey.interestOps(SelectionKey.OP_WRITE);
         }
       }
-      if (isBr) {
-        client.channelKey.interestOps(SelectionKey.OP_WRITE);
-      }
       if (isBw) {
-        backend.channelKey.interestOps(backend.channelKey.readyOps());
+        client.channelKey.interestOps(SelectionKey.OP_READ);
         if (client.channelKey.interestOps() == 0 && !client.isStalling()) {
           client.channelKey.interestOps(SelectionKey.OP_READ);
           backend.channelKey.interestOps(SelectionKey.OP_WRITE);

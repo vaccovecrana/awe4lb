@@ -211,17 +211,17 @@ public class A4TcpIo implements Closeable {
       ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
       : c.socket();
     return format(
-      "[%s, bq%02d, bp%02d, i%02d, r%02d, %s %s %s, tx%d, rx%d]",
+      "[%s, i%02d, r%02d, q%02d, p%02d, %s %s %s, tx%d, rx%d]",
       k.isReadable() ? "r"
         : k.isWritable() ? "w"
         : k.isConnectable() ? "c"
         : k.isAcceptable() ? "a"
         : "?",
+      k.interestOps(), k.readyOps(),
       bufferQueue.size(),
       bufferPool.size(),
-      k.interestOps(), k.readyOps(),
       sck.getLocalSocketAddress(),
-      k.isReadable() ? "<" : k.isWritable() ? ">" : "<?>",
+      k.isReadable() ? "<" : k.isWritable() ? ">" : "?",
       sck.getRemoteSocketAddress(),
       sendBufferSize, receiveBufferSize
     );
