@@ -159,7 +159,7 @@ public class A4TcpIo implements Closeable {
     int totalBytesWritten = 0;
     while (!bufferQueue.isEmpty()) {
       var buffer = bufferQueue.peek();
-      int bytesWritten = eofWrite(channel, buffer);
+      var bytesWritten = eofWrite(channel, buffer);
       totalBytesWritten += bytesWritten;
       if (!buffer.hasRemaining()) {
         bufferQueue.poll();
@@ -176,7 +176,7 @@ public class A4TcpIo implements Closeable {
   }
 
   public boolean isStalling() {
-    int maxBuffers = (backend != null) ? MaxBackendBuffers : MaxClientBuffers;
+    var maxBuffers = (backend != null) ? MaxBackendBuffers : MaxClientBuffers;
     return bufferQueue.size() >= maxBuffers;
   }
 
@@ -208,12 +208,11 @@ public class A4TcpIo implements Closeable {
       : c.socket();
     return format(
       "[%s, bq%02d, bp%02d, i%02d, r%02d, %s %s %s, tx%d, rx%d]",
-      format("%s%s%s%s",
-        k.isReadable() ? "r" : "",
-        k.isWritable() ? "w" : "",
-        k.isConnectable() ? "c" : "",
-        k.isAcceptable() ? "a" : ""
-      ),
+      k.isReadable() ? "r"
+        : k.isWritable() ? "w"
+        : k.isConnectable() ? "c"
+        : k.isAcceptable() ? "a"
+        : "?",
       bufferQueue.size(),
       bufferPool.size(),
       k.interestOps(), k.readyOps(),

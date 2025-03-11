@@ -116,80 +116,76 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   }
 
   private void tcpUpdate(SelectionKey key) {
-    var isCl = client.channelKey == key;
-    var isBk = backend != null && backend.channelKey == key;
-    var isClRd = key.isReadable() && isCl;
-    var isClWr = key.isWritable() && isCl;
-    var isBkRd = key.isReadable() && isBk;
-    var isBkWr = key.isWritable() && isBk;
-    var bytes = (Integer) null;
+    var isCr = key.isReadable() && client.channelKey == key;
+    var isCw = key.isWritable() && client.channelKey == key;
+    var isBr = key.isReadable() && backend != null && backend.channelKey == key;
+    var isBw = key.isWritable() && backend != null && backend.channelKey == key;
+    var bytes = Integer.MIN_VALUE;
 
-    if (isClRd) { // client has data for us to read
+    if (isCr) { // client has data for us to read
       bytes = client.read();
-      if (client.isStalling()) {
-        client.channelKey.interestOps(0);
-        if (backend.channelKey.interestOps() == SelectionKey.OP_READ) {
-          backend.channelKey.interestOps(SelectionKey.OP_WRITE);
-        }
-        logState(isClRd, isClWr, isBkRd, isBkWr, true, bytes);
+      if (bytes == 0 && tlsClient) {
+        initBackend();
+        logState(isCr, isCw, isBr, isBw, false, bytes);
         return;
       }
-    } else if (isClWr) { // client is ready to receive data
-      bytes = backend.writeTo(client.channel);
-      if (backend.channelKey.interestOps() == 0) {
-        backend.channelKey.interestOps(SelectionKey.OP_READ);
-      }
-    } else if (isBkRd) { // backend has data for us to read
+    }
+    if (isBr) { // backend has data for us to read
       bytes = backend.read();
-      if (backend.isStalling()) {
-        backend.channelKey.interestOps(0);
-        if (client.channelKey.interestOps() == SelectionKey.OP_READ) {
-          client.channelKey.interestOps(SelectionKey.OP_WRITE);
-        }
-        logState(isClRd, isClWr, isBkRd, isBkWr, true, bytes);
-        return;
-      }
       bkSel.contextOf(backend.backend).trackRxTx(true, bytes);
-    } else if (isBkWr) { // backend is ready to receive data
+    }
+    if (isCw) { // client is ready to receive data
+      bytes = backend.writeTo(client.channel);
+    }
+    if (isBw) { // backend is ready to receive data
       bytes = client.writeTo(backend.channel);
-      if (client.channelKey.interestOps() == 0) {
-        client.channelKey.interestOps(SelectionKey.OP_READ);
-      }
       bkSel.contextOf(backend.backend).trackRxTx(false, bytes);
     }
 
-    if (bytes != null) {
-      if (bytes > 0) {
-        if (isBkRd) {
-          client.channelKey.interestOps(SelectionKey.OP_WRITE);
-        }
-        if (isBkWr) {
-          backend.channelKey.interestOps(SelectionKey.OP_READ);
-        }
-        if (isClRd && backend != null) {
-          backend.channelKey.interestOps(SelectionKey.OP_WRITE);
-        }
-        if (isClWr) {
-          if (backend != null) {
-            if (backend.bufferQueue.isEmpty()) {
-              client.channelKey.interestOps(SelectionKey.OP_READ);
-            } else {
-              client.channelKey.interestOps(SelectionKey.OP_WRITE);
-            }
-          }
-        }
-      } else if (bytes == 0 && tlsClient) {
-        initBackend();
-      } else if (bytes == -1 && isBk && !backend.bufferQueue.isEmpty()) {
-        client.channelKey.interestOps(SelectionKey.OP_WRITE);
-        backend.channelKey.interestOps(0);
-      } else if (bytes == -1) {
-        tearDown(null);
-        return;
-      }
+    var isCs = client.isStalling();
+    var isBs = backend != null && backend.isStalling();
+    if (isCs || isBs) {
+      if (isCs) client.channelKey.interestOps(0);
+      if (isBs) backend.channelKey.interestOps(0);
+      logState(isCr, isCw, isBr, isBw, true, bytes);
+      return;
     }
 
-    logState(isClRd, isClWr, isBkRd, isBkWr, false, bytes);
+    if (bytes > 0) {
+      if (isCr) {
+        backend.channelKey.interestOps(SelectionKey.OP_WRITE);
+      }
+      if (isCw) {
+        client.channelKey.interestOps(client.channelKey.readyOps());
+        if (backend.channelKey.interestOps() == 0 && !backend.isStalling()) {
+          backend.channelKey.interestOps(SelectionKey.OP_READ);
+          client.channelKey.interestOps(SelectionKey.OP_WRITE);
+        }
+      }
+      if (isBr) {
+        client.channelKey.interestOps(SelectionKey.OP_WRITE);
+      }
+      if (isBw) {
+        backend.channelKey.interestOps(backend.channelKey.readyOps());
+        if (client.channelKey.interestOps() == 0 && !client.isStalling()) {
+          client.channelKey.interestOps(SelectionKey.OP_READ);
+          backend.channelKey.interestOps(SelectionKey.OP_WRITE);
+        }
+      }
+    } else if (bytes == 0) {
+      if (isCw) {
+        client.channelKey.interestOps(SelectionKey.OP_READ);
+      }
+      if (isBw) {
+        backend.channelKey.interestOps(SelectionKey.OP_READ);
+      }
+    } else if (bytes == -1) {
+      logState(isCr, isCw, isBr, isBw, false, bytes);
+      tearDown(null);
+      return;
+    }
+
+    logState(isCr, isCw, isBr, isBw, false, bytes);
   }
 
   public void update(SelectionKey key) {
