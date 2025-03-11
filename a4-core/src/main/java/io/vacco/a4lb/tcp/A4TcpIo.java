@@ -32,7 +32,7 @@ public class A4TcpIo implements Closeable {
   public final SocketChannel channel;
 
   private final Queue<ByteBuffer> bufferPool = new LinkedList<>();
-  public  final Queue<ByteBuffer> bufferQueue = new LinkedList<>();
+  private final Queue<ByteBuffer> bufferQueue = new LinkedList<>();
 
   private int sendBufferSize;
   private int receiveBufferSize;
@@ -178,6 +178,10 @@ public class A4TcpIo implements Closeable {
   public boolean isStalling() {
     var maxBuffers = (backend != null) ? MaxBackendBuffers : MaxClientBuffers;
     return bufferQueue.size() >= maxBuffers;
+  }
+
+  public boolean isEmpty() {
+    return this.bufferQueue.isEmpty();
   }
 
   public A4TcpIo backend(A4Backend backend) {

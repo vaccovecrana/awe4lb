@@ -180,9 +180,11 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         backend.channelKey.interestOps(SelectionKey.OP_READ);
       }
     } else if (bytes == -1) {
-      logState(isCr, isCw, isBr, isBw, false, bytes);
-      tearDown(null);
-      return;
+      if (client.isEmpty() && backend.isEmpty()) {
+        logState(isCr, isCw, isBr, isBw, false, bytes);
+        tearDown(null);
+        return;
+      }
     }
 
     logState(isCr, isCw, isBr, isBw, false, bytes);
