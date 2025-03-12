@@ -16,9 +16,9 @@ import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
 
-  private static final long   AdjustIntervalMs = 1000;
-  private static final int    MinBufferSize = 32 * 1024;   // 32KB
-  private static final int    MaxBufferSize = 1024 * 1024; // 1MB
+  public static final long   AdjustIntervalMs = 1000;
+  public static final int    MinBufferSize = 32 * 1024;   // 32KB
+  public static final int    MaxBufferSize = 1024 * 1024; // 1MB
 
   private static final int    QueuePressureIncrement = 4096;    // 4KB per queued buffer
   private static final int    MaxQueuePressureBoost = 32 * 1024; // 32KB max queue boost
@@ -52,7 +52,6 @@ public class A4TcpIo implements Closeable {
       this.id = this.channel.socket().toString();
       this.sendBufferSize = rawChannel.socket().getSendBufferSize();
       this.receiveBufferSize = rawChannel.socket().getReceiveBufferSize();
-      this.channel.socket().setTcpNoDelay(true);
     } catch (Exception e) {
       throw new IllegalStateException("Client > Server channel initialization error - " + rawChannel.socket(), e);
     }
@@ -69,7 +68,6 @@ public class A4TcpIo implements Closeable {
       } else {
         this.channel = chn;
       }
-      this.channel.socket().setTcpNoDelay(true);
       this.channel.connect(dest);
       this.channel.configureBlocking(false);
       this.channelKey = chn.register(selector, SelectionKey.OP_READ);
@@ -79,6 +77,12 @@ public class A4TcpIo implements Closeable {
     } catch (Exception e) {
       throw new IllegalStateException("Server > Backend channel initialization error - " + dest, e);
     }
+  }
+
+  public static int roundToPowerOfTwo(int value) {
+    if (value <= 0) return MinBufferSize;
+    int power = (int) Math.ceil(Math.log(value) / Math.log(2));
+    return Math.min(MaxBufferSize, Math.max(MinBufferSize, 1 << power));
   }
 
   private void adjustBufferSize() {
@@ -100,8 +104,8 @@ public class A4TcpIo implements Closeable {
 
     targetReceiveSize += Math.min(queuePressure * QueuePressureIncrement, MaxQueuePressureBoost);
     targetSendSize += Math.min(queuePressure * QueuePressureIncrement, MaxQueuePressureBoost);
-    targetReceiveSize = Math.max(MinBufferSize, Math.min(MaxBufferSize, targetReceiveSize));
-    targetSendSize = Math.max(MinBufferSize, Math.min(MaxBufferSize, targetSendSize));
+    targetReceiveSize = roundToPowerOfTwo(targetReceiveSize);
+    targetSendSize = roundToPowerOfTwo(targetSendSize);
 
     var adjustReceive = Math.abs(targetReceiveSize - receiveBufferSize) > receiveBufferSize * BufferSizeChangeThreshold;
     var adjustSend = Math.abs(targetSendSize - sendBufferSize) > sendBufferSize * BufferSizeChangeThreshold;
