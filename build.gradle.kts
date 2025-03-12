@@ -3,7 +3,7 @@ plugins { id("io.vacco.oss.gitflow") version "1.0.1" apply(false) }
 subprojects {
   apply(plugin = "io.vacco.oss.gitflow")
   group = "io.vacco.awe4lb"
-  version = "0.6.2"
+  version = "0.6.3"
 
   configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
     addClasspathHell()
