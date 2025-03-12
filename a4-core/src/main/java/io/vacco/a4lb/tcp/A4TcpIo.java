@@ -52,6 +52,7 @@ public class A4TcpIo implements Closeable {
       this.id = this.channel.socket().toString();
       this.sendBufferSize = rawChannel.socket().getSendBufferSize();
       this.receiveBufferSize = rawChannel.socket().getReceiveBufferSize();
+      this.channel.socket().setTcpNoDelay(true);
     } catch (Exception e) {
       throw new IllegalStateException("Client > Server channel initialization error - " + rawChannel.socket(), e);
     }
@@ -68,6 +69,7 @@ public class A4TcpIo implements Closeable {
       } else {
         this.channel = chn;
       }
+      this.channel.socket().setTcpNoDelay(true);
       this.channel.connect(dest);
       this.channel.configureBlocking(false);
       this.channelKey = chn.register(selector, SelectionKey.OP_READ);
@@ -113,9 +115,11 @@ public class A4TcpIo implements Closeable {
           this.channel.socket().setSendBufferSize(targetSendSize);
         }
         if (log.isDebugEnabled()) {
-          log.debug("[{}] Adjusting buffers: rx {} -> {} | tx {} -> {} (rxAvg={}, txAvg={}, q={}, txBuf={}, rxBuf={})",
+          log.debug("[{}] Adjusting buffers: rx {} -> {} | tx {} -> {} (rxAvg={}, txAvg={}, qp={}, txBuf={}, rxBuf={})",
             id, receiveBufferSize, targetReceiveSize, sendBufferSize, targetSendSize,
-            avgBytesPerRead, avgBytesPerWrite, queuePressure,
+            String.format("%.2f", avgBytesPerRead),
+            String.format("%.2f", avgBytesPerWrite),
+            queuePressure,
             this.channel.socket().getSendBufferSize(), this.channel.socket().getReceiveBufferSize());
         }
         if (adjustReceive) {
