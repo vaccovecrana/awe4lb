@@ -17,7 +17,7 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static final String Stop = "!", Go = "^";
+  public static final String Stop = "!", Go = "^", Close = "x", RxTx = ".", Tls = "*";
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
@@ -128,7 +128,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       bytes = client.read();
       if (bytes == 0 && tlsClient) { // TLS handshake complete.
         initBackend();
-        logState(isCr, isCw, isBr, isBw, "-", bytes);
+        logState(isCr, isCw, isBr, isBw, Tls, bytes);
         return;
       }
     }
@@ -140,7 +140,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
     if (bytes == -1) {
       if (client.isEmpty() && backend.isEmpty()) {
-        logState(isCr, isCw, isBr, isBw, "-", bytes);
+        logState(isCr, isCw, isBr, isBw, Close, bytes);
         tearDown(null);
         return;
       }
@@ -170,6 +170,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
     if (isCw) { // client ready to receive data
       if (backend.isEmpty()) {
+        bytes = client.writeEmpty();
         client.channelKey.interestOps(SelectionKey.OP_READ);
       } else {
         bytes = backend.writeTo(client.channel);
@@ -183,6 +184,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
     if (isBw) { // backend ready to receive data
       if (client.isEmpty()) {
+        bytes = backend.writeEmpty();
         backend.channelKey.interestOps(SelectionKey.OP_READ);
       } else {
         bytes = client.writeTo(backend.channel);
@@ -195,7 +197,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       }
     }
 
-    logState(isCr, isCw, isBr, isBw, ".", bytes);
+    logState(isCr, isCw, isBr, isBw, RxTx, bytes);
   }
 
   public void update(SelectionKey key) {

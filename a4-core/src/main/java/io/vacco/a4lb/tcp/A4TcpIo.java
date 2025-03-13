@@ -16,9 +16,11 @@ import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
 
-  public static final long   AdjustIntervalMs = 1000;
-  public static final int    MinBufferSize = 32 * 1024;   // 32KB
-  public static final int    MaxBufferSize = 1024 * 1024; // 1MB
+  public static final ByteBuffer Empty = ByteBuffer.allocateDirect(0);
+
+  public static final long    AdjustIntervalMs = 1000;
+  public static final int     MinBufferSize = 32 * 1024;   // 32KB
+  public static final int     MaxBufferSize = 1024 * 1024; // 1MB
 
   private static final int    QueuePressureIncrement = 4096;    // 4KB per queued buffer
   private static final int    MaxQueuePressureBoost = 32 * 1024; // 32KB max queue boost
@@ -181,6 +183,10 @@ public class A4TcpIo implements Closeable {
       writeCount++;
     }
     return totalBytesWritten;
+  }
+
+  public int writeEmpty() {
+    return eofWrite(this.channel, Empty);
   }
 
   public boolean isStalling() {
