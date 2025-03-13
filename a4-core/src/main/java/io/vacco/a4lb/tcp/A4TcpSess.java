@@ -169,15 +169,17 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
 
     if (isCw) { // client ready to receive data
-      if (backend.isEmpty()) {
-        bytes = client.writeEmpty();
-        client.channelKey.interestOps(SelectionKey.OP_READ);
-      } else {
-        bytes = backend.writeTo(client.channel);
-        if (backend.channelKey.interestOps() == 0 && !backend.isStalling()) {
-          backend.channelKey.interestOps(SelectionKey.OP_READ);
-          logState(isCr, isCw, isBr, isBw, Go, bytes);
-          return;
+      if (backend != null) {
+        if (backend.isEmpty()) {
+          bytes = client.writeEmpty(); // ... and now, for the tricky bit.
+          client.channelKey.interestOps(SelectionKey.OP_READ);
+        } else {
+          bytes = backend.writeTo(client.channel);
+          if (backend.channelKey.interestOps() == 0 && !backend.isStalling()) {
+            backend.channelKey.interestOps(SelectionKey.OP_READ);
+            logState(isCr, isCw, isBr, isBw, Go, bytes);
+            return;
+          }
         }
       }
     }
@@ -197,7 +199,9 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       }
     }
 
-    logState(isCr, isCw, isBr, isBw, RxTx, bytes);
+    if (bytes != 0) {
+      logState(isCr, isCw, isBr, isBw, RxTx, bytes);
+    }
   }
 
   public void update(SelectionKey key) {
