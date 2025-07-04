@@ -54,7 +54,7 @@ public class A4Valid {
     return c;
   }
 
-  public static <T> CharSequenceConstraint<T, String> file(CharSequenceConstraint<T, String> c) {
+  public static <T> CharSequenceConstraint<T, String> isFile(CharSequenceConstraint<T, String> c) {
     c.predicates().add(ConstraintPredicate.of(x -> {
       try {
         var f = new File(x);
@@ -74,6 +74,18 @@ public class A4Valid {
       }
     }
     return true;
+  }
+
+  private static boolean hasTlsCoverage(A4Server s) {
+    if (s.tls != null && s.tls.base != null) { // matches fall back to domain cert/key
+      return true;
+    }
+    for (var m : s.match) {
+      if (m.tls == null) {
+        return false;
+      }
+    }
+    return true; // no domain cert/key fallback, but all matches define cert/key.
   }
 
   private static final Validator<A4HealthExec> A4HealthExecVld = ValidatorBuilder.<A4HealthExec>of()
@@ -156,7 +168,7 @@ public class A4Valid {
 
   private static final Validator<A4DiscK8s> A4DiscK8sVld = ValidatorBuilder.<A4DiscK8s>of()
     ._string(k -> k.apiUri, "apiUri", c -> uri(nnNeNb(c)))
-    ._string(k -> k.tokenPath, "tokenPath", c -> file(nnNeNb(c)))
+    ._string(k -> k.tokenPath, "tokenPath", c -> isFile(nnNeNb(c)))
     ._string(k -> k.namespace, "namespace", A4Valid::nnNeNb)
     ._string(k -> k.service, "service", A4Valid::nnNeNb)
     ._integer(k -> k.port, "port", A4Valid::gtZero)
@@ -218,9 +230,9 @@ public class A4Valid {
     return m.op.sni.equals != null;
   }
 
-  private static final Validator<A4MatchTls> A4MatchTlsVld = ValidatorBuilder.<A4MatchTls>of()
-    ._string(t -> t.certPath, "certPath", c -> file(nnNeNb(c)))
-    ._string(t -> t.keyPath, "keyPath", c -> file(nnNeNb(c)))
+  private static final Validator<A4Tls> A4TlsVld = ValidatorBuilder.<A4Tls>of()
+    ._string(t -> t.certPath, "certPath", c -> isFile(nnNeNb(c)))
+    ._string(t -> t.keyPath, "keyPath", c -> isFile(nnNeNb(c)))
     .build();
 
   private static final Validator<A4Match> A4MatchVld = ValidatorBuilder.<A4Match>of()
@@ -250,11 +262,12 @@ public class A4Valid {
     .nest(m -> m.pool, "pool", A4PoolVld)
     .nestIfPresent(m -> m.discover, "discover", A4DiscVld)
     .nestIfPresent(m -> m.healthCheck, "healthCheck", A4HealthCheckVld)
-    .nestIfPresent(m -> m.tls, "tls", A4MatchTlsVld)
+    .nestIfPresent(m -> m.tls, "tls", A4TlsVld)
     .nestIfPresent(m -> m.op, "op", A4MatchOpVld)
     .build();
 
-  private static final Validator<A4ServerTls> A4TlsVld = ValidatorBuilder.<A4ServerTls>of()
+  private static final Validator<A4ServerTls> A4ServerTlsVld = ValidatorBuilder.<A4ServerTls>of()
+    ._object(A4ServerTls::protocolList, "protocols.notNull", Constraint::notNull)
     .forEach(A4ServerTls::protocolList, "protocols.version",
       svb -> svb._string(s -> s, "value", A4Valid::nnNeNb)
     )
@@ -270,7 +283,7 @@ public class A4Valid {
   private static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
     ._string(s -> s.id, "id", A4Valid::nnNeNb)
     .nest(s -> s.addr, "addr", A4SockVld)
-    .nestIfPresent(s -> s.tls, "tls", A4TlsVld)
+    .nestIfPresent(s -> s.tls, "tls", A4ServerTlsVld)
     .nestIfPresent(s -> s.udp, "udp", A4UdpVld)
     .constraint(A4Configs::allMatchesOf, "match", c -> c.notNull().notEmpty())
     .forEach(A4Configs::allMatchesOf, "match", A4MatchVld)
@@ -302,6 +315,14 @@ public class A4Valid {
             )
           )
         )
+    )
+    .constraintOnCondition(
+      (s, cg) -> s.tls != null,
+      b -> b.constraintOnTarget(
+        A4Valid::hasTlsCoverage,
+        "tls.coverage", "tls.coverage",
+        "\"{0}\" must define a base certificate, or specify certificates for all SNI matches"
+      )
     )
     .build();
 

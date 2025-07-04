@@ -99,17 +99,17 @@
               ],
               "format": "text"
             }
-          },
-          "tls": {
-            "certPath": "./src/test/resources/certs/awe4lb.pem",
-            "keyPath": "./src/test/resources/certs/awe4lb.key"
           }
         }
       ],
       "tls": {
         "ciphers": [
           "TLS_AES_128_GCM_SHA256"
-        ]
+        ],
+        "base": {
+          "certPath": "./src/test/resources/certs/awe4lb.pem",
+          "keyPath": "./src/test/resources/certs/awe4lb.key"
+        }
       }
     },
     {

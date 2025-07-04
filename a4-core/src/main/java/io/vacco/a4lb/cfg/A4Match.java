@@ -6,7 +6,7 @@ public class A4Match {
   public A4Pool         pool;
   public A4Disc         discover;
   public A4HealthCheck  healthCheck;
-  public A4MatchTls     tls;
+  public A4Tls          tls;
 
   public A4Match op(A4MatchOp op) {
     this.op = op;

@@ -1,6 +1,6 @@
 package io.vacco.a4lb.cfg;
 
-public class A4MatchTls {
+public class A4Tls {
 
   public String certPath, keyPath;
   public Boolean open;

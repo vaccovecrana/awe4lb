@@ -31,8 +31,11 @@ public class SSLCertificates {
       var sslContext = SSLContext.getInstance("TLS");
       for (var match : srv.match) {
         if (match.tls != null) {
-          km.add(match);
+          km.add(match.tls, match.matchLabel());
         }
+      }
+      if (srv.tls != null && srv.tls.base != null) {
+        km.add(srv.tls.base, A4TlsKeyManager.Base);
       }
       sslContext.init(new KeyManager[] { km }, null, null);
       return sslContext;

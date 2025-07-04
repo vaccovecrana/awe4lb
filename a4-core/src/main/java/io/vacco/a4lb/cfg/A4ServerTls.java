@@ -7,6 +7,7 @@ import java.util.List;
 public class A4ServerTls {
 
   public String[] protocols, ciphers;
+  public A4Tls    base;
 
   public A4ServerTls protocols(String ... versions) {
     this.protocols = versions;

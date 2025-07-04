@@ -1,17 +1,18 @@
 package io.vacco.a4lb.tcp;
 
-import io.vacco.a4lb.cfg.A4Match;
+import io.vacco.a4lb.cfg.A4Tls;
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.Socket;
 import java.security.*;
+import java.security.cert.*;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 
 public class A4TlsKeyManager extends X509ExtendedKeyManager {
+
+  public static final String Base = "a4lb.base";
 
   private final Map<String, KeyStore.PrivateKeyEntry> matchKeys = new HashMap<>();
   private final X509ExtendedKeyManager defaultKeyManager;
@@ -100,16 +101,16 @@ public class A4TlsKeyManager extends X509ExtendedKeyManager {
     }
   }
 
-  public void add(A4Match match) {
-    var pemCert = new File(match.tls.certPath);
-    var pemKey = new File(match.tls.keyPath);
+  public void add(A4Tls tls, String alias) {
+    var pemCert = new File(tls.certPath);
+    var pemKey = new File(tls.keyPath);
     try {
       var certificates = loadCertificates(pemCert);
       var privateKey = loadKey(pemKey);
       var entry = new KeyStore.PrivateKeyEntry(privateKey, certificates.toArray(new Certificate[0]));
-      this.matchKeys.put(match.matchLabel(), entry);
+      this.matchKeys.put(alias, entry);
     } catch (Exception e) {
-      var msg = String.format("Unable to load certificates for %s", match);
+      var msg = String.format("Unable to load certificates for %s", alias);
       throw new IllegalStateException(msg, e);
     }
   }
@@ -120,8 +121,14 @@ public class A4TlsKeyManager extends X509ExtendedKeyManager {
       for (var matcher : params.getSNIMatchers()) {
         if (matcher instanceof A4TcpSess) {
           var sess = (A4TcpSess) matcher;
-          return sess.getTlsMatch().matchLabel();
+          var match = sess.getTlsMatch();
+          if (match.tls != null) {
+            return match.matchLabel();
+          }
         }
+      }
+      if (matchKeys.containsKey(Base)) {
+        return Base;
       }
     }
     return defaultKeyManager.chooseEngineServerAlias(keyType, issuers, null);
