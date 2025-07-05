@@ -84,12 +84,6 @@
     "allDeclaredFields": true
   },
   {
-    "name": "io.vacco.a4lb.cfg.A4MatchTls",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
     "name": "io.vacco.a4lb.cfg.A4Pool",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true,
@@ -127,6 +121,12 @@
   },
   {
     "name": "io.vacco.a4lb.cfg.A4StringOp",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "io.vacco.a4lb.cfg.A4Tls",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true,
     "allDeclaredFields": true
