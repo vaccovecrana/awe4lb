@@ -212,9 +212,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     try {
       if (key.isAcceptable()) {
         initBackend();
-        return;
-      }
-      if (key.attachment() == this) {
+      } else if (key.attachment() == this) {
         tcpUpdate(key);
       }
     } catch (Exception e) {
