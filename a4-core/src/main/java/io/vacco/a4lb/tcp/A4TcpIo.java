@@ -16,8 +16,6 @@ import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
 
-  public static final ByteBuffer Empty = ByteBuffer.allocateDirect(0);
-
   public static final long    AdjustIntervalMs = 1000;
   public static final int     MinBufferSize = 32 * 1024;   // 32KB
   public static final int     MaxBufferSize = 1024 * 1024; // 1MB
@@ -170,6 +168,9 @@ public class A4TcpIo implements Closeable {
     while (!bufferQueue.isEmpty()) {
       var buffer = bufferQueue.peek();
       var bytesWritten = eofWrite(channel, buffer);
+      if (bytesWritten == 0) { // stalling...
+        break;
+      }
       totalBytesWritten += bytesWritten;
       if (!buffer.hasRemaining()) {
         bufferQueue.poll();
@@ -185,8 +186,8 @@ public class A4TcpIo implements Closeable {
     return totalBytesWritten;
   }
 
-  public int writeEmpty() {
-    return eofWrite(this.channel, Empty);
+  public int writeTo(A4TcpIo target) {
+    return writeTo(target.channel);
   }
 
   public boolean isStalling() {
@@ -196,6 +197,44 @@ public class A4TcpIo implements Closeable {
 
   public boolean isEmpty() {
     return this.bufferQueue.isEmpty();
+  }
+
+  public boolean available() {
+    return !isEmpty();
+  }
+
+  public A4TcpIo writeable(boolean enable) {
+    var k = this.channelKey;
+    if (k.isValid()) {
+      int currentOps = k.interestOps();
+      if (enable) {
+        k.interestOps(currentOps | SelectionKey.OP_WRITE);
+      } else {
+        k.interestOps(currentOps & ~SelectionKey.OP_WRITE);
+      }
+    }
+    return this;
+  }
+
+  public boolean writeable() {
+    return this.channelKey.isWritable();
+  }
+
+  public A4TcpIo readable(boolean enable) {
+    var k = this.channelKey;
+    if (k.isValid()) {
+      int currentOps = k.interestOps();
+      if (enable) {
+        k.interestOps(currentOps | SelectionKey.OP_READ);
+      } else {
+        k.interestOps(currentOps & ~SelectionKey.OP_READ);
+      }
+    }
+    return this;
+  }
+
+  public boolean readable() {
+    return this.channelKey.isReadable();
   }
 
   public A4TcpIo backend(A4Backend backend) {
@@ -220,23 +259,11 @@ public class A4TcpIo implements Closeable {
 
   @Override public String toString() {
     var k = this.channelKey;
-    var c = this.channel;
-    var sck = c instanceof SSLSocketChannel
-      ? ((SSLSocketChannel) c).getWrappedSocketChannel().socket()
-      : c.socket();
     return format(
-      "[%s, i%02d, r%02d, q%02d, p%02d, %s %s %s, tx%d, rx%d]",
-      k.isReadable() ? "r"
-        : k.isWritable() ? "w"
-        : k.isConnectable() ? "c"
-        : k.isAcceptable() ? "a"
-        : "?",
+      "[%d/%d, q%02d, p%02d, tx%d, rx%d]",
       k.interestOps(), k.readyOps(),
       bufferQueue.size(),
       bufferPool.size(),
-      sck.getLocalSocketAddress(),
-      k.isReadable() ? "<" : k.isWritable() ? ">" : "?",
-      sck.getRemoteSocketAddress(),
       sendBufferSize, receiveBufferSize
     );
   }

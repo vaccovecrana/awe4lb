@@ -62,7 +62,7 @@ public class A4TcpSrv implements A4Srv {
         this.bkSel,
         s0 -> { if (s0.id != null) sessions.put(s0.id, s0); },
         s0 -> { if (s0.id != null) sessions.remove(s0.id); },
-        isTls, tlsExec
+        tlsExec, isTls
       );
       if (sslContext != null) {
         clientChannel = new SSLServerSocketChannel(

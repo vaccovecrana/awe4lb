@@ -16,10 +16,12 @@ public class A4BackendContext {
   }
 
   public void trackRxTx(boolean isRx, int bytes) {
-    if (isRx) {
-      rxTx.updateRx(bytes);
-    } else {
-      rxTx.updateTx(bytes);
+    if (bytes > 0) {
+      if (isRx) {
+        rxTx.updateRx(bytes);
+      } else {
+        rxTx.updateTx(bytes);
+      }
     }
   }
 
