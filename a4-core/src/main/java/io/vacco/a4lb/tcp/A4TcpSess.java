@@ -18,7 +18,10 @@ import static java.lang.String.format;
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
   public static final char R = 'r', W = 'w', N = '-';
-  public static final String Go = "\uD83D\uDFE2", Stop = "\uD83D\uDD34", Close = "✖ ", RxTx = "⇆ ", Tls = "\uD83D\uDD12";
+  public static final String
+    Go = "\uD83D\uDFE2", Stop = "\uD83D\uDD34",
+    Close = "✖ ", RxTx = "⇆ ", NoOp = "— ",
+    Tls = "\uD83D\uDD12";
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
@@ -49,10 +52,9 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (e != null && log.isDebugEnabled()) {
       var x = rootCauseOf(e);
       log.debug(
-        "❌ [{}, {}] - {} - {} - {}",
-        client != null ? client.id : "?",
-        backend != null ? backend.id : "?",
-        e.getClass().getSimpleName(), x.getClass().getSimpleName(),
+        "{} ❌ {} - {} - {}", id,
+        e.getClass().getSimpleName(),
+        x.getClass().getSimpleName(),
         e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
       );
     }
@@ -72,7 +74,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     this.tlsExec = null;
     this.tlsSni = null;
     this.tlsMatch = null;
-    this.id = null;
     this.onInit = null;
     this.onTearDown = null;
     if (log.isDebugEnabled()) {
@@ -117,7 +118,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       : backend != null && backend.channelKey == k ? "bk"
       : N;
     return format(
-      "%s %c%c%c%c",
+      "%s %c%c %c%c",
       target,
       rwBit(client.channelKey.isReadable(), R),
       rwBit(client.channelKey.isWritable(), W),
@@ -126,12 +127,12 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     );
   }
 
-  private void logState(SelectionKey k, String op, int br, int bw) {
+  private void logState(SelectionKey k, String inOp, String outOp, int br, int bw) {
     if (log.isDebugEnabled()) {
       log.debug(
-        "{} {} {} | r{} w{} | cl{} bk{}",
+        "{} | {} {} | {} | i{} o{} | cl{} bk{}",
         id == null ? "????????" : id,
-        op,
+        inOp, outOp,
         stateBits(k),
         format("%06d", br),
         format("%06d", bw),
@@ -154,54 +155,46 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     int r = -2, w = -2;
 
     r = in.read();
-    if (!cl) {
+
+    if (cl) {
+      if (tlsClient && this.backend == null) {
+        initBackend();
+        logState(key, Tls, NoOp, r, w);
+        return;
+      }
+    } else {
       bkSel.contextOf(backend.backend).trackRxTx(true, r);
     }
 
-    if (cl && tlsClient) {
-      if (this.backend == null) {
-        initBackend();
-        logState(key, Tls, r, w);
-        return;
-      }
-    }
-
     if (r == -1) { // flush buffers, tear down
-      client.writeTo(backend.channel);
-      backend.writeTo(client.channel);
-      logState(key, Close, r, w);
+      r = client.writeTo(backend.channel);
+      w = backend.writeTo(client.channel);
+      client.writeEmpty();
+      backend.writeEmpty();
+      logState(key, Close, Close, r, w);
       tearDown(null);
       return;
     }
 
-    if (in.available()) {
-      w = in.writeTo(out);
-      if (!cl) {
-        bkSel.contextOf(backend.backend).trackRxTx(false, w);
-      }
-    }
+    String inOp = NoOp, outOp = NoOp;
 
-    if (in.isStalling()) {
-      in.readable(false);
+    if (in.available()) {
+      inOp = RxTx;
       out.writeable(true);
-      logState(key, Stop, r, w);
-      return;
     }
 
     if (in.writeable()) {
-      in.writeable(false);
-      out.readable(true);
-      logState(key, Go, r, w);
-      return;
+      w = out.writeTo(in);
+      if (!cl) {
+        bkSel.contextOf(backend.backend).trackRxTx(false, w);
+      }
+      if (w > 0) {
+        outOp = RxTx;
+      }
+      in.writeable(out.available());
     }
 
-    logState(key, RxTx, r, w);
-
-//    try {
-//      Thread.sleep(100);
-//    } catch (InterruptedException e) {
-//      throw new RuntimeException(e);
-//    }
+    logState(key, inOp, outOp, r, w);
   }
 
   private void tcpUpdate(SelectionKey key) {
