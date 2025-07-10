@@ -26,8 +26,8 @@ public class A4TcpIo implements Closeable {
   private static final int    MaxQueuePressureBoost = 32 * 1024; // 32KB max queue boost
   private static final double BufferSizeChangeThreshold = 0.25; // 25% change to adjust
 
-  public static int MaxBackendBuffers = 8;  // Max queued buffers for backend
-  public static int MaxClientBuffers = 8;  // Max queued buffers for client
+  public static int MaxBackendBuffers = 16;  // Max queued buffers for backend
+  public static int MaxClientBuffers = 16;  // Max queued buffers for client
 
   public final String id;
   public final SelectionKey channelKey;
@@ -196,7 +196,7 @@ public class A4TcpIo implements Closeable {
     return writeTo(target.channel);
   }
 
-  public boolean isStalling() {
+  public boolean stalling() {
     var maxBuffers = (backend != null) ? MaxBackendBuffers : MaxClientBuffers;
     return bufferQueue.size() >= maxBuffers;
   }
@@ -264,7 +264,7 @@ public class A4TcpIo implements Closeable {
   @Override public String toString() {
     var k = this.channelKey;
     return format(
-      "[%d/%d, q%02d, p%02d, tx%d, rx%d]",
+      "[%d/%d, q%02d, p%02d, tx%08d, rx%08d]",
       k.interestOps(), k.readyOps(),
       bufferQueue.size(),
       bufferPool.size(),

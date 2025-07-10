@@ -19,7 +19,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
   public static final char R = 'r', W = 'w', N = '-';
   public static final String
-    Go = "\uD83D\uDFE2", Stop = "\uD83D\uDD34",
+    Stop = "\uD83D\uDD34",
     Close = "✖ ", Rx = "↓ ", Tx = "↑ ", NoOp = "— ",
     Tls = "\uD83D\uDD12";
 
@@ -113,10 +113,16 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     return b ? c : N;
   }
 
+  private boolean isClient(SelectionKey k) {
+    return client.channelKey == k;
+  }
+
+  private boolean isBackend(SelectionKey k) {
+    return backend != null && backend.channelKey == k;
+  }
+
   private String stateBits(SelectionKey k) {
-    var target = client.channelKey == k ? "cl"
-      : backend != null && backend.channelKey == k ? "bk"
-      : N;
+    var target = isClient(k) ? "c" : isBackend(k) ? "b" : N;
     return format(
       "%s %c%c %c%c",
       target,
@@ -130,24 +136,16 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   private void logState(SelectionKey k, String inOp, String outOp, int br, int bw) {
     if (log.isDebugEnabled()) {
       log.debug(
-        "{} | {} {} | {} | i{} o{} | cl{} bk{}",
+        "{} | {} {} | {} | i{} o{} | c{} b{}",
         id == null ? "????????" : id,
         inOp, outOp,
         stateBits(k),
-        format("%06d", br),
-        format("%06d", bw),
+        format("%08d", br),
+        format("%08d", bw),
         client,
         backend != null ? backend : "?"
       );
     }
-  }
-
-  private boolean isClient(SelectionKey k) {
-    return client.channelKey == k;
-  }
-
-  private boolean isBackend(SelectionKey k) {
-    return backend != null && backend.channelKey == k;
   }
 
   private void tcpUpdate(SelectionKey key, A4TcpIo in, A4TcpIo out) {
@@ -181,6 +179,10 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (in.available()) {
       inOp = Rx;
       out.writeable(true);
+      if (in.stalling()) {
+        in.readable(false);
+        outOp = Stop;
+      }
     }
 
     if (in.writeable()) {
@@ -188,10 +190,11 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       if (!cl) {
         bkSel.contextOf(backend.backend).trackRxTx(false, w);
       }
-      if (w > 0) {
-        outOp = Tx;
-      }
+      outOp = w > 0 ? Tx : outOp;
       in.writeable(out.available());
+      if (!out.stalling()) {
+        out.readable(true);
+      }
     }
 
     logState(key, inOp, outOp, r, w);
