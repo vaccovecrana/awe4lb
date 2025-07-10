@@ -16,6 +16,8 @@ import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
 
+  public static final ByteBuffer Empty = ByteBuffer.allocateDirect(0);
+
   public static final long    AdjustIntervalMs = 1000;
   public static final int     MinBufferSize = 32 * 1024;   // 32KB
   public static final int     MaxBufferSize = 1024 * 1024; // 1MB
@@ -186,6 +188,10 @@ public class A4TcpIo implements Closeable {
     return totalBytesWritten;
   }
 
+  public int writeEmpty() {
+    return eofWrite(this.channel, Empty);
+  }
+
   public int writeTo(A4TcpIo target) {
     return writeTo(target.channel);
   }
@@ -203,7 +209,7 @@ public class A4TcpIo implements Closeable {
     return !isEmpty();
   }
 
-  public A4TcpIo writeable(boolean enable) {
+  public void writeable(boolean enable) {
     var k = this.channelKey;
     if (k.isValid()) {
       int currentOps = k.interestOps();
@@ -213,14 +219,13 @@ public class A4TcpIo implements Closeable {
         k.interestOps(currentOps & ~SelectionKey.OP_WRITE);
       }
     }
-    return this;
   }
 
   public boolean writeable() {
     return this.channelKey.isWritable();
   }
 
-  public A4TcpIo readable(boolean enable) {
+  public void readable(boolean enable) {
     var k = this.channelKey;
     if (k.isValid()) {
       int currentOps = k.interestOps();
@@ -230,7 +235,6 @@ public class A4TcpIo implements Closeable {
         k.interestOps(currentOps & ~SelectionKey.OP_READ);
       }
     }
-    return this;
   }
 
   public boolean readable() {

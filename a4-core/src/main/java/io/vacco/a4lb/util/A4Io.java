@@ -33,8 +33,8 @@ public class A4Io {
       bb.clear();
       int bytesRead = c.read(bb);
       if (bytesRead == -1) {
-        if (log.isDebugEnabled()) {
-          log.debug("{} - channel EOF", c);
+        if (log.isTraceEnabled()) {
+          log.trace("{} - channel EOF", c);
         }
       } else if (bytesRead > 0) {
         bb.flip();
