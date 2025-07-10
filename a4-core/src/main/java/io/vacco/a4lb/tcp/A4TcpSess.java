@@ -20,7 +20,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   public static final char R = 'r', W = 'w', N = '-';
   public static final String
     Go = "\uD83D\uDFE2", Stop = "\uD83D\uDD34",
-    Close = "✖ ", RxTx = "⇆ ", NoOp = "— ",
+    Close = "✖ ", Rx = "↓ ", Tx = "↑ ", NoOp = "— ",
     Tls = "\uD83D\uDD12";
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
@@ -179,7 +179,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     String inOp = NoOp, outOp = NoOp;
 
     if (in.available()) {
-      inOp = RxTx;
+      inOp = Rx;
       out.writeable(true);
     }
 
@@ -189,7 +189,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         bkSel.contextOf(backend.backend).trackRxTx(false, w);
       }
       if (w > 0) {
-        outOp = RxTx;
+        outOp = Tx;
       }
       in.writeable(out.available());
     }
