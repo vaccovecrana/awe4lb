@@ -116,21 +116,6 @@ public class A4TlsKeyManager extends X509ExtendedKeyManager {
   }
 
   @Override public String chooseEngineServerAlias(String keyType, Principal[] issuers, SSLEngine engine) {
-    if (engine != null) {
-      var params = engine.getSSLParameters();
-      for (var matcher : params.getSNIMatchers()) {
-        if (matcher instanceof A4TcpSess) {
-          var sess = (A4TcpSess) matcher;
-          var match = sess.getTlsMatch();
-          if (match.tls != null) {
-            return match.matchLabel();
-          }
-        }
-      }
-      if (matchKeys.containsKey(Base)) {
-        return Base;
-      }
-    }
     return defaultKeyManager.chooseEngineServerAlias(keyType, issuers, null);
   }
 
@@ -154,6 +139,20 @@ public class A4TlsKeyManager extends X509ExtendedKeyManager {
   }
 
   @Override public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
+    if (socket instanceof SSLSocket sslSocket) {
+      var params = sslSocket.getSSLParameters();
+      for (var matcher : params.getSNIMatchers()) {
+        if (matcher instanceof A4TcpSess sess) {
+          var match = sess.getTlsMatch();
+          if (match.tls != null) {
+            return match.matchLabel();
+          }
+        }
+      }
+      if (matchKeys.containsKey(Base)) {
+        return Base;
+      }
+    }
     return defaultKeyManager.chooseServerAlias(keyType, issuers, socket);
   }
 

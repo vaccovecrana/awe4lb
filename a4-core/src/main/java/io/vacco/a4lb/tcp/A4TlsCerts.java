@@ -1,13 +1,12 @@
-package io.vacco.a4lb.niossl;
+package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Server;
-import io.vacco.a4lb.tcp.A4TlsKeyManager;
 import javax.net.ssl.*;
 import java.security.*;
 import java.security.cert.*;
 import java.util.*;
 
-public class SSLCertificates {
+public class A4TlsCerts {
 
   public static SSLContext trustAllContext() {
     try {

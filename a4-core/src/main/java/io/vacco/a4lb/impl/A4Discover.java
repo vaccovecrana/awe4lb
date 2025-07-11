@@ -2,7 +2,7 @@ package io.vacco.a4lb.impl;
 
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.niossl.SSLCertificates;
+import io.vacco.a4lb.tcp.A4TlsCerts;
 import io.vacco.a4lb.util.*;
 import org.slf4j.*;
 
@@ -29,7 +29,7 @@ public class A4Discover implements Callable<List<A4Backend>> {
   private final A4TtlMap<Integer, String> errorLogIdx = new A4TtlMap<>(MaxDiscoveryErrorLogs, msg -> {});
   private final HttpClient client = HttpClient
     .newBuilder()
-    .sslContext(SSLCertificates.trustAllContext())
+    .sslContext(A4TlsCerts.trustAllContext()) // TODO should this be configurable?
     .build();
 
   public A4Discover(String serverId, A4Match match, Gson gson) {

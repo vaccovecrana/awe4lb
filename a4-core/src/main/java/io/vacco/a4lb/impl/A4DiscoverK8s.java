@@ -2,7 +2,6 @@ package io.vacco.a4lb.impl;
 
 import com.google.gson.*;
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.niossl.SSLCertificates;
 import io.vacco.a4lb.util.A4Io;
 
 import java.io.File;

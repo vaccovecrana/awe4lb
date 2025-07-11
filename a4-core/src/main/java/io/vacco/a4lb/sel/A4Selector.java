@@ -7,7 +7,6 @@ import io.vacco.a4lb.util.*;
 import java.net.*;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.*;
 
 public class A4Selector {
 
@@ -27,32 +26,31 @@ public class A4Selector {
     if (pool.type == null) {
       return A4SelRandom.select(pool, poolCtx);
     }
-    switch (pool.type) {
-      case weight: return A4SelWeight.select(pool, poolCtx);
-      case roundRobin: return A4SelRRobin.select(pool, poolCtx);
-      case ipHash: return A4SelIpHash.select(pool, clientIpHash);
-      case leastConn: return A4SelLConn.select(pool, bkContextIdx);
-      default: throw new IllegalStateException("Invalid pool type: " + pool.type);
-    }
+    return switch (pool.type) {
+      case weight -> A4SelWeight.select(pool, poolCtx);
+      case roundRobin -> A4SelRRobin.select(pool, poolCtx);
+      case ipHash -> A4SelIpHash.select(pool, clientIpHash);
+      case leastConn -> A4SelLConn.select(pool, bkContextIdx);
+    };
   }
 
   public Optional<A4Match> matches(String hostAddress, String tlsSni) {
     return A4MatchOps.eval(tlsSni, hostAddress, cfg);
   }
 
-  public Optional<A4Match> matches(SocketChannel client, String tlsSni) {
-    return matches(client.socket().getInetAddress().getHostAddress(), tlsSni);
+  public Optional<A4Match> matches(Socket client, String tlsSni) {
+    return matches(client.getInetAddress().getHostAddress(), tlsSni);
   }
 
-  public A4TcpIo assign(SocketChannel client, String tlsSni, ExecutorService tlsExec) {
-    var clientAddr = client.socket().getInetAddress();
+  public A4TcpIo assign(Socket client, String tlsSni) {
+    var clientAddr = client.getInetAddress();
     var clientIp = clientAddr.getHostAddress();
     try {
       var match = matches(clientIp, tlsSni).orElseThrow();
       var bk = select(match.pool, clientIp.hashCode());
       var addr = new InetSocketAddress(bk.addr.host, bk.addr.port);
       var openTls = match.tls != null && match.tls.open != null && match.tls.open;
-      return new A4TcpIo(addr, openTls, tlsExec).backend(bk);
+      return new A4TcpIo(addr, openTls).backend(bk);
     } catch (Exception e) {
       throw new A4Exceptions.A4SelectException(clientIp, tlsSni, this.cfg, e);
     }

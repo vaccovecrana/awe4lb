@@ -1,14 +1,12 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Match;
-import io.vacco.a4lb.niossl.*;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.A4Io;
 import org.slf4j.*;
 import javax.net.ssl.*;
 import java.io.Closeable;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 import static io.vacco.a4lb.util.A4Logging.*;
@@ -16,18 +14,17 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static final String
-    Close = "✖ ", Rx = "↓ ", Tx = "↑ ", NoOp = "— ",
-    Tls = "\uD83D\uDD12";
+  public static final String Close = "✖ ", Rx = "↓ ", Tx = "↑ ", Tls = "\uD83D\uDD12";
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
+
+  public String id;
 
   private A4Selector bkSel;
   private A4TcpIo client, backend;
 
   private String tlsSni;
   private A4Match tlsMatch;
-  private ExecutorService tlsExec;
   private final boolean tlsClient;
 
   private Consumer<A4TcpSess> onInit, onTearDown;
@@ -35,11 +32,10 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   public A4TcpSess(A4Selector bkSel,
                    Consumer<A4TcpSess> onInit,
                    Consumer<A4TcpSess> onTearDown,
-                   ExecutorService tlsExec, boolean tlsClient) {
+                   boolean tlsClient) {
     super(0);
     this.bkSel = Objects.requireNonNull(bkSel);
     this.tlsClient = tlsClient;
-    this.tlsExec = tlsExec;
     this.onInit = Objects.requireNonNull(onInit);
     this.onTearDown = Objects.requireNonNull(onTearDown);
   }
@@ -54,6 +50,9 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         x.getClass().getSimpleName(),
         e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
       );
+      if (log.isTraceEnabled()) {
+        log.trace(x.getMessage(), x);
+      }
     }
   }
 
@@ -68,7 +67,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     this.client = null;
     this.backend = null;
     this.bkSel = null;
-    this.tlsExec = null;
     this.tlsSni = null;
     this.tlsMatch = null;
     this.onInit = null;
@@ -78,6 +76,10 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
   }
 
+  private String threadIdOf(A4TcpIo io0, A4TcpIo io1) {
+    return format("%s%s", io0.id, io1.id);
+  }
+
   private void initBackend() {
     if (this.backend != null) {
       return;
@@ -85,81 +87,69 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (tlsClient && tlsSni == null) {
       return;
     }
-    this.backend = bkSel.assign(client.channel, tlsSni, tlsExec);
+    this.backend = bkSel.assign(client.socket, tlsSni);
+    this.id =  threadIdOf(client, backend);
     this.bkSel.contextOf(backend.backend).trackConn(true);
     this.onInit.accept(this);
   }
 
   @Override public boolean matches(SNIServerName sn) {
-    var sni = SSLCertificates.sniOf(sn).orElseThrow();
-    var op = bkSel.matches(client.channel, sni);
+    var sni = A4TlsCerts.sniOf(sn).orElseThrow();
+    var op = bkSel.matches(client.socket, sni);
     if (op.isPresent()) {
       this.tlsSni = sni;
       this.tlsMatch = op.get();
+      if (log.isTraceEnabled()) {
+        log.trace("{} - SNI match found: {}", format("%s----", client.id), this.tlsMatch);
+      }
       return true;
     }
     return false;
   }
 
-  private void logState(String inOp, String outOp, int br, int bw) {
+  private void logState(String op, long bt) {
     if (log.isDebugEnabled()) {
       log.debug(
-        "{} | {} {} | i{} o{} | c{} b{}",
+        "{} | {} | t{} | c{} b{}",
         Thread.currentThread().getName(),
-        inOp, outOp,
-        format("%08d", br),
-        format("%08d", bw),
+        op,
+        format("%016d", bt),
         client == null ? "?" : client,
         backend == null ? "?" : backend
       );
     }
   }
 
-  private String threadIdOf(A4TcpIo io0, A4TcpIo io1) {
-    return format("%s%s", io0.id, io1.id);
-  }
-
   private void pump(boolean fromClient) {
-    int r = -2, w = -2;
-    var pt = Thread.currentThread();
     try {
       while (true) {
         var in = fromClient ? client : backend;
         var out = fromClient ? backend : client;
-        r = in.read();
-        if (r == -1) {
-          if (out != null) {
-            w = in.writeTo(out);
-          }
-          logState(Close, w > 0 ? Tx : NoOp, r, w);
-          break;
-        }
-        if (fromClient && tlsClient && this.backend == null) {
-          initBackend();
-          pt.setName(threadIdOf(client, backend));
-          pt = Thread.ofVirtual().name(threadIdOf(backend, client)).start(() -> pump(false));
-          logState(Tls, NoOp, r, w);
-          if (r == 0) {
+        var op = fromClient ? Tx : Rx;
+        if (fromClient && this.backend == null) {
+          var temp = new byte[512]; // Small buffer to trigger TLS handshake
+          int br = in.socket.getInputStream().read(temp);
+          if (br < 0) {
+            logState(Close, br);
+            break;
+          } else {
+            initBackend();
+            Thread.currentThread().setName(this.id);
+            Thread.ofVirtual().name(id).start(() -> pump(false));
+            backend.socket.getOutputStream().write(temp, 0, br);
+            backend.socket.getOutputStream().flush();
+            bkSel.contextOf(backend.backend).trackRxTx(false, br);
+            logState(op, br);
             continue;
           }
         }
-        if (out != null) {
-          w = in.writeTo(out);
-        }
-        if (backend != null) {
-          if (!fromClient) {
-            bkSel.contextOf(backend.backend).trackRxTx(true, r);
-          }
-          if (fromClient) {
-            bkSel.contextOf(backend.backend).trackRxTx(false, w);
-          }
-        }
-        var inOp = r > 0 ? Rx : NoOp;
-        var outOp = w > 0 ? Tx : NoOp;
-        logState(inOp, outOp, r, w);
-        Thread.sleep(200);
+        var bytes = in.transferTo(out);
+        out.socket.shutdownOutput();
+        bkSel.contextOf(backend.backend).trackRxTx(!fromClient, bytes);
+        logState(op, bytes);
+        break;
       }
-      if (pt != Thread.currentThread()) { // I'm the client
+      if (fromClient) {
         tearDown(null);
       }
     } catch (Exception e) {

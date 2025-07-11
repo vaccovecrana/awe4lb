@@ -18,7 +18,7 @@ public class A4RxTx {
     return (t1 - t0) >= UpdateTimeMs;
   }
 
-  public void updateRx(int rxBytes) {
+  public void updateRx(long rxBytes) {
     var nowMs = System.currentTimeMillis();
     if (canUpdate(rxTimeMs, nowMs)) {
       this.rxTimeMs = nowMs;
@@ -26,7 +26,7 @@ public class A4RxTx {
     }
   }
 
-  public void updateTx(int txBytes) {
+  public void updateTx(long txBytes) {
     var nowMs = System.currentTimeMillis();
     if (canUpdate(txTimeMs, nowMs)) {
       this.txTimeMs = nowMs;

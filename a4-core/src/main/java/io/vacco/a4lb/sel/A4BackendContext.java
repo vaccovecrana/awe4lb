@@ -15,7 +15,7 @@ public class A4BackendContext {
     }
   }
 
-  public void trackRxTx(boolean isRx, int bytes) {
+  public void trackRxTx(boolean isRx, long bytes) {
     if (bytes > 0) {
       if (isRx) {
         rxTx.updateRx(bytes);
