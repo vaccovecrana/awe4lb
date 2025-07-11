@@ -93,7 +93,7 @@ public class A4Lb implements Closeable {
       if (srv.udp != null) {
         this.initUdp(srv, bkSel);
       } else {
-        var tcpImpl = new A4TcpSrv(A4Io.newSelector(), srv, bkSel);
+        var tcpImpl = new A4TcpSrv(srv, bkSel);
         scheduler.schedulePermanent(tcpImpl);
       }
       for (int i = 0; i < srv.match.size(); i++) {

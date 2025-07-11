@@ -19,7 +19,6 @@ public class A4TcpSrv implements A4Srv {
 
   public static final Logger log = LoggerFactory.getLogger(A4TcpSrv.class);
 
-  private final Selector selector;
   private final SSLContext sslContext;
   private final ServerSocketChannel channel;
 
@@ -28,13 +27,11 @@ public class A4TcpSrv implements A4Srv {
   private final Map<String, A4TcpSess> sessions = new ConcurrentHashMap<>();
   private final ExecutorService tlsExec;
 
-  public A4TcpSrv(Selector selector, A4Server srv, A4Selector bkSel) {
+  public A4TcpSrv(A4Server srv, A4Selector bkSel) {
     try {
-      this.selector = Objects.requireNonNull(selector);
       this.channel = ServerSocketChannel.open();
       this.channel.bind(new InetSocketAddress(srv.addr.host, srv.addr.port));
-      this.channel.configureBlocking(false);
-      this.channel.register(selector, SelectionKey.OP_ACCEPT);
+      this.channel.configureBlocking(true);
       this.bkSel = Objects.requireNonNull(bkSel);
       this.srvConfig = Objects.requireNonNull(srv);
       if (srvConfig.tls != null) {
@@ -54,29 +51,24 @@ public class A4TcpSrv implements A4Srv {
 
   private A4TcpSess initSession() {
     SocketChannel clientChannel = null;
-    SelectionKey clientKey;
     try {
       // TODO check for connection limits here.
       var isTls = srvConfig.tls != null;
       var sess = new A4TcpSess(
         this.bkSel,
-        s0 -> { if (s0.id != null) sessions.put(s0.id, s0); },
-        s0 -> { if (s0.id != null) sessions.remove(s0.id); },
+        s0 -> { if (Thread.currentThread().getName() != null) sessions.put(Thread.currentThread().getName(), s0); },
+        s0 -> { if (Thread.currentThread().getName() != null) sessions.remove(Thread.currentThread().getName()); },
         tlsExec, isTls
       );
       if (sslContext != null) {
         clientChannel = new SSLServerSocketChannel(
-            this.channel, sslContext, tlsExec, sess,
-            srvConfig.tls.protocols, srvConfig.tls.ciphers
+          this.channel, sslContext, tlsExec, sess,
+          srvConfig.tls.protocols, srvConfig.tls.ciphers
         ).accept();
-        var sslChann = (SSLSocketChannel) clientChannel;
-        clientKey = sslChann.getWrappedSocketChannel().register(selector, SelectionKey.OP_READ);
       } else {
         clientChannel = this.channel.accept();
-        clientChannel.configureBlocking(false);
-        clientKey = clientChannel.register(selector, SelectionKey.OP_READ);
       }
-      return sess.withClient(new A4TcpIo(clientKey, clientChannel));
+      return sess.withClient(new A4TcpIo(clientChannel));
     } catch (Exception ioe) {
       log.error("{} - Unable to initialize tcp session", channel.socket(), ioe);
       if (clientChannel != null) {
@@ -88,17 +80,10 @@ public class A4TcpSrv implements A4Srv {
 
   @Override public Void call() {
     while (true) {
-      A4Io.select(selector, key -> {
-        if (key.channel() == this.channel && key.isAcceptable()) {
-          var sess = initSession();
-          if (sess != null) {
-            sess.update(key);
-          }
-        } else if (key.attachment() instanceof A4TcpSess) {
-          var sess = (A4TcpSess) key.attachment();
-          sess.update(key);
-        }
-      });
+      var sess = initSession();
+      if (sess != null) {
+        sess.start();
+      }
     }
   }
 
@@ -107,7 +92,6 @@ public class A4TcpSrv implements A4Srv {
       this.tlsExec.shutdownNow();
     }
     A4Io.close(channel);
-    A4Io.close(selector);
 
     int sessCount = this.sessions.size();
     this.sessions.values().forEach(A4Io::close);

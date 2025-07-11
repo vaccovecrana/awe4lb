@@ -18,8 +18,8 @@ public class A4Selector {
   public A4Selector(List<A4Match> cfg) {
     this.cfg = Objects.requireNonNull(cfg);
     cfg.stream()
-        .map(m -> m.pool)
-        .forEach(p -> poolContextIdx.put(p, new A4PoolContext()));
+      .map(m -> m.pool)
+      .forEach(p -> poolContextIdx.put(p, new A4PoolContext()));
   }
 
   public A4Backend select(A4Pool pool, int clientIpHash) {
@@ -44,7 +44,7 @@ public class A4Selector {
     return matches(client.socket().getInetAddress().getHostAddress(), tlsSni);
   }
 
-  public A4TcpIo assign(Selector selector, SocketChannel client, String tlsSni, ExecutorService tlsExec) {
+  public A4TcpIo assign(SocketChannel client, String tlsSni, ExecutorService tlsExec) {
     var clientAddr = client.socket().getInetAddress();
     var clientIp = clientAddr.getHostAddress();
     try {
@@ -52,7 +52,7 @@ public class A4Selector {
       var bk = select(match.pool, clientIp.hashCode());
       var addr = new InetSocketAddress(bk.addr.host, bk.addr.port);
       var openTls = match.tls != null && match.tls.open != null && match.tls.open;
-      return new A4TcpIo(addr, selector, openTls, tlsExec).backend(bk);
+      return new A4TcpIo(addr, openTls, tlsExec).backend(bk);
     } catch (Exception e) {
       throw new A4Exceptions.A4SelectException(clientIp, tlsSni, this.cfg, e);
     }

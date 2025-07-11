@@ -7,7 +7,6 @@ import io.vacco.a4lb.util.A4Io;
 import org.slf4j.*;
 import javax.net.ssl.*;
 import java.io.Closeable;
-import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -17,9 +16,7 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static final char R = 'r', W = 'w', N = '-';
   public static final String
-    Stop = "\uD83D\uDD34",
     Close = "✖ ", Rx = "↓ ", Tx = "↑ ", NoOp = "— ",
     Tls = "\uD83D\uDD12";
 
@@ -27,7 +24,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
   private A4Selector bkSel;
   private A4TcpIo client, backend;
-  public  String id;
 
   private String tlsSni;
   private A4Match tlsMatch;
@@ -52,7 +48,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (e != null && log.isDebugEnabled()) {
       var x = rootCauseOf(e);
       log.debug(
-        "{} ❌ {} - {} - {}", id,
+        "{} ❌ {} - {} - {}",
+        Thread.currentThread().getName(),
         e.getClass().getSimpleName(),
         x.getClass().getSimpleName(),
         e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
@@ -88,12 +85,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (tlsClient && tlsSni == null) {
       return;
     }
-    this.backend = bkSel.assign(client.channelKey.selector(), client.channel, tlsSni, tlsExec);
-    this.backend.channelKey.attach(this);
-    this.id = format("%08x", format("%s-%s",
-      client.getRawChannel().socket(),
-      backend.getRawChannel().socket()
-    ).hashCode());
+    this.backend = bkSel.assign(client.channel, tlsSni, tlsExec);
     this.bkSel.contextOf(backend.backend).trackConn(true);
     this.onInit.accept(this);
   }
@@ -109,120 +101,82 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     return false;
   }
 
-  private char rwBit(boolean b, char c) {
-    return b ? c : N;
-  }
-
-  private boolean isClient(SelectionKey k) {
-    return client.channelKey == k;
-  }
-
-  private boolean isBackend(SelectionKey k) {
-    return backend != null && backend.channelKey == k;
-  }
-
-  private String stateBits(SelectionKey k) {
-    var target = isClient(k) ? "c" : isBackend(k) ? "b" : N;
-    return format(
-      "%s %c%c %c%c",
-      target,
-      rwBit(client.channelKey.isReadable(), R),
-      rwBit(client.channelKey.isWritable(), W),
-      rwBit(backend != null && backend.channelKey.isReadable(), R),
-      rwBit(backend != null && backend.channelKey.isWritable(), W)
-    );
-  }
-
-  private void logState(SelectionKey k, String inOp, String outOp, int br, int bw) {
+  private void logState(String inOp, String outOp, int br, int bw) {
     if (log.isDebugEnabled()) {
       log.debug(
-        "{} | {} {} | {} | i{} o{} | c{} b{}",
-        id == null ? "????????" : id,
+        "{} | {} {} | i{} o{} | c{} b{}",
+        Thread.currentThread().getName(),
         inOp, outOp,
-        stateBits(k),
         format("%08d", br),
         format("%08d", bw),
-        client,
-        backend != null ? backend : "?"
+        client == null ? "?" : client,
+        backend == null ? "?" : backend
       );
     }
   }
 
-  private void tcpUpdate(SelectionKey key, A4TcpIo in, A4TcpIo out) {
-    var cl = isClient(key);
+  private String threadIdOf(A4TcpIo io0, A4TcpIo io1) {
+    return format("%s%s", io0.id, io1.id);
+  }
+
+  private void pump(boolean fromClient) {
     int r = -2, w = -2;
-
-    r = in.read();
-
-    if (cl) {
-      if (tlsClient && this.backend == null) {
-        initBackend();
-        logState(key, Tls, NoOp, r, w);
-        return;
-      }
-    } else {
-      bkSel.contextOf(backend.backend).trackRxTx(true, r);
-    }
-
-    if (r == -1) { // flush buffers, tear down
-      r = client.writeTo(backend.channel);
-      w = backend.writeTo(client.channel);
-      client.writeEmpty();
-      backend.writeEmpty();
-      logState(key, Close, Close, r, w);
-      tearDown(null);
-      return;
-    }
-
-    String inOp = NoOp, outOp = NoOp;
-
-    if (in.available()) {
-      inOp = Rx;
-      out.writeable(true);
-      if (in.stalling()) {
-        in.readable(false);
-        outOp = Stop;
-      }
-    }
-
-    if (in.writeable()) {
-      w = out.writeTo(in);
-      if (!cl) {
-        bkSel.contextOf(backend.backend).trackRxTx(false, w);
-      }
-      outOp = w > 0 ? Tx : outOp;
-      in.writeable(out.available());
-      if (!out.stalling()) {
-        out.readable(true);
-      }
-    }
-
-    logState(key, inOp, outOp, r, w);
-  }
-
-  private void tcpUpdate(SelectionKey key) {
-    if (isClient(key)) {
-      tcpUpdate(key, client, backend);
-    } else if (isBackend(key)) {
-      tcpUpdate(key, backend, client);
-    }
-  }
-
-  public void update(SelectionKey key) {
+    var pt = Thread.currentThread();
     try {
-      if (key.isAcceptable()) {
-        initBackend();
-      } else if (key.attachment() == this) {
-        tcpUpdate(key);
+      while (true) {
+        var in = fromClient ? client : backend;
+        var out = fromClient ? backend : client;
+        r = in.read();
+        if (r == -1) {
+          if (out != null) {
+            w = in.writeTo(out);
+          }
+          logState(Close, w > 0 ? Tx : NoOp, r, w);
+          break;
+        }
+        if (fromClient && tlsClient && this.backend == null) {
+          initBackend();
+          pt.setName(threadIdOf(client, backend));
+          pt = Thread.ofVirtual().name(threadIdOf(backend, client)).start(() -> pump(false));
+          logState(Tls, NoOp, r, w);
+          if (r == 0) {
+            continue;
+          }
+        }
+        if (out != null) {
+          w = in.writeTo(out);
+        }
+        if (backend != null) {
+          if (!fromClient) {
+            bkSel.contextOf(backend.backend).trackRxTx(true, r);
+          }
+          if (fromClient) {
+            bkSel.contextOf(backend.backend).trackRxTx(false, w);
+          }
+        }
+        var inOp = r > 0 ? Rx : NoOp;
+        var outOp = w > 0 ? Tx : NoOp;
+        logState(inOp, outOp, r, w);
+        Thread.sleep(200);
+      }
+      if (pt != Thread.currentThread()) { // I'm the client
+        tearDown(null);
       }
     } catch (Exception e) {
-      tearDown(e);
+      if (fromClient) {
+        tearDown(e);
+      } else {
+        logError(e);
+      }
     }
+  }
+
+  public void start() {
+    Thread.ofVirtual().start(() -> pump(true));
   }
 
   public A4TcpSess withClient(A4TcpIo client) {
     this.client = Objects.requireNonNull(client);
-    this.client.channelKey.attach(this);
     return this;
   }
 
