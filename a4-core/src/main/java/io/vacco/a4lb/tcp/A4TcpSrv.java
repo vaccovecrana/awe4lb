@@ -55,8 +55,8 @@ public class A4TcpSrv implements A4Srv {
       var isTls = srvConfig.tls != null;
       var sess = new A4TcpSess(
         this.bkSel,
-        s0 -> { if (s0.id != null) sessions.put(s0.id, s0); },
-        s0 -> { if (s0.id != null) sessions.remove(s0.id); },
+        s0 -> sessions.put(s0.id(), s0),
+        s0 -> sessions.remove(s0.id()),
         isTls
       );
       clientSocket = serverSocket.accept();

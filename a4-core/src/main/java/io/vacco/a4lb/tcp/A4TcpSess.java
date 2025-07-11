@@ -18,8 +18,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
-  public String id;
-
   private A4Selector bkSel;
   private A4TcpIo client, backend;
 
@@ -76,8 +74,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
   }
 
-  private String threadIdOf(A4TcpIo io0, A4TcpIo io1) {
-    return format("%s%s", io0.id, io1.id);
+  public String id() {
+    return format("%s%s", client.id, backend != null ? backend.id : "----");
   }
 
   private void initBackend() {
@@ -88,7 +86,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       return;
     }
     this.backend = bkSel.assign(client.socket, tlsSni);
-    this.id =  threadIdOf(client, backend);
     this.bkSel.contextOf(backend.backend).trackConn(true);
     this.onInit.accept(this);
   }
@@ -111,7 +108,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (log.isDebugEnabled()) {
       log.debug(
         "{} | {} | t{} | {} {}",
-        Thread.currentThread().getName(),
+        id(),
         op,
         format("%010d", bt),
         client == null ? "?" : client,
@@ -134,8 +131,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
             break;
           } else {
             initBackend();
-            Thread.currentThread().setName(this.id);
-            Thread.ofVirtual().name(id).start(() -> pump(false));
+            Thread.currentThread().setName(id());
+            Thread.ofVirtual().name(id()).start(() -> pump(false));
             backend.socket.getOutputStream().write(temp, 0, br);
             backend.socket.getOutputStream().flush();
             bkSel.contextOf(backend.backend).trackRxTx(false, br);
@@ -144,15 +141,12 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
           }
         }
         var bytes = in.transferTo(out);
-        out.socket.shutdownOutput();
+        log.warn("momo? {}", fromClient);
         bkSel.contextOf(backend.backend).trackRxTx(!fromClient, bytes);
         logState(op, bytes);
-        break;
-      }
-      if (fromClient) {
-        tearDown(null);
       }
     } catch (Exception e) {
+      log.warn("momo! {}", fromClient, e);
       if (fromClient) {
         tearDown(e);
       } else {
@@ -162,7 +156,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   }
 
   public void start() {
-    Thread.ofVirtual().start(() -> pump(true));
+    Thread.ofVirtual().name(id()).start(() -> pump(true));
   }
 
   public A4TcpSess withClient(A4TcpIo client) {
