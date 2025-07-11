@@ -110,10 +110,10 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   private void logState(String op, long bt) {
     if (log.isDebugEnabled()) {
       log.debug(
-        "{} | {} | t{} | c{} b{}",
+        "{} | {} | t{} | {} {}",
         Thread.currentThread().getName(),
         op,
-        format("%016d", bt),
+        format("%010d", bt),
         client == null ? "?" : client,
         backend == null ? "?" : backend
       );
