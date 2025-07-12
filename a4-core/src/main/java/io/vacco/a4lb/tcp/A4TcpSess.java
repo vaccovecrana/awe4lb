@@ -52,7 +52,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (e != null && log.isDebugEnabled()) {
       var x = rootCauseOf(e);
       log.debug(
-        "{} ❌ {} - {} - {}", id,
+        "{} |   {}   | {} - {} - {}",
+        id, "❌",
         e.getClass().getSimpleName(),
         x.getClass().getSimpleName(),
         e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
@@ -87,7 +88,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   private void logState(SelectionKey k, String inOp, String outOp, int br, int bw) {
     if (log.isDebugEnabled()) {
       log.debug(
-        "{} | {} {} | {} | i{} o{} | c{} b{}",
+        "{} |  {} {} | {} | i{} o{} | c{} b{}",
         id == null ? "????????" : id,
         inOp, outOp,
         stateBits(k),
@@ -101,16 +102,16 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
   private void tearDown(Exception e) {
     logError(e);
-    int r = client.writeTo(backend.channel);
-    int w = backend.writeTo(client.channel);
-    logState(client.channelKey, Close, Close, r, w);
-    client.closeOutput();
-    backend.closeOutput();
-    A4Io.close(client);
-    A4Io.close(backend);
     if (backend != null) {
+      int r = client.writeTo(backend.channel);
+      int w = backend.writeTo(client.channel);
+      logState(client.channelKey, Close, Close, r, w);
+      client.closeOutput();
+      backend.closeOutput();
+      A4Io.close(backend);
       bkSel.contextOf(backend.backend).trackConn(false);
     }
+    A4Io.close(client);
     this.onTearDown.accept(this);
     this.client = null;
     this.backend = null;
@@ -121,7 +122,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     this.onInit = null;
     this.onTearDown = null;
     if (log.isDebugEnabled()) {
-      log.debug("------------------------------");
+      log.debug("-----------------------------------------------------------------");
     }
   }
 
@@ -179,10 +180,11 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (in.available) {
       inOp = Rx;
       out.writeable(true);
-      if (in.stalling) {
-        in.readable(false);
-        outOp = Stop;
-      }
+    }
+
+    if (in.stalling) {
+      in.readable(false);
+      outOp = Stop;
     }
 
     if (in.writeable()) {
