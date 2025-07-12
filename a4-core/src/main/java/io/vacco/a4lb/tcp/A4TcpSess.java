@@ -176,10 +176,10 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
     String inOp = NoOp, outOp = NoOp;
 
-    if (in.available()) {
+    if (in.available) {
       inOp = Rx;
       out.writeable(true);
-      if (in.stalling()) {
+      if (in.stalling) {
         in.readable(false);
         outOp = Stop;
       }
@@ -191,8 +191,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         bkSel.contextOf(backend.backend).trackRxTx(false, w);
       }
       outOp = w > 0 ? Tx : outOp;
-      in.writeable(out.available());
-      if (!out.stalling()) {
+      in.writeable(out.available);
+      if (!out.stalling) {
         out.readable(true);
       }
     }
