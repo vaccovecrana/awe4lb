@@ -16,6 +16,8 @@ import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
 
+  public static final ByteBuffer Empty = ByteBuffer.allocateDirect(0);
+
   public final String id;
   public final SelectionKey channelKey;
   public final SocketChannel channel;
@@ -81,11 +83,11 @@ public class A4TcpIo implements Closeable {
     }
   }
 
-  public int writeTo(ByteChannel channel) {
+  public int writeTo(ByteChannel chn, ByteBuffer bb) {
     int totalBytesWritten = 0;
     try {
-      while (buffer.hasRemaining()) {
-        int bytesWritten = channel.write(buffer);
+      while (bb.hasRemaining()) {
+        int bytesWritten = chn.write(bb);
         if (bytesWritten == 0) {
           this.stalling = true;
           break;
@@ -98,14 +100,18 @@ public class A4TcpIo implements Closeable {
       log.trace("write", e);
       return -1;
     }
-    if (!buffer.hasRemaining()) {
+    if (!bb.hasRemaining()) {
       available = false;
     }
     return totalBytesWritten;
   }
 
   public int writeTo(A4TcpIo target) {
-    return writeTo(target.channel);
+    return writeTo(target.channel, buffer);
+  }
+
+  public int writeEmpty() {
+    return writeTo(this.channel, Empty);
   }
 
   public void writeable(boolean enable) {

@@ -103,8 +103,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   private void tearDown(Exception e) {
     logError(e);
     if (backend != null) {
-      int r = client.writeTo(backend.channel);
-      int w = backend.writeTo(client.channel);
+      int r = client.writeTo(backend);
+      int w = backend.writeTo(client);
       logState(client.channelKey, Close, Close, r, w);
       client.closeOutput();
       backend.closeOutput();
@@ -188,7 +188,11 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
 
     if (in.writeable()) {
-      w = out.writeTo(in);
+      if (!out.available) {
+        w = in.writeEmpty();
+      } else {
+        w = out.writeTo(in);
+      }
       if (!cl) {
         bkSel.contextOf(backend.backend).trackRxTx(false, w);
       }
