@@ -14,7 +14,7 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static final String Error = "!", Close = "✖", Rx = "↓", Tx = "↑", Tls = "*";
+  public static final String Error = "!", Close = "✖", Rx = "↓", Tx = "↑", Tls = "*", None = "----";
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
@@ -59,7 +59,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     logError(e);
     A4Io.close(target);
     if (client != null || backend != null) {
-      bkSel.contextOf(backend.backend).trackConn(false);
+      // bkSel.contextOf(backend.backend).trackConn(false); // TODO fix
       this.onTearDown.accept(this);
       this.client = null;
       this.backend = null;
@@ -75,10 +75,12 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   }
 
   private String id(boolean reverse) {
+    var cid = client != null ? client.id : None;
+    var bid = backend != null ? backend.id : None;
     if (reverse) {
-      return format("%s%s", backend != null ? backend.id : "----", client.id);
+      return format("%s%s", bid, cid);
     } else {
-      return format("%s%s", client.id, backend != null ? backend.id : "----");
+      return format("%s%s", cid, bid);
     }
   }
 

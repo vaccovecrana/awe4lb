@@ -7,12 +7,13 @@ import io.vacco.a4lb.util.*;
 import java.net.*;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class A4Selector {
 
   private final List<A4Match> cfg;
-  private final Map<A4Pool, A4PoolContext> poolContextIdx = new HashMap<>();
-  private final Map<A4Backend, A4BackendContext> bkContextIdx = new HashMap<>();
+  private final Map<A4Pool, A4PoolContext> poolContextIdx = new ConcurrentHashMap<>();
+  private final Map<A4Backend, A4BackendContext> bkContextIdx = new ConcurrentHashMap<>();
 
   public A4Selector(List<A4Match> cfg) {
     this.cfg = Objects.requireNonNull(cfg);

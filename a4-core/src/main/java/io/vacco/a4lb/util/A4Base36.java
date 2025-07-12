@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class A4Base36 {
 
-  private static final String BASE36_CHARS = "0123456789abcdefghijklmnopqrstuvwxyz";
+  private static final String BASE36_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   private static final int MAX_VALUE_4 = 1679616; // 36^4
   private static final int Length = 4;
 

@@ -13,7 +13,7 @@ public class A4TcpIo implements Closeable {
   public final Socket socket;
   public A4Backend backend;
 
-  public byte[] peek = new byte[16 * 1024];
+  public byte[] peek = new byte[64 * 1024];
   public int    peekBytes;
 
   public A4TcpIo(Socket socket) {
@@ -30,8 +30,8 @@ public class A4TcpIo implements Closeable {
       } else {
         socket = new Socket(dest.getHostName(), dest.getPort());
       }
-      socket.setKeepAlive(true);
-      // socket.setSoTimeout(5000); // TODO should this be configurable?
+      socket.setTcpNoDelay(false);
+      socket.setSoTimeout(5000);
       this.socket = socket;
       this.id = A4Base36.hash4(socket.toString());
     } catch (IOException e) {
@@ -52,7 +52,6 @@ public class A4TcpIo implements Closeable {
   public void writeTo(A4TcpIo target) throws IOException {
     var out = target.socket.getOutputStream();
     out.write(this.peek, 0, peekBytes);
-    out.flush();
   }
 
   public A4TcpIo backend(A4Backend backend) {
