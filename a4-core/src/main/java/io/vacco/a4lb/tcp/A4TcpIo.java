@@ -11,7 +11,7 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
-import static io.vacco.a4lb.util.A4Io.*;
+import static io.vacco.a4lb.util.A4Io.log;
 import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
@@ -75,7 +75,8 @@ public class A4TcpIo implements Closeable {
         available = true;
       }
       return bytesRead;
-    } catch (IOException ioe) {
+    } catch (IOException e) {
+      log.trace("read", e);
       return -1;
     }
   }
@@ -94,12 +95,8 @@ public class A4TcpIo implements Closeable {
         totalBytesWritten += bytesWritten;
       }
     } catch (IOException e) {
-      var msg = e.getMessage();
-      if (msg != null && msg.contains("Broken pipe")) { // Client closed; treat as EOF
-        return -1;
-      } else {
-        throw new IllegalStateException(e);
-      }
+      log.trace("write", e);
+      return -1;
     }
     if (!buffer.hasRemaining()) {
       available = false;
