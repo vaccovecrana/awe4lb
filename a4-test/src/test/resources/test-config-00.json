@@ -3,62 +3,6 @@
   "description": "Test configuration",
   "servers": [
     {
-      "id": "momo-http-json",
-      "addr": {
-        "host": "0.0.0.0",
-        "port": 8080
-      },
-      "match": [
-        {
-          "discover": {
-            "http": {
-              "endpoint": "http://127.0.0.1:4010",
-              "format": "json"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "sdr-http-json",
-      "addr": {
-        "host": "0.0.0.0",
-        "port": 8090
-      },
-      "match": [
-        {
-          "op": {
-            "host": {
-              "equals": "127.0.0.1"
-            }
-          },
-          "pool": {
-            "type": "roundRobin"
-          },
-          "discover": {
-            "exec": {
-              "command": "cat",
-              "args": [
-                "./src/test/resources/discover/sdr-hosts.json"
-              ],
-              "format": "json"
-            }
-          },
-          "healthCheck": {
-            "exec": {
-              "command": "nc",
-              "args": [
-                "-z",
-                "-v",
-                "$host",
-                "$port"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
       "id": "https-txt",
       "addr": {
         "host": "0.0.0.0",
@@ -68,37 +12,39 @@
         {
           "op": {
             "sni": {
-              "equals": "momo.localhost"
+              "equals": "doc.xio.vacco.li"
             }
           },
-          "discover": {
-            "http": {
-              "endpoint": "http://127.0.0.1:4011",
-              "format": "text"
-            }
+          "pool": {
+            "hosts": [
+              {
+                "addr": {
+                  "host": "172.16.4.58",
+                  "port": 8080
+                }
+              }
+            ]
           },
-          "tls": {
-            "certPath": "./src/test/resources/certs/awe4lb.pem",
-            "keyPath": "./src/test/resources/certs/awe4lb.key"
+          "healthCheck": {
+            "intervalMs": 900000,
+            "timeoutMs": 800000
           }
         },
         {
           "op": {
             "sni": {
-              "equals": "sdr.localhost"
+              "equals": "adv.xio.vacco.li"
             }
           },
           "pool": {
-            "type": "weight"
-          },
-          "discover": {
-            "exec": {
-              "command": "cat",
-              "args": [
-                "./src/test/resources/discover/sdr-hosts.txt"
-              ],
-              "format": "text"
-            }
+            "hosts": [
+              {
+                "addr": {
+                  "host": "172.16.4.58",
+                  "port": 8096
+                }
+              }
+            ]
           }
         }
       ],
@@ -107,58 +53,9 @@
           "TLS_AES_128_GCM_SHA256"
         ],
         "base": {
-          "certPath": "./src/test/resources/certs/awe4lb.pem",
-          "keyPath": "./src/test/resources/certs/awe4lb.key"
+          "certPath": "/home/jjzazuet/Desktop/xio.vacco.li.pem",
+          "keyPath": "/home/jjzazuet/Desktop/xio.vacco.li.key"
         }
-      }
-    },
-    {
-      "id": "momo-udp-echo",
-      "addr": {
-        "host": "0.0.0.0",
-        "port": 8070
-      },
-      "match": [
-        {
-          "pool": {
-            "type": "ipHash",
-            "hosts": [
-              {
-                "addr": {
-                  "host": "127.0.0.1",
-                  "port": 6000
-                }
-              },
-              {
-                "addr": {
-                  "host": "127.0.0.1",
-                  "port": 6001
-                }
-              },
-              {
-                "addr": {
-                  "host": "127.0.0.1",
-                  "port": 6002
-                }
-              }
-            ]
-          },
-          "healthCheck": {
-            "exec": {
-              "command": "ping",
-              "args": [
-                "-c",
-                "1",
-                "$host"
-              ]
-            }
-          }
-        }
-      ],
-      "udp": {
-        "bufferSize": 2048,
-        "idleTimeoutMs": 2000,
-        "maxSessions": 1024
       }
     }
   ]

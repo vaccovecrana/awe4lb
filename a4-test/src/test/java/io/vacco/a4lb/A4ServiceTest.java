@@ -3,8 +3,8 @@ package io.vacco.a4lb;
 import com.github.mizosoft.methanol.*;
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.niossl.SSLCertificates;
 import io.vacco.a4lb.service.A4Context;
+import io.vacco.a4lb.tcp.A4TlsCerts;
 import io.vacco.a4lb.util.*;
 import io.vacco.a4lb.web.A4Route;
 import j8spec.annotation.DefinedOrder;
@@ -33,7 +33,7 @@ public class A4ServiceTest {
   private static Logger log;
   private static A4Context ctx = new A4Context();
   private static final Gson gson = new Gson();
-  private static final SSLContext trustAllCtx = SSLCertificates.trustAllContext();
+  private static final SSLContext trustAllCtx = A4TlsCerts.trustAllContext();
   private static final Methanol apiClient = Methanol.newBuilder()
       .baseUri("http://localhost:7070")
       .build();
@@ -108,7 +108,7 @@ public class A4ServiceTest {
         ctx.init(fl);
         log = LoggerFactory.getLogger(A4ServiceTest.class);
         Thread.sleep(5000);
-        // Thread.sleep(Integer.MAX_VALUE);
+        Thread.sleep(Integer.MAX_VALUE);
       });
 
       it("Attempts to add an invalid configuration", () -> {
