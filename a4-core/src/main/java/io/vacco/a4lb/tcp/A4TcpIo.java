@@ -67,11 +67,17 @@ public class A4TcpIo implements Closeable {
     if (available) {
       return 0; // Backpressure: don't read until current data is written
     }
-    int bytesRead = eofRead(this.channel, buffer);
-    if (bytesRead > 0) {
-      available = true;
+    try {
+      buffer.clear();
+      int bytesRead = channel.read(buffer);
+      if (bytesRead > 0) {
+        buffer.flip();
+        available = true;
+      }
+      return bytesRead;
+    } catch (IOException ioe) {
+      return -1;
     }
-    return bytesRead;
   }
 
   public int writeTo(ByteChannel channel) {
@@ -131,10 +137,6 @@ public class A4TcpIo implements Closeable {
         k.interestOps(currentOps & ~SelectionKey.OP_READ);
       }
     }
-  }
-
-  public boolean readable() {
-    return this.channelKey.isReadable();
   }
 
   public void closeOutput() {

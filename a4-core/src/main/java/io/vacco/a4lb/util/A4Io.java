@@ -28,24 +28,6 @@ public class A4Io {
     }
   }
 
-  public static int eofRead(ByteChannel c, ByteBuffer bb) {
-    try {
-      bb.clear();
-      int bytesRead = c.read(bb);
-      if (bytesRead == -1) {
-        if (log.isTraceEnabled()) {
-          log.trace("{} - channel EOF", c);
-        }
-      } else if (bytesRead > 0) {
-        bb.flip();
-      }
-      return bytesRead;
-    } catch (IOException ioe) {
-      var msg = String.format("Unable to read data from channel %s", c);
-      throw new IllegalStateException(msg, ioe);
-    }
-  }
-
   public static Selector newSelector() {
     try {
       return Selector.open();
