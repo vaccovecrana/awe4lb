@@ -35,8 +35,8 @@ public class A4ServiceTest {
   private static final Gson gson = new Gson();
   private static final SSLContext trustAllCtx = SSLCertificates.trustAllContext();
   private static final Methanol apiClient = Methanol.newBuilder()
-      .baseUri("http://localhost:7070")
-      .build();
+    .baseUri("http://localhost:7070")
+    .build();
 
   private static final String
       testConfigId = "test-config-00",
@@ -108,7 +108,7 @@ public class A4ServiceTest {
         ctx.init(fl);
         log = LoggerFactory.getLogger(A4ServiceTest.class);
         Thread.sleep(5000);
-        // Thread.sleep(Integer.MAX_VALUE);
+        Thread.sleep(Integer.MAX_VALUE);
       });
 
       it("Attempts to add an invalid configuration", () -> {
