@@ -17,7 +17,7 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static final char R = 'r', W = 'w', N = '-';
+  public static final char D = 'd', R = 'r', W = 'w', N = '-', X = 'x', E = '!';
   public static final String
     Stop = "\uD83D\uDD34",
     Close = "✖ ", Rx = "↓ ", Tx = "↑ ", NoOp = "— ",
@@ -76,12 +76,18 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   private String stateBits(SelectionKey k) {
     var target = isClient(k) ? "c" : isBackend(k) ? "b" : N;
     return format(
-      "%s %c%c %c%c",
+      "%s %c%c%c%c%c %c%c%c%c%c",
       target,
       rwBit(client.channelKey.isReadable(), R),
-      rwBit(client.channelKey.isWritable(), W),
+      client.closedOutput() ? X : rwBit(client.channelKey.isWritable(), W),
+      client.available ? D : N,
+      client.rxe != null ? E : N,
+      client.txe != null ? E : N,
       rwBit(backend != null && backend.channelKey.isReadable(), R),
-      rwBit(backend != null && backend.channelKey.isWritable(), W)
+      backend != null && backend.closedOutput() ? X : rwBit(backend != null && backend.channelKey.isWritable(), W),
+      backend != null && backend.available ? D : N,
+      backend != null && backend.rxe != null ? E : N,
+      backend != null && backend.txe != null ? E : N
     );
   }
 
@@ -103,11 +109,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   private void tearDown(Exception e) {
     logError(e);
     if (backend != null) {
-      int r = client.writeTo(backend);
-      int w = backend.writeTo(client);
-      logState(client.channelKey, Close, Close, r, w);
-      client.closeOutput();
-      backend.closeOutput();
       A4Io.close(backend);
       bkSel.contextOf(backend.backend).trackConn(false);
     }
@@ -122,7 +123,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     this.onInit = null;
     this.onTearDown = null;
     if (log.isDebugEnabled()) {
-      log.debug("-----------------------------------------------------------------");
+      log.debug("-------------------------------------------------------------------");
     }
   }
 
@@ -171,8 +172,12 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
 
     if (r == -1) {
-      tearDown(null);
-      return;
+      if (cl) {
+        backend.closeOutput();
+      } else {
+        client.closeOutput();
+      }
+      in.readable(false);
     }
 
     String inOp = NoOp, outOp = NoOp;
@@ -198,8 +203,11 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       }
       outOp = w > 0 ? Tx : outOp;
       if (w == -1) {
-        tearDown(null);
-        return;
+        if (cl) {
+          client.closeOutput();
+        } else {
+          backend.closeOutput();
+        }
       }
       in.writeable(out.available);
       if (!out.stalling) {
@@ -208,6 +216,16 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
 
     logState(key, inOp, outOp, r, w);
+
+    if ((client.closedOutput() || backend.closedOutput()) && !client.available && !backend.available) {
+      tearDown(null);
+    }
+
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void tcpUpdate(SelectionKey key) {

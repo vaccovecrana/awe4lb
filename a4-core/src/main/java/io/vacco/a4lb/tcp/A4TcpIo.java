@@ -11,7 +11,6 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
-import static io.vacco.a4lb.util.A4Io.log;
 import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
@@ -27,6 +26,8 @@ public class A4TcpIo implements Closeable {
 
   public boolean available = false;
   public boolean stalling = false;
+
+  public IOException rxe, txe;
 
   private static void setSocketOptions(Socket s) {
     try {
@@ -76,9 +77,10 @@ public class A4TcpIo implements Closeable {
         buffer.flip();
         available = true;
       }
+      this.rxe = null;
       return bytesRead;
     } catch (IOException e) {
-      log.trace("read", e);
+      this.rxe = e;
       return -1;
     }
   }
@@ -97,12 +99,13 @@ public class A4TcpIo implements Closeable {
         totalBytesWritten += bytesWritten;
       }
     } catch (IOException e) {
-      log.trace("write", e);
+      this.txe = e;
       return -1;
     }
     if (!bb.hasRemaining()) {
       available = false;
     }
+    this.txe = null;
     return totalBytesWritten;
   }
 
@@ -148,6 +151,10 @@ public class A4TcpIo implements Closeable {
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  public boolean closedOutput() {
+    return this.channel.socket().isOutputShutdown();
   }
 
   public A4TcpIo backend(A4Backend backend) {
