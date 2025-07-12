@@ -183,8 +183,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
 
     if (in.stalling) {
-      in.readable(false);
       outOp = Stop;
+      in.readable(false);
     }
 
     if (in.writeable()) {
