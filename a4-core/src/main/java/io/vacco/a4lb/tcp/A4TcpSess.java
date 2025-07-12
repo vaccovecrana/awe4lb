@@ -60,8 +60,52 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
   }
 
+  private char rwBit(boolean b, char c) {
+    return b ? c : N;
+  }
+
+  private boolean isClient(SelectionKey k) {
+    return client.channelKey == k;
+  }
+
+  private boolean isBackend(SelectionKey k) {
+    return backend != null && backend.channelKey == k;
+  }
+
+  private String stateBits(SelectionKey k) {
+    var target = isClient(k) ? "c" : isBackend(k) ? "b" : N;
+    return format(
+      "%s %c%c %c%c",
+      target,
+      rwBit(client.channelKey.isReadable(), R),
+      rwBit(client.channelKey.isWritable(), W),
+      rwBit(backend != null && backend.channelKey.isReadable(), R),
+      rwBit(backend != null && backend.channelKey.isWritable(), W)
+    );
+  }
+
+  private void logState(SelectionKey k, String inOp, String outOp, int br, int bw) {
+    if (log.isDebugEnabled()) {
+      log.debug(
+        "{} | {} {} | {} | i{} o{} | c{} b{}",
+        id == null ? "????????" : id,
+        inOp, outOp,
+        stateBits(k),
+        format("%08d", br),
+        format("%08d", bw),
+        client,
+        backend != null ? backend : "?"
+      );
+    }
+  }
+
   private void tearDown(Exception e) {
     logError(e);
+    int r = client.writeTo(backend.channel);
+    int w = backend.writeTo(client.channel);
+    logState(client.channelKey, Close, Close, r, w);
+    client.closeOutput();
+    backend.closeOutput();
     A4Io.close(client);
     A4Io.close(backend);
     if (backend != null) {
@@ -109,45 +153,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     return false;
   }
 
-  private char rwBit(boolean b, char c) {
-    return b ? c : N;
-  }
-
-  private boolean isClient(SelectionKey k) {
-    return client.channelKey == k;
-  }
-
-  private boolean isBackend(SelectionKey k) {
-    return backend != null && backend.channelKey == k;
-  }
-
-  private String stateBits(SelectionKey k) {
-    var target = isClient(k) ? "c" : isBackend(k) ? "b" : N;
-    return format(
-      "%s %c%c %c%c",
-      target,
-      rwBit(client.channelKey.isReadable(), R),
-      rwBit(client.channelKey.isWritable(), W),
-      rwBit(backend != null && backend.channelKey.isReadable(), R),
-      rwBit(backend != null && backend.channelKey.isWritable(), W)
-    );
-  }
-
-  private void logState(SelectionKey k, String inOp, String outOp, int br, int bw) {
-    if (log.isDebugEnabled()) {
-      log.debug(
-        "{} | {} {} | {} | i{} o{} | c{} b{}",
-        id == null ? "????????" : id,
-        inOp, outOp,
-        stateBits(k),
-        format("%08d", br),
-        format("%08d", bw),
-        client,
-        backend != null ? backend : "?"
-      );
-    }
-  }
-
   private void tcpUpdate(SelectionKey key, A4TcpIo in, A4TcpIo out) {
     var cl = isClient(key);
     int r = -2, w = -2;
@@ -164,12 +169,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       bkSel.contextOf(backend.backend).trackRxTx(true, r);
     }
 
-    if (r == -1) { // flush buffers, tear down
-      r = client.writeTo(backend.channel);
-      w = backend.writeTo(client.channel);
-      client.writeEmpty();
-      backend.writeEmpty();
-      logState(key, Close, Close, r, w);
+    if (r == -1) {
       tearDown(null);
       return;
     }
@@ -191,6 +191,10 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         bkSel.contextOf(backend.backend).trackRxTx(false, w);
       }
       outOp = w > 0 ? Tx : outOp;
+      if (w == -1) {
+        tearDown(null);
+        return;
+      }
       in.writeable(out.available);
       if (!out.stalling) {
         out.readable(true);

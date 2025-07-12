@@ -46,15 +46,6 @@ public class A4Io {
     }
   }
 
-  public static int eofWrite(ByteChannel c, ByteBuffer bb) {
-    try {
-      return c.write(bb);
-    } catch (IOException ioe) {
-      var msg = String.format("Unable to write data to channel %s", c);
-      throw new IllegalStateException(msg, ioe);
-    }
-  }
-
   public static Selector newSelector() {
     try {
       return Selector.open();

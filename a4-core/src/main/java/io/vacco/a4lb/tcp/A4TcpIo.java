@@ -4,7 +4,8 @@ import io.vacco.a4lb.cfg.A4Backend;
 import io.vacco.a4lb.niossl.*;
 import io.vacco.a4lb.util.A4Io;
 import java.io.Closeable;
-import java.net.InetSocketAddress;
+import java.io.IOException;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
@@ -15,22 +16,30 @@ import static java.lang.String.format;
 
 public class A4TcpIo implements Closeable {
 
-  public static final ByteBuffer Empty = ByteBuffer.allocateDirect(0);
-
   public final String id;
   public final SelectionKey channelKey;
   public final SocketChannel channel;
 
   public A4Backend backend;
-  private final ByteBuffer buffer = ByteBuffer.allocateDirect(128 * 1024);
+  private final ByteBuffer buffer = ByteBuffer.allocateDirect(256 * 1024);
 
   public boolean available = false;
   public boolean stalling = false;
+
+  private static void setSocketOptions(Socket s) {
+    try {
+     s.setSoTimeout(5000); // TODO should these be configurable?
+     s.setSoLinger(true, 5);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
+  }
 
   public A4TcpIo(SelectionKey channelKey, SocketChannel rawChannel) {
     this.channel = Objects.requireNonNull(rawChannel);
     this.channelKey = Objects.requireNonNull(channelKey);
     this.id = this.channel.socket().toString();
+    setSocketOptions(this.channel.socket());
   }
 
   public A4TcpIo(InetSocketAddress dest, Selector selector, boolean openTls, ExecutorService tlsExec) {
@@ -48,6 +57,7 @@ public class A4TcpIo implements Closeable {
       this.channel.configureBlocking(false);
       this.channelKey = chn.register(selector, SelectionKey.OP_READ);
       this.id = channel.socket().toString();
+      setSocketOptions(this.channel.socket());
     } catch (Exception e) {
       throw new IllegalStateException("Server > Backend channel initialization error - " + dest, e);
     }
@@ -66,24 +76,29 @@ public class A4TcpIo implements Closeable {
 
   public int writeTo(ByteChannel channel) {
     int totalBytesWritten = 0;
-    while (buffer.hasRemaining()) {
-      int bytesWritten = eofWrite(channel, buffer);
-      if (bytesWritten == 0) {
-        this.stalling = true;
-        break; // Can't write more right now
-      } else if (bytesWritten > 0) {
-        this.stalling = false;
+    try {
+      while (buffer.hasRemaining()) {
+        int bytesWritten = channel.write(buffer);
+        if (bytesWritten == 0) {
+          this.stalling = true;
+          break;
+        } else if (bytesWritten > 0) {
+          this.stalling = false;
+        }
+        totalBytesWritten += bytesWritten;
       }
-      totalBytesWritten += bytesWritten;
+    } catch (IOException e) {
+      var msg = e.getMessage();
+      if (msg != null && msg.contains("Broken pipe")) { // Client closed; treat as EOF
+        return -1;
+      } else {
+        throw new IllegalStateException(e);
+      }
     }
     if (!buffer.hasRemaining()) {
       available = false;
     }
     return totalBytesWritten;
-  }
-
-  public int writeEmpty() {
-    return eofWrite(this.channel, Empty);
   }
 
   public int writeTo(A4TcpIo target) {
@@ -120,6 +135,14 @@ public class A4TcpIo implements Closeable {
 
   public boolean readable() {
     return this.channelKey.isReadable();
+  }
+
+  public void closeOutput() {
+    try {
+      this.channel.shutdownOutput();
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   public A4TcpIo backend(A4Backend backend) {
