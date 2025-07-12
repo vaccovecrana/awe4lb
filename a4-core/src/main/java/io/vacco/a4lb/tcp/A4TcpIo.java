@@ -4,6 +4,7 @@ import io.vacco.a4lb.cfg.A4Backend;
 import io.vacco.a4lb.util.*;
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class A4TcpIo implements Closeable {
@@ -11,6 +12,9 @@ public class A4TcpIo implements Closeable {
   public final String id;
   public final Socket socket;
   public A4Backend backend;
+
+  public byte[] peek = new byte[16 * 1024];
+  public int    peekBytes;
 
   public A4TcpIo(Socket socket) {
     this.socket = Objects.requireNonNull(socket);
@@ -26,6 +30,8 @@ public class A4TcpIo implements Closeable {
       } else {
         socket = new Socket(dest.getHostName(), dest.getPort());
       }
+      socket.setKeepAlive(true);
+      // socket.setSoTimeout(5000); // TODO should this be configurable?
       this.socket = socket;
       this.id = A4Base36.hash4(socket.toString());
     } catch (IOException e) {
@@ -33,12 +39,20 @@ public class A4TcpIo implements Closeable {
     }
   }
 
-  public long transferTo(A4TcpIo target) throws IOException {
-    var in = socket.getInputStream();
+  public int read() {
+    try {
+      Arrays.fill(peek, (byte) 0x00);
+      this.peekBytes = this.socket.getInputStream().read(peek);
+      return this.peekBytes;
+    } catch (IOException e) {
+      return -1;
+    }
+  }
+
+  public void writeTo(A4TcpIo target) throws IOException {
     var out = target.socket.getOutputStream();
-    long bytesTransferred = in.transferTo(out);
+    out.write(this.peek, 0, peekBytes);
     out.flush();
-    return bytesTransferred;
   }
 
   public A4TcpIo backend(A4Backend backend) {

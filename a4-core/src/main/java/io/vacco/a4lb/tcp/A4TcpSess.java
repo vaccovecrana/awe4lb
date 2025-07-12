@@ -14,7 +14,7 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static final String Close = "✖ ", Rx = "↓ ", Tx = "↑ ", Tls = "\uD83D\uDD12";
+  public static final String Error = "!", Close = "✖", Rx = "↓", Tx = "↑", Tls = "*";
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
@@ -42,40 +42,48 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (e != null && log.isDebugEnabled()) {
       var x = rootCauseOf(e);
       log.debug(
-        "{} ❌ {} - {} - {}",
+        "{} | {} | {} - {} - {}",
         Thread.currentThread().getName(),
+        Error,
         e.getClass().getSimpleName(),
         x.getClass().getSimpleName(),
         e == x ? e.getMessage() : format("%s - %s", e.getMessage(), x.getMessage())
       );
       if (log.isTraceEnabled()) {
-        log.trace(x.getMessage(), x);
+        log.trace(x.getClass().getSimpleName(), x);
       }
     }
   }
 
-  private void tearDown(Exception e) {
+  private void tearDown(A4TcpIo target, Exception e) {
     logError(e);
-    A4Io.close(client);
-    A4Io.close(backend);
-    if (backend != null) {
+    A4Io.close(target);
+    if (client != null || backend != null) {
       bkSel.contextOf(backend.backend).trackConn(false);
+      this.onTearDown.accept(this);
+      this.client = null;
+      this.backend = null;
+      this.bkSel = null;
+      this.tlsSni = null;
+      this.tlsMatch = null;
+      this.onInit = null;
+      this.onTearDown = null;
+      if (log.isDebugEnabled()) {
+        log.debug("---------------------------------------");
+      }
     }
-    this.onTearDown.accept(this);
-    this.client = null;
-    this.backend = null;
-    this.bkSel = null;
-    this.tlsSni = null;
-    this.tlsMatch = null;
-    this.onInit = null;
-    this.onTearDown = null;
-    if (log.isDebugEnabled()) {
-      log.debug("------------------------------");
+  }
+
+  private String id(boolean reverse) {
+    if (reverse) {
+      return format("%s%s", backend != null ? backend.id : "----", client.id);
+    } else {
+      return format("%s%s", client.id, backend != null ? backend.id : "----");
     }
   }
 
   public String id() {
-    return format("%s%s", client.id, backend != null ? backend.id : "----");
+    return id(false);
   }
 
   private void initBackend() {
@@ -97,18 +105,18 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       this.tlsSni = sni;
       this.tlsMatch = op.get();
       if (log.isTraceEnabled()) {
-        log.trace("{} - SNI match found: {}", format("%s----", client.id), this.tlsMatch);
+        log.trace("{} | {} | {}", format("%s----", client.id), Tls, this.tlsMatch);
       }
       return true;
     }
     return false;
   }
 
-  private void logState(String op, long bt) {
+  private void logState(String op, long bt, boolean fromClient) {
     if (log.isDebugEnabled()) {
       log.debug(
-        "{} | {} | t{} | {} {}",
-        id(),
+        "{} | {} | {} | {} {}",
+        id(!fromClient),
         op,
         format("%010d", bt),
         client == null ? "?" : client,
@@ -118,40 +126,32 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   }
 
   private void pump(boolean fromClient) {
+    A4TcpIo in = null, out;
     try {
       while (true) {
-        var in = fromClient ? client : backend;
-        var out = fromClient ? backend : client;
+        in = fromClient ? client : backend;
+        out = fromClient ? backend : client;
         var op = fromClient ? Tx : Rx;
+        var bt = (long) in.read();
         if (fromClient && this.backend == null) {
-          var temp = new byte[512]; // Small buffer to trigger TLS handshake
-          int br = in.socket.getInputStream().read(temp);
-          if (br < 0) {
-            logState(Close, br);
-            break;
-          } else {
-            initBackend();
-            Thread.currentThread().setName(id());
-            Thread.ofVirtual().name(id()).start(() -> pump(false));
-            backend.socket.getOutputStream().write(temp, 0, br);
-            backend.socket.getOutputStream().flush();
-            bkSel.contextOf(backend.backend).trackRxTx(false, br);
-            logState(op, br);
-            continue;
-          }
+          initBackend();
+          Thread.currentThread().setName(id());
+          Thread.ofVirtual().name(id()).start(() -> pump(false));
+          out = backend;
         }
-        var bytes = in.transferTo(out);
-        log.warn("momo? {}", fromClient);
-        bkSel.contextOf(backend.backend).trackRxTx(!fromClient, bytes);
-        logState(op, bytes);
+        if (bt > 0) {
+          in.writeTo(out);
+          bkSel.contextOf(backend.backend).trackRxTx(!fromClient, bt);
+          logState(op, bt, fromClient);
+        }
+        if (bt < 0) {
+          logState(Close, bt, fromClient);
+          tearDown(in, null);
+          break;
+        }
       }
     } catch (Exception e) {
-      log.warn("momo! {}", fromClient, e);
-      if (fromClient) {
-        tearDown(e);
-      } else {
-        logError(e);
-      }
+      tearDown(in, e);
     }
   }
 
@@ -165,7 +165,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   }
 
   @Override public void close() {
-    this.tearDown(null);
+    this.tearDown(this.client, null);
+    this.tearDown(this.backend, null);
   }
 
   public A4Match getTlsMatch() {
