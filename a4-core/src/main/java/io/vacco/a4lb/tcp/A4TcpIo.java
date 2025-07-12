@@ -2,10 +2,9 @@ package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Backend;
 import io.vacco.a4lb.niossl.*;
-import io.vacco.a4lb.util.A4Io;
+import io.vacco.a4lb.util.*;
 import java.io.Closeable;
-import java.net.InetSocketAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
@@ -30,7 +29,6 @@ public class A4TcpIo implements Closeable {
   public static int MaxClientBuffers = 16;  // Max queued buffers for client
 
   public final String id;
-  public final SelectionKey channelKey;
   public final SocketChannel channel;
 
   private final Queue<ByteBuffer> bufferPool = new LinkedList<>();
@@ -47,11 +45,11 @@ public class A4TcpIo implements Closeable {
   private long writeCount = 0;
   private long lastAdjustTime = System.currentTimeMillis();
 
-  public A4TcpIo(SelectionKey channelKey, SocketChannel rawChannel) {
+  public A4TcpIo(SocketChannel rawChannel) {
     try {
       this.channel = Objects.requireNonNull(rawChannel);
-      this.channelKey = Objects.requireNonNull(channelKey);
-      this.id = this.channel.socket().toString();
+      this.channel.configureBlocking(true);
+      this.id = A4Base36.hash4(this.channel.socket().toString());
       this.sendBufferSize = rawChannel.socket().getSendBufferSize();
       this.receiveBufferSize = rawChannel.socket().getReceiveBufferSize();
     } catch (Exception e) {
@@ -59,7 +57,7 @@ public class A4TcpIo implements Closeable {
     }
   }
 
-  public A4TcpIo(InetSocketAddress dest, Selector selector, boolean openTls, ExecutorService tlsExec) {
+  public A4TcpIo(InetSocketAddress dest, boolean openTls, ExecutorService tlsExec) {
     try {
       var chn = SocketChannel.open();
       if (openTls) {
@@ -71,9 +69,8 @@ public class A4TcpIo implements Closeable {
         this.channel = chn;
       }
       this.channel.connect(dest);
-      this.channel.configureBlocking(false);
-      this.channelKey = chn.register(selector, SelectionKey.OP_READ);
-      this.id = channel.socket().toString();
+      this.channel.configureBlocking(true);
+      this.id = A4Base36.hash4(channel.socket().toString());
       this.sendBufferSize = chn.socket().getSendBufferSize();
       this.receiveBufferSize = chn.socket().getReceiveBufferSize();
     } catch (Exception e) {
@@ -170,7 +167,7 @@ public class A4TcpIo implements Closeable {
     while (!bufferQueue.isEmpty()) {
       var buffer = bufferQueue.peek();
       var bytesWritten = eofWrite(channel, buffer);
-      if (bytesWritten == 0) { // stalling...
+      if (bytesWritten == 0) { // Should not happen in blocking mode, but safety
         break;
       }
       totalBytesWritten += bytesWritten;
@@ -209,38 +206,6 @@ public class A4TcpIo implements Closeable {
     return !isEmpty();
   }
 
-  public void writeable(boolean enable) {
-    var k = this.channelKey;
-    if (k.isValid()) {
-      int currentOps = k.interestOps();
-      if (enable) {
-        k.interestOps(currentOps | SelectionKey.OP_WRITE);
-      } else {
-        k.interestOps(currentOps & ~SelectionKey.OP_WRITE);
-      }
-    }
-  }
-
-  public boolean writeable() {
-    return this.channelKey.isWritable();
-  }
-
-  public void readable(boolean enable) {
-    var k = this.channelKey;
-    if (k.isValid()) {
-      int currentOps = k.interestOps();
-      if (enable) {
-        k.interestOps(currentOps | SelectionKey.OP_READ);
-      } else {
-        k.interestOps(currentOps & ~SelectionKey.OP_READ);
-      }
-    }
-  }
-
-  public boolean readable() {
-    return this.channelKey.isReadable();
-  }
-
   public A4TcpIo backend(A4Backend backend) {
     this.backend = Objects.requireNonNull(backend);
     return this;
@@ -253,8 +218,6 @@ public class A4TcpIo implements Closeable {
   }
 
   @Override public void close() {
-    channelKey.attach(null);
-    channelKey.cancel();
     A4Io.close(channel);
     this.backend = null;
     bufferPool.clear();
@@ -262,10 +225,8 @@ public class A4TcpIo implements Closeable {
   }
 
   @Override public String toString() {
-    var k = this.channelKey;
     return format(
-      "[%d/%d, q%02d, p%02d, tx%08d, rx%08d]",
-      k.interestOps(), k.readyOps(),
+      "[q%02d, p%02d, tx%08d, rx%08d]",
       bufferQueue.size(),
       bufferPool.size(),
       sendBufferSize, receiveBufferSize
