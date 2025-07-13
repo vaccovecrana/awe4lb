@@ -1,5 +1,5 @@
 plugins {
-  id("io.vacco.oss.gitflow") version "1.8.0-SNAPSHOT" apply(false)
+  id("io.vacco.oss.gitflow") version "1.8.0" apply(false)
 }
 
 subprojects {
