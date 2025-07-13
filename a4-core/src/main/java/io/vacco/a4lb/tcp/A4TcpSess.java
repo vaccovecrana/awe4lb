@@ -7,6 +7,7 @@ import org.slf4j.*;
 import javax.net.ssl.*;
 import java.io.Closeable;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 import static io.vacco.a4lb.util.A4Logging.*;
@@ -14,18 +15,20 @@ import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
 
-  public static final String Error = "!", Close = "✖", Rx = "↓", Tx = "↑", Tls = "*", None = "----";
+  public static final String Eof = "x", Error = "!", Rx = "↓", Tx = "↑", Tls = "*", NoOp = "-", None = "----";
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
-  private A4Selector bkSel;
-  private A4TcpIo client, backend;
-
-  private String tlsSni;
-  private A4Match tlsMatch;
+  private A4Selector    bkSel;
+  private A4TcpIo       client, backend;
+  private String        tlsSni;
+  private A4Match       tlsMatch;
   private final boolean tlsClient;
 
+  private final CountDownLatch stop = new CountDownLatch(2);
+
   private Consumer<A4TcpSess> onInit, onTearDown;
+  private Thread clt, bkt;
 
   public A4TcpSess(A4Selector bkSel,
                    Consumer<A4TcpSess> onInit,
@@ -51,25 +54,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       );
       if (log.isTraceEnabled()) {
         log.trace(x.getClass().getSimpleName(), x);
-      }
-    }
-  }
-
-  private void tearDown(A4TcpIo target, Exception e) {
-    logError(e);
-    A4Io.close(target);
-    if (client != null || backend != null) {
-      // bkSel.contextOf(backend.backend).trackConn(false); // TODO fix
-      this.onTearDown.accept(this);
-      this.client = null;
-      this.backend = null;
-      this.bkSel = null;
-      this.tlsSni = null;
-      this.tlsMatch = null;
-      this.onInit = null;
-      this.onTearDown = null;
-      if (log.isDebugEnabled()) {
-        log.debug("---------------------------------------");
       }
     }
   }
@@ -107,58 +91,94 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       this.tlsSni = sni;
       this.tlsMatch = op.get();
       if (log.isTraceEnabled()) {
-        log.trace("{} | {} | {}", format("%s----", client.id), Tls, this.tlsMatch);
+        log.trace("{} | {} | {}", format("%s%s", client.id, None), Tls, this.tlsMatch);
       }
       return true;
     }
     return false;
   }
 
-  private void logState(String op, long bt, boolean fromClient) {
+  private String stateBits(A4TcpIo io) {
+    if (io == null) {
+      return format("%s:---", None);
+    }
+    return format(
+      "%s:%s%s%s",
+      io.id,
+      io.eof ? Eof : NoOp,
+      io.rxe != null ? Error : NoOp,
+      io.txe != null ? Error : NoOp
+    );
+  }
+
+  private void logState(long br, long bw, boolean fromClient) {
     if (log.isDebugEnabled()) {
       log.debug(
-        "{} | {} | {} | {} {}",
+        "{} | {} | {} {} | {} {}",
         id(!fromClient),
-        op,
-        format("%010d", bt),
-        client == null ? "?" : client,
-        backend == null ? "?" : backend
+        fromClient ? Tx : Rx,
+        format("%010d", br),
+        format("%010d", bw),
+        stateBits(client),
+        stateBits(backend)
       );
     }
   }
 
   private void pump(boolean fromClient) {
-    A4TcpIo in = null, out;
+    A4TcpIo in, out;
     try {
       while (true) {
         in = fromClient ? client : backend;
         out = fromClient ? backend : client;
-        var op = fromClient ? Tx : Rx;
-        var bt = (long) in.read();
+        long br = in.read(), bw = -2;
         if (fromClient && this.backend == null) {
           initBackend();
-          Thread.currentThread().setName(id());
-          Thread.ofVirtual().name(id()).start(() -> pump(false));
+          clt.setName(id());
+          bkt = Thread.ofVirtual().name(id()).start(() -> pump(false));
           out = backend;
         }
-        if (bt > 0) {
-          in.writeTo(out);
-          bkSel.contextOf(backend.backend).trackRxTx(!fromClient, bt);
-          logState(op, bt, fromClient);
+        if (br > 0) {
+          bw = in.writeTo(out);
+          bkSel.contextOf(backend.backend).trackRxTx(!fromClient, br);
         }
-        if (bt < 0) {
-          logState(Close, bt, fromClient);
-          tearDown(in, null);
+        if ((in.eof || out.eof) && bw <= 0) { // Try one last drain
+          in.writeTo(out);
+          out.writeTo(in);
+          A4Io.close(in);
+          stop.countDown();
+          logState(br, bw, fromClient);
           break;
         }
+        logState(br, bw, fromClient);
       }
     } catch (Exception e) {
-      tearDown(in, e);
+      logError(e);
+      stop.countDown();
     }
   }
 
   public void start() {
-    Thread.ofVirtual().name(id()).start(() -> pump(true));
+    this.clt = Thread.ofVirtual().name(id()).start(() -> pump(true));
+    Thread.ofVirtual().name(id()).start(() -> {
+      try {
+        stop.await();
+        bkSel.contextOf(backend.backend).trackConn(false);
+        this.onTearDown.accept(this);
+        this.client = null;
+        this.backend = null;
+        this.bkSel = null;
+        this.tlsSni = null;
+        this.tlsMatch = null;
+        this.onInit = null;
+        this.onTearDown = null;
+        if (log.isDebugEnabled()) {
+          log.debug("--------------------------------------------------------");
+        }
+      } catch (InterruptedException e) {
+        logError(e);
+      }
+    });
   }
 
   public A4TcpSess withClient(A4TcpIo client) {
@@ -167,8 +187,14 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   }
 
   @Override public void close() {
-    this.tearDown(this.client, null);
-    this.tearDown(this.backend, null);
+    A4Io.close(client);
+    if (clt != null) {
+      clt.interrupt();
+    }
+    A4Io.close(backend);
+    if (bkt != null) {
+      bkt.interrupt();
+    }
   }
 
   public A4Match getTlsMatch() {

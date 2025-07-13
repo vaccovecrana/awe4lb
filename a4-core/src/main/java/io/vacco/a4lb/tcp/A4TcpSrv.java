@@ -11,6 +11,8 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static io.vacco.a4lb.util.A4Logging.onError;
+
 public class A4TcpSrv implements A4Srv {
 
   public static final Logger log = LoggerFactory.getLogger(A4TcpSrv.class);
@@ -43,7 +45,7 @@ public class A4TcpSrv implements A4Srv {
       }
       log.info("{} - {} - TCP ingress open", srv.id, serverSocket.getLocalSocketAddress());
     } catch (IOException ioe) {
-      log.error("Unable to open server socket {}", srv.addr, ioe);
+      onError(log, "Unable to open server socket {}", ioe, srv.addr);
       throw new IllegalStateException(ioe);
     }
   }
@@ -67,21 +69,20 @@ public class A4TcpSrv implements A4Srv {
       }
       return sess.withClient(new A4TcpIo(clientSocket));
     } catch (Exception ioe) {
-      log.error("{} - Unable to initialize tcp session", serverSocket.getLocalSocketAddress(), ioe);
-      if (clientSocket != null) {
-        A4Io.close(clientSocket);
-      }
+      onError(log, "{} - Unable to initialize tcp session", ioe, serverSocket.getLocalSocketAddress());
+      A4Io.close(clientSocket);
       return null;
     }
   }
 
   @Override public Void call() {
-    while (true) {
+    while (!serverSocket.isClosed()) {
       var sess = initSession();
       if (sess != null) {
         sess.start();
       }
     }
+    return null;
   }
 
   @Override public void close() {
