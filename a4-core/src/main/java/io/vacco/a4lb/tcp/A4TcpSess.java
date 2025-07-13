@@ -7,7 +7,7 @@ import org.slf4j.*;
 import javax.net.ssl.*;
 import java.io.Closeable;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import static io.vacco.a4lb.util.A4Logging.*;
@@ -21,14 +21,14 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
   private A4Selector    bkSel;
   private A4TcpIo       client, backend;
+
   private String        tlsSni;
   private A4Match       tlsMatch;
   private final boolean tlsClient;
 
-  private final CountDownLatch stop = new CountDownLatch(2);
-
+  private final AtomicBoolean stop = new AtomicBoolean(false);
   private Consumer<A4TcpSess> onInit, onTearDown;
-  private Thread clt, bkt;
+  private Thread              clt, bkt;
 
   public A4TcpSess(A4Selector bkSel,
                    Consumer<A4TcpSess> onInit,
@@ -105,13 +105,13 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     return format(
       "%s:%s%s%s",
       io.id,
-      io.eof ? Eof : NoOp,
+      io.eof(),
       io.rxe != null ? Error : NoOp,
       io.txe != null ? Error : NoOp
     );
   }
 
-  private String eofState(A4TcpIo io) {
+  private String stateEof(A4TcpIo io) {
     if (io == null || io.rxe == null && io.txe == null) {
       return "";
     }
@@ -132,9 +132,28 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         format("%010d", bw),
         stateBits(client),
         stateBits(backend),
-        eofState(client),
-        eofState(backend)
+        stateEof(client),
+        stateEof(backend)
       );
+    }
+  }
+
+  private void tearDown() {
+    A4Io.close(client);
+    A4Io.close(backend);
+    if (stop.compareAndSet(false, true)) {
+      bkSel.contextOf(backend.backend).trackConn(false);
+      this.onTearDown.accept(this);
+      this.client = null;
+      this.backend = null;
+      this.bkSel = null;
+      this.tlsSni = null;
+      this.tlsMatch = null;
+      this.onInit = null;
+      this.onTearDown = null;
+      if (log.isDebugEnabled()) {
+        log.debug("--------------------------------------------------------");
+      }
     }
   }
 
@@ -155,44 +174,20 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
           bw = in.writeTo(out);
           bkSel.contextOf(backend.backend).trackRxTx(!fromClient, br);
         }
-        if ((in.eof || out.eof) && bw <= 0) { // Try one last drain
+        if (in.eof()) { // Try one last drain
           in.writeTo(out);
-          out.writeTo(in);
-          stop.countDown();
-          logState(br, bw, fromClient);
+          tearDown();
           break;
         }
         logState(br, bw, fromClient);
       }
     } catch (Exception e) {
       logError(e);
-      stop.countDown();
     }
   }
 
   public void start() {
     this.clt = Thread.ofVirtual().name(id()).start(() -> pump(true));
-    Thread.ofVirtual().name(id()).start(() -> {
-      try {
-        stop.await();
-        bkSel.contextOf(backend.backend).trackConn(false);
-        A4Io.close(client);
-        A4Io.close(backend);
-        this.onTearDown.accept(this);
-        this.client = null;
-        this.backend = null;
-        this.bkSel = null;
-        this.tlsSni = null;
-        this.tlsMatch = null;
-        this.onInit = null;
-        this.onTearDown = null;
-        if (log.isDebugEnabled()) {
-          log.debug("--------------------------------------------------------");
-        }
-      } catch (InterruptedException e) {
-        logError(e);
-      }
-    });
   }
 
   public A4TcpSess withClient(A4TcpIo client) {
