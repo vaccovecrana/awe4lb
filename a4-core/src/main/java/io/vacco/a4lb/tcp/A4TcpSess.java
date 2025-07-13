@@ -158,7 +158,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         if ((in.eof || out.eof) && bw <= 0) { // Try one last drain
           in.writeTo(out);
           out.writeTo(in);
-          A4Io.close(in);
           stop.countDown();
           logState(br, bw, fromClient);
           break;
@@ -177,6 +176,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       try {
         stop.await();
         bkSel.contextOf(backend.backend).trackConn(false);
+        A4Io.close(client);
+        A4Io.close(backend);
         this.onTearDown.accept(this);
         this.client = null;
         this.backend = null;

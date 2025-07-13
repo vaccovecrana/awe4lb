@@ -2,6 +2,7 @@ package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Backend;
 import io.vacco.a4lb.util.*;
+import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
@@ -56,11 +57,8 @@ public class A4TcpIo implements Closeable {
   }
 
   public int writeTo(A4TcpIo target) {
-    if (target == null) {
+    if (target == null || target.eof || peekBytes == -1) {
       return -1;
-    }
-    if (peekBytes == -1) {
-      return peekBytes;
     }
     try {
       var out = target.socket.getOutputStream();
@@ -81,7 +79,19 @@ public class A4TcpIo implements Closeable {
   }
 
   @Override public void close() {
-    A4Io.close(socket);
+    if (socket != null && !socket.isClosed()) {
+      try {
+        if (socket instanceof SSLSocket sslSocket) {
+          sslSocket.shutdownOutput(); // Sends close_notify
+        }
+      } catch (Exception ignored) {
+        // Ignore; socket may already be reset
+      } finally {
+        try {
+          socket.close();
+        } catch (Exception ignored) {}
+      }
+    }
   }
 
   @Override public String toString() {
