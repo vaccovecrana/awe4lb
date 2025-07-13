@@ -34,8 +34,7 @@ public class A4TcpIo implements Closeable {
         socket = new Socket(dest.getHostName(), dest.getPort());
       }
       socket.setSoTimeout(5000);
-      socket.setSoLinger(true, 0); // Immediate RST on close
-      socket.setTcpNoDelay(true); // No batching delay
+      socket.setTcpNoDelay(true);
       this.socket = socket;
       this.id = A4Base36.hash4(socket.toString());
     } catch (IOException e) {

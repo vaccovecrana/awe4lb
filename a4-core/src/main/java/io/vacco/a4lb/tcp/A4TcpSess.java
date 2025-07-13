@@ -90,8 +90,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (op.isPresent()) {
       this.tlsSni = sni;
       this.tlsMatch = op.get();
-      if (log.isTraceEnabled()) {
-        log.trace("{} | {} | {}", format("%s%s", client.id, None), Tls, this.tlsMatch);
+      if (log.isDebugEnabled()) {
+        log.debug("{} | {} | {}", format("%s%s", client.id, None), Tls, this.tlsMatch);
       }
       return true;
     }
@@ -111,16 +111,29 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     );
   }
 
+  private String eofState(A4TcpIo io) {
+    if (io == null || io.rxe == null && io.txe == null) {
+      return "";
+    }
+    return format(
+      "[%s, %s]",
+      io.rxe != null ? io.rxe.getMessage() : "",
+      io.txe != null ? io.txe.getMessage() : ""
+    );
+  }
+
   private void logState(long br, long bw, boolean fromClient) {
     if (log.isDebugEnabled()) {
       log.debug(
-        "{} | {} | {} {} | {} {}",
+        "{} | {} | {} {} | {} {} | {} {}",
         id(!fromClient),
         fromClient ? Tx : Rx,
         format("%010d", br),
         format("%010d", bw),
         stateBits(client),
-        stateBits(backend)
+        stateBits(backend),
+        eofState(client),
+        eofState(backend)
       );
     }
   }
