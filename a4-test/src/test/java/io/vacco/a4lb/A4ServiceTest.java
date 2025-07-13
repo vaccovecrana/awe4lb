@@ -15,6 +15,7 @@ import org.slf4j.*;
 import javax.net.ssl.SSLContext;
 import java.awt.*;
 import java.io.IOException;
+import java.net.http.HttpClient;
 
 import static io.vacco.a4lb.web.A4Route.*;
 import static io.vacco.a4lb.util.A4Options.*;
@@ -35,8 +36,9 @@ public class A4ServiceTest {
   private static final Gson gson = new Gson();
   private static final SSLContext trustAllCtx = A4TlsCerts.trustAllContext();
   private static final Methanol apiClient = Methanol.newBuilder()
-      .baseUri("http://localhost:7070")
-      .build();
+    .baseUri("http://localhost:7070")
+    .version(HttpClient.Version.HTTP_1_1)
+    .build();
 
   private static final String
       testConfigId = "test-config-00",
