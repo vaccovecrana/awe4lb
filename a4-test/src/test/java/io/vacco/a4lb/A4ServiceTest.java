@@ -108,7 +108,7 @@ public class A4ServiceTest {
         ctx.init(fl);
         log = LoggerFactory.getLogger(A4ServiceTest.class);
         Thread.sleep(5000);
-        Thread.sleep(Integer.MAX_VALUE);
+        // Thread.sleep(Integer.MAX_VALUE);
       });
 
       it("Attempts to add an invalid configuration", () -> {
