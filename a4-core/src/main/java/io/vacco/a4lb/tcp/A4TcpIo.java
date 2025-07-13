@@ -2,7 +2,6 @@ package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Backend;
 import io.vacco.a4lb.util.*;
-import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
@@ -12,13 +11,11 @@ public class A4TcpIo implements Closeable {
 
   public final String id;
   public final Socket socket;
-  public A4Backend backend;
+  public A4Backend    backend;
 
-  public byte[] peek = new byte[256 * 1024];
-  public int    peekBytes;
-
-  public boolean eof = false;
-  public Exception rxe, txe;
+  public byte[]       peek = new byte[128 * 1024];
+  public int          peekBytes;
+  public Exception    rxe, txe;
 
   public A4TcpIo(Socket socket) {
     this.socket = Objects.requireNonNull(socket);
@@ -34,8 +31,6 @@ public class A4TcpIo implements Closeable {
       } else {
         socket = new Socket(dest.getHostName(), dest.getPort());
       }
-      socket.setSoTimeout(5000);
-      socket.setTcpNoDelay(true);
       this.socket = socket;
       this.id = A4Base36.hash4(socket.toString());
     } catch (IOException e) {
@@ -51,13 +46,13 @@ public class A4TcpIo implements Closeable {
       return this.peekBytes;
     } catch (IOException e) {
       this.rxe = e;
-      this.eof = true;
+      this.peekBytes = -1;
       return -1;
     }
   }
 
   public int writeTo(A4TcpIo target) {
-    if (target == null || target.eof || peekBytes == -1) {
+    if (target == null || peekBytes == -1) {
       return -1;
     }
     try {
@@ -68,9 +63,13 @@ public class A4TcpIo implements Closeable {
       return peekBytes;
     } catch (IOException e) {
       this.txe = e;
-      this.eof = true;
+      this.peekBytes = -1;
       return -1;
     }
+  }
+
+  public boolean eof() {
+    return peekBytes == -1;
   }
 
   public A4TcpIo backend(A4Backend backend) {
@@ -79,19 +78,7 @@ public class A4TcpIo implements Closeable {
   }
 
   @Override public void close() {
-    if (socket != null && !socket.isClosed()) {
-      try {
-        if (socket instanceof SSLSocket sslSocket) {
-          sslSocket.shutdownOutput(); // Sends close_notify
-        }
-      } catch (Exception ignored) {
-        // Ignore; socket may already be reset
-      } finally {
-        try {
-          socket.close();
-        } catch (Exception ignored) {}
-      }
-    }
+    A4Io.close(socket);
   }
 
   @Override public String toString() {
