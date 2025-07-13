@@ -105,7 +105,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     return format(
       "%s:%s%s%s",
       io.id,
-      io.eof(),
+      io.eof() ? Eof : NoOp,
       io.rxe != null ? Error : NoOp,
       io.txe != null ? Error : NoOp
     );
@@ -152,18 +152,22 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
       this.onInit = null;
       this.onTearDown = null;
       if (log.isDebugEnabled()) {
-        log.debug("--------------------------------------------------------");
+        log.debug("----------------------------------------------------------");
       }
     }
   }
 
   private void pump(boolean fromClient) {
     A4TcpIo in, out;
+    long br = -2, bw = -2;
     try {
       while (true) {
         in = fromClient ? client : backend;
         out = fromClient ? backend : client;
-        long br = in.read(), bw = -2;
+        if (in == null) {
+          break;
+        }
+        br = in.read();
         if (fromClient && this.backend == null) {
           initBackend();
           clt.setName(id());
