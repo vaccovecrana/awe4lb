@@ -100,18 +100,12 @@ export interface A4Match {
   pool: A4Pool;
   discover: A4Disc;
   healthCheck: A4HealthCheck;
-  tls: A4MatchTls;
+  tls: A4Tls;
 }
 
 export interface A4MatchOp {
   sni: A4StringOp;
   host: A4StringOp;
-}
-
-export interface A4MatchTls {
-  certPath: string;
-  keyPath: string;
-  open: boolean;
 }
 
 export interface A4Pool {
@@ -137,6 +131,7 @@ export interface A4Server {
 export interface A4ServerTls {
   protocols: string[];
   ciphers: string[];
+  base: A4Tls;
 }
 
 export interface A4Sock {
@@ -148,6 +143,12 @@ export interface A4StringOp {
   equals: string;
   endsWith: string;
   startsWith: string;
+}
+
+export interface A4Tls {
+  certPath: string;
+  keyPath: string;
+  open: boolean;
 }
 
 export interface A4Udp {

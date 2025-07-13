@@ -2,7 +2,7 @@ import * as React from "preact/compat"
 
 import { useContext } from "preact/hooks"
 import { lockUi, A4Context, A4Store } from "@a4ui/store"
-import { A4Backend, A4BackendState, A4Config, A4Disc, A4HealthCheck, A4Match, A4MatchTls, A4Server, A4ServerTls, A4Udp, apiV1ConfigGet } from "@a4ui/rpc"
+import { A4Backend, A4BackendState, A4Config, A4Disc, A4HealthCheck, A4Match, A4Server, A4ServerTls, A4Tls, A4Udp, apiV1ConfigGet } from "@a4ui/rpc"
 import { RenderableProps } from "preact"
 
 import { A4Router } from "@a4ui/components/A4Icons"
@@ -138,11 +138,15 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
         <thead>
           <th>Protocols</th>
           <th>Ciphers</th>
+          <th>Default certificate</th>
+          <th>Default key</th>
         </thead>
         <tbody>
           <tr>
             <td>{tls.protocols}</td>
             <td>{tls.ciphers}</td>
+            <td>{tls.base?.keyPath}</td>
+            <td>{tls.base?.certPath}</td>
           </tr>
         </tbody>
       </table>
@@ -186,7 +190,7 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
     )
   }
 
-  public renderMatchTlsTable(tls: A4MatchTls) {
+  public renderMatchTlsTable(tls: A4Tls) {
     return (
       <table class="table small">
         <thead>
