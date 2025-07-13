@@ -104,7 +104,7 @@ public class A4ServiceTest {
 
       it("Initializes the Load Balancer context", () -> {
         var fl = A4Options.from(new String[] {
-          flagOf(kLogLevel, "debug"),
+          flagOf(kLogLevel, "trace"),
           flagOf(kConfig, "./src/test/resources")
         });
         ctx.init(fl);
