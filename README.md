@@ -2,6 +2,8 @@
 
 `awe4lb` is a lightweight, high-performance Layer 4 (TCP/UDP) load balancer written in Java.
 
+![a4lb-02](./docs/img/a4lb-02.png)
+
 It supports TLS termination, backend selection via various algorithms (e.g., round-robin, weighted, IP hash, least connections), dynamic discovery (HTTP, exec, Kubernetes), health checks, and UDP proxying. Configurations use a simple JSON-based DSL for defining servers, matching rules, pools, and discovery mechanisms.
 
 It includes a web-based UI for management and an API for runtime operations.
