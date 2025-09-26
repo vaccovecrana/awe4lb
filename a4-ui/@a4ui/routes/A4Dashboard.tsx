@@ -50,104 +50,85 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
     )
   }
 
+  public tr(th: string, td: string) {
+    return (
+      <tr>
+        <th>{th}</th>
+        <td>{td}</td>
+      </tr>
+    )
+  }
+
+  public cardCol(element: any) {
+    return (
+      <div class="col auto">
+        <div class="card minimal mv8 mh4">
+          {element}
+        </div>
+      </div>
+    )
+  }
+
   public renderDiscover(disc: A4Disc) {
     if (disc.exec) {
-      return (
+      return this.cardCol(
         <table class="table small">
-          <thead>
-            <th>Discover Interval/Timeout</th>
-            <th>Command/Args</th>
-            <th>Format</th>
-          </thead>
           <tbody>
-            <tr>
-              <td>{disc.intervalMs}ms, {disc.timeoutMs}ms</td>
-              <td>{disc.exec.command} {disc.exec.args.join(" ")}</td>
-              <td>{disc.exec.format}</td>
-            </tr>
+            {this.tr("Discover Interval", `${disc.intervalMs}ms`)}
+            {this.tr("Discover Timeout", `${disc.timeoutMs}ms`)}
+            {this.tr("Command", disc.exec.command)}
+            {this.tr("Args", disc.exec.args.join(" "))}
+            {this.tr("Format", disc.exec.format)}
           </tbody>
         </table>
       )
     }
     if (disc.http) {
-      return (
+      return this.cardCol(
         <table class="table small">
-          <thead>
-            <th>Discover Interval</th>
-            <th>Timeout</th>
-            <th>Endpoint</th>
-            <th>Format</th>
-          </thead>
           <tbody>
-            <tr>
-              <td>{disc.intervalMs}ms</td>
-              <td>{disc.timeoutMs}ms</td>
-              <td><code>{disc.http.endpoint}</code></td>
-              <td><code>{disc.http.format}</code></td>
-            </tr>
+            {this.tr("Discover Interval", `${disc.intervalMs}ms`)}
+            {this.tr("Timeout", `${disc.timeoutMs}ms`)}
+            {this.tr("Endpoint", disc.http.endpoint)}
+            {this.tr("Format", disc.http.format)}
           </tbody>
         </table>
       )
     }
-    return (
+    return this.cardCol(
       <table class="table small">
-        <thead>
-          <th>Discover Interval</th>
-          <th>Timeout</th>
-          <th>API server</th>
-          <th>Namespace</th>
-          <th>Service/Port</th>
-          <th>Token</th>
-        </thead>
         <tbody>
-          <tr>
-            <td>{disc.intervalMs}ms</td>
-            <td>{disc.timeoutMs}ms</td>
-            <td><code>{disc.k8s.apiUri}</code></td>
-            <td><code>{disc.k8s.namespace}</code></td>
-            <td><code>{disc.k8s.service}:{disc.k8s.port}</code></td>
-            <td><code>{disc.k8s.tokenPath}</code></td>
-          </tr>
+          {this.tr("Discover Interval", `${disc.intervalMs}ms`)}
+          {this.tr("Timeout", `${disc.timeoutMs}ms`)}
+          {this.tr("API server", disc.k8s.apiUri)}
+          {this.tr("Namespace", disc.k8s.namespace)}
+          {this.tr("Service/Port", `${disc.k8s.service}:${disc.k8s.port}`)}
+          {this.tr("Token", disc.k8s.tokenPath)}
         </tbody>
       </table>
     )
   }
 
   public renderUdpTable(udp: A4Udp) {
-    return (
+    return this.cardCol(
       <table class="table small">
-        <thead>
-          <th>UDP timeout</th>
-          <th>Buffer Size</th>
-          <th>Max Sessions</th>
-        </thead>
         <tbody>
-          <tr>
-            <td>{udp.idleTimeoutMs}ms</td>
-            <td>{udp.bufferSize} bytes</td>
-            <td>{udp.maxSessions}</td>
-          </tr>
+          {this.tr("UDP timeout", `${udp.idleTimeoutMs}ms`)}
+          {this.tr("Buffer Size", `${udp.bufferSize} bytes`)}
+          {this.tr("Max Sessions", udp.maxSessions.toString())}
         </tbody>
       </table>
     )
   }
 
   public renderTlsTable(tls: A4ServerTls) {
-    return (
+    return this.cardCol(
       <table class="table small">
-        <thead>
-          <th>Protocols</th>
-          <th>Ciphers</th>
-          <th>Default certificate</th>
-          <th>Default key</th>
-        </thead>
         <tbody>
-          <tr>
-            <td>{tls.protocols}</td>
-            <td>{tls.ciphers}</td>
-            <td>{tls.base?.keyPath}</td>
-            <td>{tls.base?.certPath}</td>
-          </tr>
+          {tls.protocols && this.tr("Protocols", `${tls.protocols}`)}
+          {tls.ciphers && this.tr("Ciphers", `${tls.ciphers}`)}
+          {tls.base?.certPath && this.tr("Default certificate", tls.base.certPath)}
+          {tls.base?.keyPath && this.tr("Default key", tls.base.keyPath)}
         </tbody>
       </table>
     )
@@ -155,55 +136,34 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
 
   public renderHealthCheckTable(health: A4HealthCheck) {
     if (health.exec) {
-      return (
+      return this.cardCol(
         <table class="table small">
-          <thead>
-            <th>Heatlh Interval</th>
-            <th>Timeout</th>
-            <th>Command/Args</th>
-          </thead>
           <tbody>
-            <tr>
-              <td>{health.intervalMs}ms</td>
-              <td>{health.timeoutMs}ms</td>
-              <td>
-                <code>{health.exec.command} {health.exec.args.join(" ")}</code>
-              </td>
-            </tr>
+            {this.tr("Heatlh Interval", `${health.intervalMs}ms`)}
+            {this.tr("Timeout", `${health.timeoutMs}ms`)}
+            {this.tr("Command", health.exec.command)}
+            {this.tr("Args", health.exec.args.join(" "))}
           </tbody>
         </table>
       )
     }
-    return (
+    return this.cardCol(
       <table class="table small">
-        <thead>
-          <th>Health Interval</th>
-          <th>Timeout</th>
-        </thead>
         <tbody>
-          <tr>
-            <td>{health.intervalMs}ms</td>
-            <td>{health.timeoutMs}ms</td>
-          </tr>
+          {this.tr("Heatlh Interval", `${health.intervalMs}ms`)}
+          {this.tr("Timeout", `${health.timeoutMs}ms`)}
         </tbody>
       </table>
     )
   }
 
   public renderMatchTlsTable(tls: A4Tls) {
-    return (
+    return this.cardCol(
       <table class="table small">
-        <thead>
-          <th>Cert path</th>
-          <th>Key path</th>
-          <th>Backend trust</th>
-        </thead>
         <tbody>
-          <tr>
-            <td>{tls.certPath}</td>
-            <td>{tls.keyPath}</td>
-            <td>{tls.open ? tls.open : "false"}</td>
-          </tr>
+          {this.tr("Cert path", tls.certPath)}
+          {this.tr("Key path", tls.keyPath)}
+          {this.tr("Backend trust", (tls.open ? tls.open : false).toString())}
         </tbody>
       </table>
     )
@@ -227,16 +187,20 @@ class A4Dashboard extends React.Component<A4DProps, A4DState> {
             </div>
           </div>
         </div>
-        {srv.tls ? this.renderTlsTable(srv.tls) : []}
-        {srv.udp ? this.renderUdpTable(srv.udp) : []}
+        <div class="row">
+          {srv.tls ? this.renderTlsTable(srv.tls) : []}
+          {srv.udp ? this.renderUdpTable(srv.udp) : []}
+        </div>
         {srv.match.map(match => (
           <div class="mt8">
             <div class="matchLabel">
               Match: <code>{matchLabelOf(match)} :: {match.pool.type ? match.pool.type : "random"}</code>
             </div>
-            {match.tls ? this.renderMatchTlsTable(match.tls) : []}
-            {match.healthCheck ? this.renderHealthCheckTable(match.healthCheck) : []}
-            {match.discover ? this.renderDiscover(match.discover) : []}
+            <div class="row">
+              {match.tls ? this.renderMatchTlsTable(match.tls) : []}
+              {match.healthCheck ? this.renderHealthCheckTable(match.healthCheck) : []}
+              {match.discover ? this.renderDiscover(match.discover) : []}
+            </div>
             {this.renderPoolHostsTable(match)}
           </div>
         ))}

@@ -1,6 +1,46 @@
 # awe4lb
 
-`awe4lb` is a layer 4 load balancer
+`awe4lb` is a lightweight, high-performance Layer 4 (TCP/UDP) load balancer written in Java.
+
+It supports TLS termination, backend selection via various algorithms (e.g., round-robin, weighted, IP hash, least connections), dynamic discovery (HTTP, exec, Kubernetes), health checks, and UDP proxying. Configurations use a simple JSON-based DSL for defining servers, matching rules, pools, and discovery mechanisms.
+
+It includes a web-based UI for management and an API for runtime operations.
+
+## Purpose
+
+Incoming TCP/UDP traffic gets distributed across backend servers to improve scalability, reliability, and performance. Key use cases include:
+
+- TLS-termination proxies for HTTP services.
+- Load balancing for databases, APIs, or custom protocols.
+- UDP forwarding (e.g., for echo servers or custom apps).
+- Dynamic backend discovery in environments like Kubernetes.
+
+It prioritizes simplicity, low overhead, and extensibility while handling production workloads.
+
+## Features
+
+- **Protocols**: TCP (with TLS), UDP.
+- **Balancing Algorithms**: Random, weighted, round-robin, IP hash, least connections.
+- **Discovery**: Static hosts, HTTP endpoints, external commands, Kubernetes API.
+- **Health Checks**: Exec-based (e.g., ping, nc) with configurable intervals/timeouts.
+- **Management**: REST API for config CRUD/select, web UI for visualization.
+
+## TODO
+
+- **Metrics**: Basic RX/TX averages, connection tracking.
+
+## Quick Start
+
+Grab the [latest release](https://github.com/vaccovecrana/awe4lb/releases) or [docker image](https://github.com/vaccovecrana/awe4lb/pkgs/container/awe4lb)
+
+Run the load balancer:
+```
+java -jar a4-core/build/libs/a4-core-<version>.jar --api-host=0.0.0.0 --config=./path/to/configs/directory
+```
+
+Open `http://localhost:7070` in a browser for config management.
+
+For an example load balancing configuration, see [test-config-00](./a4-test/src/test/resources/test-config-00.json)
 
 ## Configuration notes
 
@@ -12,39 +52,24 @@
 - Do not allow public access to the REST api, since it allows for full management. Expose it only within a trusted network perimeter.
 - Most applications and use cases should work fine with the default TCP buffer size. However, applications which stream large amounts of data should make sure that the underlying hardware has enough memory capacity to handle backpressure from either clients or backends.
 
-## Implementation items
+## Development
 
-### TCP
+Requires Gradle 8 or later.
 
-- [x] Schema modeling (configuration template).
-- [x] SSL connection tracking.
-- [ ] ACME certificate issuance/renewal. For now, use `certbot` to rotate certificates, then restart `awe4lb`.
+Create a file with the following content at `~/.gsOrgConfig.json`:
 
-### UDP
+```
+{
+  "orgId": "vacco-oss",
+  "orgConfigUrl": "https://raw.githubusercontent.com/vaccovecrana/org-config/refs/heads/main/vacco-oss-java-21.json"
+}
+```
 
-- [x] UDP backend selection strategies (weight, random, round robin).
-- [x] Sticky session support.
-- [ ] UDP Transparent proxying.
+Then run:
 
-### Backend discovery
-
-- [ ] DNS records.
-- [x] Exec return value.
-- [x] Kubernetes.
-- [ ] Any others provided by `gobetween`.
-
-### Monitoring
-
-- [ ] Metrics capturing.
-  - [x] Bytes sent/received (global).
-  - [ ] Whichever other metrics `gobetween` exposes.
-- [ ] Metrics access (prometheus endpoint).
-
-### Admin functionality
-
-- [x] REST API access for configuration changes.
-- [x] UI implementation.
-- [ ] Documentation/Usage notes/caveats.
+```
+gradle clean build
+```
 
 ## Similar projects
 
