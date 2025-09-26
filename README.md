@@ -34,13 +34,65 @@ It prioritizes simplicity, low overhead, and extensibility while handling produc
 Grab the [latest release](https://github.com/vaccovecrana/awe4lb/releases) or [docker image](https://github.com/vaccovecrana/awe4lb/pkgs/container/awe4lb)
 
 Run the load balancer:
-```
+```shell
 a4lb --api-host=0.0.0.0 --config=./path/to/configs/directory
 ```
 
+Or from a Docker image:
+```shell
+docker run -d --name awe4lb \
+  -p 7070:7070 -p 8070:8070/udp -p 443:8443 \
+  -v $(pwd)/configs:/etc/a4lb \
+  ghcr.io/vaccovecrana/awe4lb:0.7.1 \
+  --logLevel=info --config=/etc/a4lb
+```
+
+> Note: in both cases, the user executing `a4lb` must be able to open any ports that will be used for front-end load balancing (i.e. port `443/tcp` for TLS termination, port `22/tcp` for SSH proxying, or any other services you define).
+
 Open `http://localhost:7070` in a browser for config management.
 
-For an example load balancing configuration, see [test-config-00](./a4-test/src/test/resources/test-config-00.json)
+Using the UI, you can define load balancer configurations. In this example, we have 3 front servers. The first proxying HTTP connections, the second terminating HTTPS connections to HTTP backends, and the third proxying UDP connections via sticky sessions.
+
+```yaml
+id: test-config-00
+description: Test configuration
+servers:
+  - id: test-http
+    addr: {host: 0.0.0.0, port: 80}
+    pool:
+      hosts: [{addr: {host: 172.16.4.58, port: 3000}}]
+    healthCheck: {intervalMs: 60000, timeoutMs: 15000}
+  - id: test-https
+    addr: {host: 0.0.0.0, port: 443}
+    match:
+      - op: {sni: {equals: test-svc0.localhost}}
+        pool:
+          hosts: [{addr: {host: 172.16.4.59, port: 3000}}]
+      - op: {sni: {equals: test-svc1.localhost}}
+        pool:
+          hosts: [{addr: {host: 172.16.4.58, port: 3000}}]
+        healthCheck:
+          exec: {command: nc, args: ['-z', '-v', $host, $port]}
+    tls:
+      ciphers: [TLS_AES_128_GCM_SHA256]
+      base:
+        certPath: ./src/test/resources/certs/awe4lb.pem
+        keyPath: ./src/test/resources/certs/awe4lb.key
+  - id: test-udp-echo
+    addr: {host: 0.0.0.0, port: 8070}
+    match:
+      - pool:
+          type: ipHash
+          hosts: [{addr: {host: 127.0.0.1, port: 6000}}]
+        healthCheck:
+          exec: {command: ping, args: ['-c', '1', $host]}
+    udp:
+      bufferSize: 2048
+      idleTimeoutMs: 2000
+      maxSessions: 1024
+```
+
+For an in-depth example load balancing configuration, see [test-config-00](./a4-test/src/test/resources/test-config-00.json)
 
 ## Configuration notes
 
@@ -93,6 +145,7 @@ In memory of James Perry McCaffrey (March 27, 1958 – December 17, 2023).
 ## A Message from Dr. Casper Darling
 
 Hello there! I'm Dr. Casper Darling, head of research at the Federal Bureau of Control.
+
 Now, listen closely, because what we have here with `awe4lb` is nothing short of remarkable.
 It's a load balancer, yes, but think of it as a Control Point in the digital realm—routing TCP and UDP traffic through sockets that act like our very own Thresholds!
 
