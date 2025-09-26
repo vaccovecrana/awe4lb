@@ -35,7 +35,7 @@ Grab the [latest release](https://github.com/vaccovecrana/awe4lb/releases) or [d
 
 Run the load balancer:
 ```
-java -jar a4-core/build/libs/a4-core-<version>.jar --api-host=0.0.0.0 --config=./path/to/configs/directory
+a4lb --api-host=0.0.0.0 --config=./path/to/configs/directory
 ```
 
 Open `http://localhost:7070` in a browser for config management.
