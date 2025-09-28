@@ -36,11 +36,13 @@ It prioritizes simplicity, low overhead, and extensibility while handling produc
 Grab the [latest release](https://github.com/vaccovecrana/awe4lb/releases) or [docker image](https://github.com/vaccovecrana/awe4lb/pkgs/container/awe4lb)
 
 Run the load balancer:
+
 ```shell
 a4lb --api-host=0.0.0.0 --config=./path/to/configs/directory
 ```
 
 Or from a Docker image:
+
 ```shell
 docker run -d --name awe4lb \
   -p 7070:7070 -p 8070:8070/udp -p 443:8443 \
@@ -103,7 +105,7 @@ For an in-depth example load balancing configuration, see [test-config-00](./a4-
 
 ## Security considerations
 
-- Do not allow public access to the REST api, since it allows for full management. Expose it only within a trusted network perimeter.
+- Do not allow public access to the REST API, since it allows for full management. Expose it only within a trusted network perimeter.
 - Most applications and use cases should work fine with the default TCP buffer size. However, applications which stream large amounts of data should make sure that the underlying hardware has enough memory capacity to handle backpressure from either clients or backends.
 
 ## Development
@@ -142,19 +144,28 @@ gradle clean build
 - https://github.com/yyyar/gobetween/issues/335
 - https://github.com/felipejfc/go-udp-echo-server
 
-In memory of James Perry McCaffrey (March 27, 1958 – December 17, 2023).
+## FBC - INTRODUCTION TO PARANATURAL TOPICS
 
-## A Message from Dr. Casper Darling
+> Presentation 27.1
+> Presented by: Dr. Casper Darling
+> Research assistance provided by: Carla Vaughn, Hubert Tan
 
 Hello there! I'm Dr. Casper Darling, head of research at the Federal Bureau of Control.
 
 Now, listen closely, because what we have here with `awe4lb` is nothing short of remarkable.
+
 It's a load balancer, yes, but think of it as a Control Point in the digital realm—routing TCP and UDP traffic through sockets that act like our very own Thresholds!
 
 These altered streams of data, infused with the energies of everyday networks, are balanced across backends with algorithms as precise as binding an Object of Power.
+
 We've got discovery methods pulling from HTTP, commands, even Kubernetes—containing the chaos, keeping it stable.
 
 But remember, every connection could be an intrusion, a potential AWE waiting to unfold.
+
 As for me, well... I've been exposed to something profound, a resonance that's changing everything. This is my final presentation on the matter.
 
-Use `awe4lb` wisely; the Bureau's depending on it. Darling, out.
+Use `awe4lb` wisely; the Bureau's depending on it.
+
+---
+
+In memory of James Perry McCaffrey (March 27, 1958 – December 17, 2023).
