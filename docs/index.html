@@ -67,11 +67,6 @@
   async function loadMarkdown(rawUrl) {
     const response = await fetch(rawUrl);
     let markdown = await response.text();
-    // Replace all placeholders (e.g., {{version}}, {{author}}) with config values
-    for (const [key, value] of Object.entries(config)) {
-      const placeholder = `{{${key}}}`;
-      markdown = markdown.replace(new RegExp(placeholder, 'g'), value);
-    }
     content.innerHTML = marked.parse(markdown);
     window.location.hash = rawUrl.split('/').pop(); // Update URL hash for sharing
   }
