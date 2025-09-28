@@ -8,12 +8,12 @@ A server object includes:
 
 - `id`: Unique identifier (e.g., `"test-udp-echo"`).
 - `addr`: Listening address and port (e.g., `{"host": "0.0.0.0", "port": 8070}`).
-- `match`: Array of match rules to select backend pools (see [Server Match Operations](TODO FIX THIS LINK)).
+- `match`: Array of match rules to select backend pools (see [Server Match Operations](#03-server-match-operations.md)).
 
 Optional configurations:
 
-- `tls`: TLS settings for TCP servers (see [TLS Termination](TODO FIX THIS LINK)).
-- `udp`: UDP settings (e.g., `{"bufferSize": 2048, "idleTimeoutMs": 2000, "maxSessions": 1024}`) (see [UDP Configuration](TODO FIX THIS LINK)).
+- `tls`: TLS settings for TCP servers (see [TLS Termination](#07-tls-termination.md)).
+- `udp`: UDP settings (e.g., `{"bufferSize": 2048, "idleTimeoutMs": 2000, "maxSessions": 1024}`) (see [UDP Configuration](#08-udp-configuration.md)).
 
 ## Example
 

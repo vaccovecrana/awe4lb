@@ -7,7 +7,7 @@ Match operations (`match`) filter incoming connections based on conditions like 
 A match rule includes:
 
 - `op`: Conditions to match (e.g., `sni: {equals: momo.localhost}` or `host: {startsWith: '127.0'}`).
-- `pool`: Static or dynamic backend pool (see [Static Host Pools](#static-host-pools) or [Backend Host Pool Discovery](#backend-host-pool-discovery)).
+- `pool`: Static or dynamic backend pool (see [Static Host Pools](#04-static-host-pools.md) or [Backend Host Pool Discovery](#05-host-pool-discovery.md)).
 - Optional: `healthCheck`, `tls`, `discover` (detailed in later sections).
 
 ## Supported Operations
