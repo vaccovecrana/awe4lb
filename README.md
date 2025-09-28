@@ -96,7 +96,9 @@ servers:
       maxSessions: 1024
 ```
 
-For an in-depth example load balancing configuration, see [test-config-00](./a4-test/src/test/resources/test-config-00.json)
+For in-depth configuration options, [read the docs](https://vaccovecrana.github.io/awe4lb).
+
+For an in-depth example load balancing configuration, see [test-config-00](./a4-test/src/test/resources/test-config-00.json).
 
 ## Configuration notes
 
