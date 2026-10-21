@@ -4,7 +4,9 @@ import io.vacco.a4lb.cfg.A4Format;
 import io.vacco.a4lb.cfg.A4Sock;
 import java.io.File;
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class A4Options {
 
@@ -43,22 +45,38 @@ public class A4Options {
     return String.format("%s=%s", key, value);
   }
 
+  private static Map<String, String> argsOf(String[] args) {
+    var result = new HashMap<String, String>();
+    if (args == null) {
+      return result;
+    }
+    Arrays.stream(args)
+      .filter(arg -> arg != null && arg.startsWith("--"))
+      .forEach(arg -> {
+        var idx = arg.indexOf('=');
+        if (idx > 0 && idx < arg.length() - 1) {
+          result.put(arg.substring(0, idx), arg.substring(idx + 1));
+        }
+      });
+    return result;
+  }
+
   public static A4Options from(String[] args) {
-    var argIdx = Arrays.stream(args)
-      .filter(arg -> arg.startsWith("--"))
-      .map(arg -> arg.split("="))
-      .filter(pair -> pair.length == 2)
-      .filter(pair -> pair[0] != null && pair[1] != null)
-      .collect(Collectors.toMap(pair -> pair[0], pair -> pair[1]));
+    var argIdx = argsOf(args);
     var opt = new A4Options();
+    var config = argIdx.get(kConfig);
     var host = argIdx.get(kApiHost);
     var port = argIdx.get(kApiPort);
     var logFormat = argIdx.get(kLogFormat);
     var logLevel = argIdx.get(kLogLevel);
 
-    opt.root = new File(argIdx.get(kConfig));
-    opt.logFormat = logFormat != null ? A4Format.valueOf(logFormat) : opt.logFormat;
-    opt.logLevel = logLevel != null ? LogLevel.valueOf(logLevel) : opt.logLevel;
+    opt.root = config != null ? new File(config) : null;
+    if (logFormat != null) {
+      opt.logFormat = A4Format.valueOf(logFormat.toLowerCase(Locale.ROOT));
+    }
+    if (logLevel != null) {
+      opt.logLevel = LogLevel.valueOf(logLevel.toLowerCase(Locale.ROOT));
+    }
     opt.api = new A4Sock()
       .host(host == null ? DefaultHost : host)
       .port(port == null ? DefaultPort : Integer.parseInt(port));

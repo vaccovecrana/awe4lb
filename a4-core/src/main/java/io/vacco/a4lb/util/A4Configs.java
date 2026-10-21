@@ -19,6 +19,12 @@ public class A4Configs {
   }
 
   public static A4Config inflate(A4Config cfg) {
+    if (cfg == null) {
+      throw new IllegalArgumentException("Configuration is required");
+    }
+    if (cfg.servers == null) {
+      cfg.servers = new ArrayList<>();
+    }
     for (var srv : cfg.servers) {
       for (var m : allMatchesOf(srv)) {
         if (srv.udp == null && m.healthCheck == null) {
@@ -68,9 +74,11 @@ public class A4Configs {
     for (var srv : cfg0.servers) {
       for (var m : allMatchesOf(srv)) {
         if (m.discover != null) {
-          m.pool.clear();
-          if (m.pool.type == null) {
-            m.pool = null;
+          if (m.pool != null) {
+            m.pool.clear();
+            if (m.pool.type == null) {
+              m.pool = null;
+            }
           }
           if (A4Disc.DefaultIntervalMs.equals(m.discover.intervalMs)
               && A4Disc.DefaultTimeoutMs.equals(m.discover.timeoutMs)) {
@@ -100,9 +108,15 @@ public class A4Configs {
   public static A4Config syncFs(File configRoot, Gson g, A4Config config) {
     var cfgFile = configFileOf(configRoot, config.id);
     var cfg0 = deflate(config, g);
-    try (var fw = new FileWriter(cfgFile)) {
-      g.toJson(cfg0, fw);
-      return config;
+    try {
+      var parent = cfgFile.getParentFile();
+      if (parent != null && !parent.exists() && !parent.mkdirs()) {
+        throw new IllegalStateException("Unable to create configuration directory: " + parent.getAbsolutePath());
+      }
+      try (var fw = new FileWriter(cfgFile)) {
+        g.toJson(cfg0, fw);
+        return config;
+      }
     } catch (Exception e) {
       throw new IllegalStateException("Unable to write configuration: " + cfgFile.getAbsolutePath(), e);
     }
@@ -126,6 +140,9 @@ public class A4Configs {
   }
 
   public static ConstraintViolations save(File configRoot, Gson g, A4Config config) {
+    if (config == null) {
+      throw new IllegalArgumentException("Configuration is required");
+    }
     var errors = A4Valid.validate(config);
     if (errors.isEmpty()) {
       syncFs(configRoot, g, config);

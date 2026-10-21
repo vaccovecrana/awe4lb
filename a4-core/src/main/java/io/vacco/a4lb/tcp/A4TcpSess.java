@@ -139,20 +139,31 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   }
 
   private void tearDown() {
-    A4Io.close(client);
-    A4Io.close(backend);
+    var c = client;
+    var b = backend;
+    var sel = bkSel;
+    var callback = onTearDown;
+    A4Io.close(c);
+    A4Io.close(b);
     if (stop.compareAndSet(false, true)) {
-      bkSel.contextOf(backend.backend).trackConn(false);
-      this.onTearDown.accept(this);
-      this.client = null;
-      this.backend = null;
-      this.bkSel = null;
-      this.tlsSni = null;
-      this.tlsMatch = null;
-      this.onInit = null;
-      this.onTearDown = null;
-      if (log.isDebugEnabled()) {
-        log.debug("----------------------------------------------------------");
+      if (sel != null && b != null && b.backend != null) {
+        sel.contextOf(b.backend).trackConn(false);
+      }
+      try {
+        if (callback != null) {
+          callback.accept(this);
+        }
+      } finally {
+        this.client = null;
+        this.backend = null;
+        this.bkSel = null;
+        this.tlsSni = null;
+        this.tlsMatch = null;
+        this.onInit = null;
+        this.onTearDown = null;
+        if (log.isDebugEnabled()) {
+          log.debug("----------------------------------------------------------");
+        }
       }
     }
   }
@@ -176,17 +187,20 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         }
         if (br > 0) {
           bw = in.writeTo(out);
-          bkSel.contextOf(backend.backend).trackRxTx(!fromClient, br);
+          if (backend != null && backend.backend != null) {
+            bkSel.contextOf(backend.backend).trackRxTx(!fromClient, br);
+          }
         }
         if (in.eof()) { // Try one last drain
           in.writeTo(out);
-          tearDown();
           break;
         }
         logState(br, bw, fromClient);
       }
     } catch (Exception e) {
       logError(e);
+    } finally {
+      tearDown();
     }
   }
 
@@ -208,6 +222,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (bkt != null) {
       bkt.interrupt();
     }
+    tearDown();
   }
 
   public A4Match getTlsMatch() {

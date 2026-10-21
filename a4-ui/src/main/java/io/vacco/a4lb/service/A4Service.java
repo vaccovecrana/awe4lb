@@ -51,14 +51,19 @@ public class A4Service implements Closeable {
   }
 
   public Collection<A4Validation> update(File configRoot, String configId, A4Config config) {
-    if (configId.equals(New)) {
-      configId = config.id;
+    if (config == null) {
+      return List.of(A4Validation.ofMessage("Configuration is required"));
     }
-    if (config == null || configId == null || !configId.equals(config.id)) {
-      return List.of(A4Validation.ofMessage(format("Config id mismatch: [%s, %s]", configId, config.id)));
+    var effectiveId = New.equals(configId) ? config.id : configId;
+    if (effectiveId == null || config.id == null || !effectiveId.equals(config.id)) {
+      return List.of(A4Validation.ofMessage(format("Config id mismatch: [%s, %s]", effectiveId, config.id)));
     }
     var errList = A4Configs.save(configRoot, gson, config);
     return errList.isEmpty() ? Collections.emptyList() : A4Valid.validationsOf(errList);
+  }
+
+  public A4Stats stats() {
+    return lockInstanceAnd(() -> instance != null ? instance.stats() : new A4Stats());
   }
 
   @Override public void close() {

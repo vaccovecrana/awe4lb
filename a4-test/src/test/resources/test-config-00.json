@@ -79,7 +79,8 @@
           },
           "tls": {
             "certPath": "./src/test/resources/certs/awe4lb.pem",
-            "keyPath": "./src/test/resources/certs/awe4lb.key"
+            "keyPath": "./src/test/resources/certs/awe4lb.key",
+            "open": false
           }
         },
         {
@@ -108,7 +109,8 @@
         ],
         "base": {
           "certPath": "./src/test/resources/certs/awe4lb.pem",
-          "keyPath": "./src/test/resources/certs/awe4lb.key"
+          "keyPath": "./src/test/resources/certs/awe4lb.key",
+          "open": false
         }
       }
     },

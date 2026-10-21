@@ -13,6 +13,15 @@ public class A4LbMain {
       return;
     }
     var ctx = new A4Context();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      try {
+        ctx.close();
+      } catch (Exception e) {
+        System.err.printf("Unable to stop load balancer - %s %s%n",
+          e.getClass().getSimpleName(), e.getMessage()
+        );
+      }
+    }, "a4lb-shutdown"));
     try { // TODO add UNIX SIGTERM handler
       ctx.init(A4Options.from(args));
     } catch (Exception e) {

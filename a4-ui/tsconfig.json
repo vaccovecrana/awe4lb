@@ -3,15 +3,21 @@
     "sourceMap": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
-    "module": "ES2022",
+    "module": "preserve",
     "target": "ES2022",
-    "lib": ["dom", "ES2020"],
-    "moduleResolution": "Node",
-    "jsx": "react",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact/compat",
     "resolveJsonModule": true,
     "typeRoots": ["node_modules/@types"],
     "allowJs": false,
-    "baseUrl": "."
+    "paths": {
+      "@a4ui/*": ["./@a4ui/*"],
+      "react": ["./node_modules/preact/compat"],
+      "react-dom": ["./node_modules/preact/compat"]
+    }
   },
+  "include": ["./@a4ui"],
   "exclude": ["./build"]
 }

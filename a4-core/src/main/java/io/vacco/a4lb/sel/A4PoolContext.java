@@ -6,7 +6,7 @@ import java.util.Random;
 public class A4PoolContext {
 
   public Random rnd = new Random(A4Config.Seed);
-  public int    rrVal = 0;
+  public int    rrVal = -1;
 
   public void rrUpdate() {
     rrVal = rrVal + 1;

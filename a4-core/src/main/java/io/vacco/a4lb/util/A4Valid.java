@@ -344,7 +344,7 @@ public class A4Valid {
   private static final Validator<A4Options> A4FlagsVld = ValidatorBuilder.<A4Options>of()
     ._object(fl -> fl.root, A4Options.kConfig, Constraint::notNull)
     .constraintOnTarget(
-      fl -> fl.root.exists(), A4Options.kConfig, "exists",
+      fl -> fl.root != null && fl.root.exists(), A4Options.kConfig, "exists",
       "\"{0}\" does not exist (not a file or directory)"
     )
     .nest(fl -> fl.api, "--api-*", A4SockVld)

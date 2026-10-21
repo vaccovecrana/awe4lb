@@ -50,8 +50,7 @@ public class A4TcpSrv implements A4Srv {
     }
   }
 
-  private A4TcpSess initSession() {
-    Socket clientSocket = null;
+  private A4TcpSess initSession(Socket clientSocket) {
     try {
       // TODO check for connection limits here.
       var isTls = srvConfig.tls != null;
@@ -61,7 +60,6 @@ public class A4TcpSrv implements A4Srv {
         s0 -> sessions.remove(s0.id()),
         isTls
       );
-      clientSocket = serverSocket.accept();
       if (isTls && clientSocket instanceof SSLSocket sslSocket) {
         var params = sslSocket.getSSLParameters();
         params.setSNIMatchers(Collections.singletonList(sess));
@@ -77,12 +75,33 @@ public class A4TcpSrv implements A4Srv {
 
   @Override public Void call() {
     while (!serverSocket.isClosed()) {
-      var sess = initSession();
+      Socket clientSocket;
+      try {
+        clientSocket = serverSocket.accept();
+      } catch (Exception e) {
+        if (serverSocket.isClosed()) {
+          break;
+        }
+        onError(log, "{} - Unable to accept tcp connection", e, serverSocket.getLocalSocketAddress());
+        try {
+          // Back off briefly on transient accept() failures; avoid a tight spin.
+          Thread.sleep(50);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          break;
+        }
+        continue;
+      }
+      var sess = initSession(clientSocket);
       if (sess != null) {
         sess.start();
       }
     }
     return null;
+  }
+
+  public int localPort() {
+    return serverSocket.getLocalPort();
   }
 
   @Override public void close() {

@@ -51,6 +51,10 @@ public class A4UdpSrv implements A4Srv {
   private void onUdpRead(SelectionKey key) throws IOException {
     buff.clear();
     var from = (InetSocketAddress) ((DatagramChannel) key.channel()).receive(this.buff);
+    if (from == null) {
+      return;
+    }
+    var bytes = buff.position();
     if (key.channel() == this.channel) {
       var sessId = idOf(from);
       var sess = sessions.get(sessId);
@@ -58,10 +62,18 @@ public class A4UdpSrv implements A4Srv {
         sess = bkSel.assign(selector, from);
         sessions.put(sessId, sess, srvConfig.udp.idleTimeoutMs);
       }
+      if (sess.backend != null) {
+        bkSel.contextOf(sess.backend).trackRxTx(false, bytes);
+      }
       sess.channel.write(buff.flip());
     } else {
       var sess = (A4UdpIo) key.attachment();
-      this.channel.send(buff.flip(), sess.client);
+      if (sess != null) {
+        if (sess.backend != null) {
+          bkSel.contextOf(sess.backend).trackRxTx(true, bytes);
+        }
+        this.channel.send(buff.flip(), sess.client);
+      }
     }
   }
 

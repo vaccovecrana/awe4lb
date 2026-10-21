@@ -71,4 +71,11 @@ public class A4Selector {
     return bkContextIdx.computeIfAbsent(bk, bk0 -> new A4BackendContext());
   }
 
+  /** Drops idle counters for backends that are no longer present in any pool. */
+  public void retainContexts(Collection<A4Backend> keep) {
+    var keepSet = new HashSet<>(keep);
+    bkContextIdx.entrySet().removeIf(e ->
+      !keepSet.contains(e.getKey()) && e.getValue().activeConnections() == 0);
+  }
+
 }

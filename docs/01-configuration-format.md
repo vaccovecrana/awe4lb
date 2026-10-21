@@ -67,7 +67,7 @@ UDP servers support sticky sessions only, regardless of the backend selection me
 
 ## Example
 
-> Note: `awe4lb` stores configuration files as JSON, but the UI allows you to edit configurations in YAML format for easier readability. This guide will use YAML formatting.
+> Note: `awe4lb` stores configuration files as JSON, but the UI allows you to edit configurations in YAML format for easier readability. The editor keeps the YAML document and a structured form in sync in both directions; backend validation errors are shown inline before the configuration is saved. This guide will use YAML formatting.
 
 See [test-config-00.json](https://raw.githubusercontent.com/vaccovecrana/awe4lb/refs/heads/main/a4-test/src/test/resources/test-config-00.json) for a full example:
 

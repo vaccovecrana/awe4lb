@@ -28,8 +28,10 @@ public class A4UdpIo implements Closeable {
   }
 
   @Override public void close() {
-    channelKey.attach(null);
-    channelKey.cancel();
+    if (channelKey != null) {
+      channelKey.attach(null);
+      channelKey.cancel();
+    }
     A4Io.close(channel);
     this.backend = null;
   }

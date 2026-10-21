@@ -25,7 +25,7 @@ public class A4Scheduler implements ThreadFactory {
 
   public A4Scheduler(int schedulerCapacity, String id) {
     this.id = Objects.requireNonNull(id);
-    this.scheduler = Executors.newScheduledThreadPool(schedulerCapacity);
+    this.scheduler = Executors.newScheduledThreadPool(schedulerCapacity, this);
   }
 
   public void schedulePermanent(A4Srv server) {
@@ -85,6 +85,7 @@ public class A4Scheduler implements ThreadFactory {
   public void stop() {
     scheduler.shutdownNow();
     executor.shutdownNow();
+    scheduledTasks.clear();
     servers.forEach(A4Io::close);
     servers.clear();
     log.info("{} - stopped", this.id);
@@ -93,6 +94,7 @@ public class A4Scheduler implements ThreadFactory {
   @Override public Thread newThread(@NonNull Runnable r) {
     var t = new Thread(r);
     t.setName(String.format("a4lb-%s-%x", this.id, t.hashCode()));
+    t.setDaemon(true);
     t.setUncaughtExceptionHandler((t0, e) -> log.error(
       "{} - General task execution error. Please submit a bug at {}",
       t0.getName(), issuesUrl, e

@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 public class A4Pool {
 
   public A4PoolType type;
-  public List<A4Backend> hosts;
+  public volatile List<A4Backend> hosts;
 
   public A4Pool hosts(List<A4Backend> hosts) {
     this.hosts = new ArrayList<>(hosts);
@@ -27,7 +27,11 @@ public class A4Pool {
   }
 
   public List<A4Backend> upHosts() {
-    return hosts.stream()
+    var current = hosts;
+    if (current == null) {
+      return List.of();
+    }
+    return current.stream()
         .filter(bk -> bk.state == A4BackendState.Up)
         .collect(Collectors.toList());
   }

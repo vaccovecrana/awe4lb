@@ -4,13 +4,13 @@ import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.A4ConfigState;
 import io.vacco.a4lb.service.A4Service;
 import io.vacco.a4lb.cfg.*;
-import io.vacco.ronove.RvResponse;
+import io.vacco.ronove.util.RvResponse;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.io.File;
 import java.util.*;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static io.vacco.a4lb.service.A4Service.New;
@@ -29,7 +29,7 @@ public class A4ApiHdl {
     this.gson = Objects.requireNonNull(gson);
   }
 
-  @GET @Path(apiV1Config)
+  @GET @Path(apiV1Config) @Produces(MediaType.APPLICATION_JSON)
   public RvResponse<A4Config> apiV1ConfigGet(@QueryParam(pConfigId) String configId) {
     var res = new RvResponse<A4Config>().withStatus(Response.Status.OK);
     try {
@@ -48,20 +48,26 @@ public class A4ApiHdl {
   }
 
   @POST @Path(apiV1Config)
+  @Consumes(MediaType.APPLICATION_JSON) @Produces(MediaType.APPLICATION_JSON)
   public RvResponse<Collection<A4Validation>> apiV1ConfigPost(@QueryParam(pConfigId) String configId,
                                                               @BeanParam A4Config config) {
+    if (config == null) {
+      return new RvResponse<Collection<A4Validation>>()
+          .withStatus(Response.Status.CONFLICT)
+          .withBody(List.of(A4Validation.ofMessage("Configuration is required")));
+    }
     var errors = service.update(configRoot, configId, inflate(config));
     return new RvResponse<Collection<A4Validation>>()
         .withStatus(errors.isEmpty() ? Response.Status.OK : Response.Status.CONFLICT)
         .withBody(errors);
   }
 
-  @DELETE @Path(apiV1Config)
+  @DELETE @Path(apiV1Config) @Produces(MediaType.APPLICATION_JSON)
   public boolean apiV1ConfigDelete(@QueryParam(pConfigId) String configId) {
     return configId != null && delete(configRoot, configId);
   }
 
-  @GET @Path(apiV1ConfigSelect)
+  @GET @Path(apiV1ConfigSelect) @Produces(MediaType.APPLICATION_JSON)
   public A4ConfigState apiV1ConfigSelectGet(@QueryParam(pConfigId) String configId) {
     var state = configId == null || configId.isEmpty()
         ? service.setActive(null)
@@ -75,9 +81,14 @@ public class A4ApiHdl {
     return state;
   }
 
-  @GET @Path(apiV1ConfigList)
+  @GET @Path(apiV1ConfigList) @Produces(MediaType.APPLICATION_JSON)
   public Collection<A4Config> apiV1ConfigListGet() {
     return configList(configRoot, gson).collect(Collectors.toList());
+  }
+
+  @GET @Path(apiV1Stats) @Produces(MediaType.APPLICATION_JSON)
+  public A4Stats apiV1StatsGet() {
+    return service.stats();
   }
 
 }

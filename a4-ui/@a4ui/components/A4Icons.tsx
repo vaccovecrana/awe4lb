@@ -1,5 +1,4 @@
 import { RenderableProps } from "preact"
-import * as React from "preact/compat"
 
 type IconProps = RenderableProps<{ maxHeight: number }>
 

@@ -25,11 +25,8 @@ It prioritizes simplicity, low overhead, and extensibility while handling produc
 - **Balancing Algorithms**: Random, weighted, round-robin, IP hash, least connections.
 - **Discovery**: Static hosts, HTTP endpoints, external commands, Kubernetes API.
 - **Health Checks**: Exec-based (e.g., ping, nc) with configurable intervals/timeouts.
-- **Management**: REST API for config CRUD/select, web UI for visualization.
-
-## TODO
-
-- **Metrics**: Basic RX/TX averages, connection tracking.
+- **Management**: REST API for config CRUD/select, web UI with a bidirectional YAML/form config editor.
+- **Metrics**: Per-backend RX/TX totals, throughput rates, connection counts and a server-side five-minute history ring buffer.
 
 ## Quick Start
 
@@ -54,6 +51,16 @@ docker run -d --name awe4lb \
 > Note: in both cases, the user executing `a4lb` must be able to open any ports that will be used for front-end load balancing (i.e. port `443/tcp` for TLS termination, port `22/tcp` for SSH proxying, or any other services you define).
 
 Open `http://localhost:7070` in a browser for config management.
+
+### Web UI
+
+The Preact UI is bundled with rspack and provides three views:
+
+- **Status**: the active configuration, its servers, matches, TLS/UDP settings, discovery, health checks and live backend state.
+- **Configs**: create, edit, activate, stop and delete configurations. The editor keeps a structured form and a YAML document in sync in both directions, reports YAML syntax errors with line/column information, and surfaces backend validation errors inline. `Ctrl/Cmd+S` saves.
+- **Traffic**: live per-backend RX/TX throughput charts and counters, rendered from a server-side ring buffer sampled once per second.
+
+The REST API also exposes the raw snapshot at `GET /api/v1/stats`.
 
 Using the UI, you can define load balancer configurations. In this example, we have 3 front servers. The first proxying HTTP connections, the second terminating HTTPS connections to HTTP backends, and the third proxying UDP connections via sticky sessions.
 
@@ -128,6 +135,47 @@ Then run:
 ```
 gradle clean build
 ```
+
+The UI toolchain (Node 22.17, rspack, Sass) is provisioned by the Gradle node plugin.
+
+Tests:
+
+```
+./gradlew build                 # compiles everything, runs Java + UI unit tests
+npm --prefix a4-ui run test:unit
+./gradlew :a4-ui:testUi         # UI unit tests only
+./gradlew :a4-test:test         # Java unit + proxy/stats tests
+```
+
+The docker-compose dependent Java suite is opt-in:
+
+```
+./a4-test/e2e.sh
+```
+
+Browser suites run against a live instance and are opt-in as well. The
+convenience runner starts a throwaway API/UI instance in the background and
+stops it afterwards:
+
+```shell
+./a4-ui/test/run-suite.sh e2e
+./a4-ui/test/run-suite.sh visual
+```
+
+Or point the suites at an instance you already started:
+
+```shell
+# Terminal 1
+a4lb --config=./configs --api-port=7070
+
+# Terminal 2
+A4_UI_URL=http://127.0.0.1:7070 ./gradlew :a4-ui:e2eTest
+A4_UI_URL=http://127.0.0.1:7070 ./gradlew :a4-ui:visual
+```
+
+`e2eTest` runs the Puppeteer suite; `visual` captures desktop and mobile
+screenshots into `a4-ui/build/test-artifacts/visual/`. Set `A4_CHROME` if the
+browser is not on the default path.
 
 ## Similar projects
 

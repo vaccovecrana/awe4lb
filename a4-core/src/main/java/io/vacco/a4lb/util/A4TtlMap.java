@@ -9,6 +9,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+/**
+ * Bounded TTL map. A key may be re-inserted (refreshing its TTL); the queue
+ * keeps insertion order for size-based eviction, while stale queue entries are
+ * ignored when the key has already been replaced or removed.
+ */
 public class A4TtlMap<K, V> {
 
   public static class CacheEntry<V> {
@@ -33,6 +38,9 @@ public class A4TtlMap<K, V> {
   private final Consumer<V> onExpired;
 
   public A4TtlMap(int maxSize, Consumer<V> onExpired) {
+    if (maxSize <= 0) {
+      throw new IllegalArgumentException("Max size must be greater than 0");
+    }
     this.onExpired = Objects.requireNonNull(onExpired);
     this.maxSize = maxSize;
     cache = new ConcurrentHashMap<>(maxSize);
@@ -49,7 +57,10 @@ public class A4TtlMap<K, V> {
     }
     long timestamp = entry.getExpireBy();
     if (timestamp != -1 && System.currentTimeMillis() > timestamp) {
-      onExpired.accept(removeAndGet(key));
+      if (cache.remove(key, entry)) {
+        cacheSize.decrementAndGet();
+        onExpired.accept(entry.getEntry());
+      }
       return null;
     }
     return entry.getEntry();
@@ -59,10 +70,10 @@ public class A4TtlMap<K, V> {
     if (key == null) {
       return null;
     }
-    CacheEntry<V> entry = cache.get(key);
+    CacheEntry<V> entry = cache.remove(key);
     if (entry != null) {
       cacheSize.decrementAndGet();
-      return cache.remove(key).getEntry();
+      return entry.getEntry();
     }
     return null;
   }
@@ -75,19 +86,37 @@ public class A4TtlMap<K, V> {
       throw new IllegalArgumentException("Invalid Value.");
     }
     var expireBy = ttlMs != -1 ? System.currentTimeMillis() + ttlMs : ttlMs;
-    var exists = cache.containsKey(key);
-    if (!exists) {
+    var previous = cache.put(key, new CacheEntry<V>(expireBy, value));
+    if (previous == null) {
       cacheSize.incrementAndGet();
-      while (cacheSize.get() > maxSize) {
-        removeAndGet(queue.poll());
+    } else {
+      queue.remove(key);
+    }
+    queue.add(key);
+    evictOverflow();
+  }
+
+  private void evictOverflow() {
+    while (cacheSize.get() > maxSize) {
+      var oldest = queue.poll();
+      if (oldest == null) {
+        return;
+      }
+      var removed = cache.remove(oldest);
+      if (removed != null) {
+        cacheSize.decrementAndGet();
       }
     }
-    cache.put(key, new CacheEntry<V>(expireBy, value));
-    queue.add(key);
   }
 
   public void clear() {
     cache.clear();
+    queue.clear();
+    cacheSize.set(0);
+  }
+
+  public int size() {
+    return cacheSize.get();
   }
 
   public Collection<CacheEntry<V>> values() {

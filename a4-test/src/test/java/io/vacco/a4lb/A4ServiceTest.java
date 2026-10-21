@@ -13,7 +13,6 @@ import org.buildobjects.process.ProcBuilder;
 import org.junit.runner.RunWith;
 import org.slf4j.*;
 import javax.net.ssl.SSLContext;
-import java.awt.*;
 import java.io.IOException;
 import java.net.http.HttpClient;
 
@@ -92,9 +91,14 @@ public class A4ServiceTest {
     }
   }
 
+  private static final boolean IntegrationEnabled =
+      Boolean.getBoolean("a4.integration")
+        || "1".equals(System.getenv("A4_INTEGRATION_TESTS"))
+        || "true".equalsIgnoreCase(System.getenv("A4_INTEGRATION_TESTS"));
+
   static {
-    if (GraphicsEnvironment.isHeadless()) {
-      System.out.println("CI/CD. Skipping.");
+    if (!IntegrationEnabled) {
+      System.out.println("Integration tests skipped. Set -Da4.integration=true or A4_INTEGRATION_TESTS=1 to run them.");
     } else {
       beforeEach(() -> {
         if (log != null) {

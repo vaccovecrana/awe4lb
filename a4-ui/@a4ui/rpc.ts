@@ -24,10 +24,10 @@ const doJsonIo = <I, O>(url: string, method: string, body: I,
 /* ====================================== */
 
 export interface A4Backend {
-  addr: A4Sock;
-  weight: number;
-  priority: number;
-  state: A4BackendState;
+  addr?: A4Sock;
+  weight?: number;
+  priority?: number;
+  state?: A4BackendState;
 }
 
 export const enum A4BackendState {
@@ -37,44 +37,44 @@ export const enum A4BackendState {
 }
 
 export interface A4Config {
-  Seed: number;
-  id: string;
-  description: string;
-  servers: A4Server[];
+  Seed?: number;
+  id?: string;
+  description?: string;
+  servers?: A4Server[];
 }
 
 export interface A4ConfigState {
-  active: A4Config;
-  inactive: A4Config;
+  active?: A4Config;
+  inactive?: A4Config;
 }
 
 export interface A4Disc {
-  DefaultIntervalMs: number;
-  DefaultTimeoutMs: number;
-  http: A4DiscHttp;
-  exec: A4DiscExec;
-  k8s: A4DiscK8s;
-  intervalMs: number;
-  timeoutMs: number;
+  DefaultIntervalMs?: number;
+  DefaultTimeoutMs?: number;
+  http?: A4DiscHttp;
+  exec?: A4DiscExec;
+  k8s?: A4DiscK8s;
+  intervalMs?: number;
+  timeoutMs?: number;
 }
 
 export interface A4DiscExec {
-  command: string;
-  args: string[];
-  format: A4Format;
+  command?: string;
+  args?: string[];
+  format?: A4Format;
 }
 
 export interface A4DiscHttp {
-  endpoint: string;
-  format: A4Format;
+  endpoint?: string;
+  format?: A4Format;
 }
 
 export interface A4DiscK8s {
-  apiUri: string;
-  tokenPath: string;
-  namespace: string;
-  service: string;
-  port: number;
+  apiUri?: string;
+  tokenPath?: string;
+  namespace?: string;
+  service?: string;
+  port?: number;
 }
 
 export const enum A4Format {
@@ -83,34 +83,34 @@ export const enum A4Format {
 }
 
 export interface A4HealthCheck {
-  DefaultIntervalMs: number;
-  DefaultTimeoutMs: number;
-  intervalMs: number;
-  timeoutMs: number;
-  exec: A4HealthExec;
+  DefaultIntervalMs?: number;
+  DefaultTimeoutMs?: number;
+  intervalMs?: number;
+  timeoutMs?: number;
+  exec?: A4HealthExec;
 }
 
 export interface A4HealthExec {
-  command: string;
-  args: string[];
+  command?: string;
+  args?: string[];
 }
 
 export interface A4Match {
-  op: A4MatchOp;
-  pool: A4Pool;
-  discover: A4Disc;
-  healthCheck: A4HealthCheck;
-  tls: A4Tls;
+  op?: A4MatchOp;
+  pool?: A4Pool;
+  discover?: A4Disc;
+  healthCheck?: A4HealthCheck;
+  tls?: A4Tls;
 }
 
 export interface A4MatchOp {
-  sni: A4StringOp;
-  host: A4StringOp;
+  sni?: A4StringOp;
+  host?: A4StringOp;
 }
 
 export interface A4Pool {
-  type: A4PoolType;
-  hosts: A4Backend[];
+  type?: A4PoolType;
+  hosts?: A4Backend[];
 }
 
 export const enum A4PoolType {
@@ -121,48 +121,83 @@ export const enum A4PoolType {
 }
 
 export interface A4Server {
-  id: string;
-  addr: A4Sock;
-  match: A4Match[];
-  tls: A4ServerTls;
-  udp: A4Udp;
+  id?: string;
+  addr?: A4Sock;
+  match?: A4Match[];
+  tls?: A4ServerTls;
+  udp?: A4Udp;
 }
 
 export interface A4ServerTls {
-  protocols: string[];
-  ciphers: string[];
-  base: A4Tls;
+  protocols?: string[];
+  ciphers?: string[];
+  base?: A4Tls;
 }
 
 export interface A4Sock {
-  host: string;
-  port: number;
+  host?: string;
+  port?: number;
+}
+
+export interface A4Stats {
+  timestampMs?: number;
+  configId?: string;
+  backends?: A4StatsBackend[];
+  history?: A4StatsHistory;
+}
+
+export interface A4StatsBackend {
+  id?: string;
+  serverId?: string;
+  serverType?: string;
+  matchLabel?: string;
+  poolType?: string;
+  host?: string;
+  port?: number;
+  state?: string;
+  activeConnections?: number;
+  totalConnections?: number;
+  rxBytes?: number;
+  txBytes?: number;
+  rxBps?: number;
+  txBps?: number;
+}
+
+export interface A4StatsHistory {
+  timestamps?: number[];
+  series?: A4StatsSeries[];
+}
+
+export interface A4StatsSeries {
+  id?: string;
+  rxBps?: number[];
+  txBps?: number[];
 }
 
 export interface A4StringOp {
-  equals: string;
-  endsWith: string;
-  startsWith: string;
+  equals?: string;
+  endsWith?: string;
+  startsWith?: string;
 }
 
 export interface A4Tls {
-  certPath: string;
-  keyPath: string;
-  open: boolean;
+  certPath?: string;
+  keyPath?: string;
+  open?: boolean;
 }
 
 export interface A4Udp {
-  bufferSize: number;
-  idleTimeoutMs: number;
-  maxSessions: number;
+  bufferSize?: number;
+  idleTimeoutMs?: number;
+  maxSessions?: number;
 }
 
 export interface A4Validation {
-  args: string[];
-  format: string;
-  key: string;
-  name: string;
-  message: string;
+  args?: string[];
+  format?: string;
+  key?: string;
+  name?: string;
+  message?: string;
 }
 
 
@@ -232,6 +267,16 @@ export const apiV1ConfigSelectGet = (configId: string): Promise<A4ConfigState> =
   )
 }
 
+export const apiV1StatsGet = (): Promise<A4Stats> => {
+  let path = "/api/v1/stats"
+  return doJsonIo(path, "GET",
+      undefined
+    ,
+    new Map(),
+    undefined
+  )
+}
+
 export const apiV1ConfigPost = (configId: string, arg1: A4Config): Promise<A4Validation[]> => {
   let path = "/api/v1/config"
   const qParams = new URLSearchParams()
@@ -243,6 +288,6 @@ export const apiV1ConfigPost = (configId: string, arg1: A4Config): Promise<A4Val
       JSON.stringify(arg1)
     ,
     new Map(),
-    undefined
+    "application/json"
   )
 }
