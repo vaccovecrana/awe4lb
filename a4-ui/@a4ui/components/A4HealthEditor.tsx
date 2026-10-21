@@ -3,6 +3,7 @@ import {HealthEntry} from "@a4ui/yaml"
 
 const A4HealthEditor = (props: {
   health: HealthEntry
+  udp?: boolean
   onChange: (next: HealthEntry) => void
 }) => {
   const h = props.health
@@ -23,6 +24,11 @@ const A4HealthEditor = (props: {
       </div>
       {h.enabled && (
         <div>
+          {props.udp && !h.command.trim() && (
+            <div class="a4-form-text" style="color:var(--a4-nord13)">
+              UDP health checks require an exec command.
+            </div>
+          )}
           <div class="a4-grid-2">
             <A4Field label="Interval (ms)" hint="Default: 5000">
               <input

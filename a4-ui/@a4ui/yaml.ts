@@ -6,6 +6,7 @@ export type PoolType = "" | "roundRobin" | "leastConn" | "ipHash" | "weight"
 export type OpKind = "any" | "host" | "sni"
 export type OpType = "equals" | "startsWith" | "endsWith"
 export type DiscoverKind = "http" | "exec" | "k8s"
+export type ServerTransport = "tcp" | "tls" | "udp"
 
 export interface HostEntry {
   key: string
@@ -67,11 +68,10 @@ export interface ServerEntry {
   id: string
   host: string
   port: string
-  tlsEnabled: boolean
+  transport: ServerTransport
   tlsProtocols: string
   tlsCiphers: string
   tlsBase: TlsEntry
-  udpEnabled: boolean
   udpBufferSize: string
   udpIdleTimeoutMs: string
   udpMaxSessions: string
@@ -136,11 +136,10 @@ export const emptyServer = (): ServerEntry => ({
   id: "",
   host: "0.0.0.0",
   port: "",
-  tlsEnabled: false,
+  transport: "tcp",
   tlsProtocols: "",
   tlsCiphers: "",
   tlsBase: emptyTls(),
-  udpEnabled: false,
   udpBufferSize: "16384",
   udpIdleTimeoutMs: "60000",
   udpMaxSessions: "4096",
@@ -184,7 +183,7 @@ export const fromConfig = (cfg: A4Config | undefined, previous?: ConfigForm): Co
       id: srv.id || "",
       host: srv.addr?.host || "",
       port: srv.addr?.port != null ? String(srv.addr.port) : "",
-      tlsEnabled: !!srv.tls,
+      transport: (srv.tls ? "tls" : srv.udp ? "udp" : "tcp") as ServerTransport,
       tlsProtocols: (srv.tls?.protocols || []).join(", "),
       tlsCiphers: (srv.tls?.ciphers || []).join(", "),
       tlsBase: {
@@ -193,7 +192,6 @@ export const fromConfig = (cfg: A4Config | undefined, previous?: ConfigForm): Co
         keyPath: srv.tls?.base?.keyPath || "",
         open: !!srv.tls?.base?.open
       },
-      udpEnabled: !!srv.udp,
       udpBufferSize: srv.udp?.bufferSize != null ? String(srv.udp.bufferSize) : "16384",
       udpIdleTimeoutMs: srv.udp?.idleTimeoutMs != null ? String(srv.udp.idleTimeoutMs) : "60000",
       udpMaxSessions: srv.udp?.maxSessions != null ? String(srv.udp.maxSessions) : "4096",
@@ -272,7 +270,7 @@ const hostOf = (h: HostEntry) => {
   return out
 }
 
-const matchOf = (m: MatchEntry): A4Match => {
+const matchOf = (m: MatchEntry, transport: ServerTransport): A4Match => {
   const out: A4Match = {}
   if (m.op.kind !== "any") {
     const op = {[m.op.op]: m.op.value || undefined}
@@ -324,7 +322,7 @@ const matchOf = (m: MatchEntry): A4Match => {
     }
     out.healthCheck = h
   }
-  if (m.tls.enabled) {
+  if (m.tls.enabled && transport !== "udp") {
     out.tls = tlsOf(m.tls)
   }
   return out
@@ -334,9 +332,9 @@ const serverOf = (s: ServerEntry): A4Server => {
   const out: A4Server = {
     id: s.id || undefined,
     addr: {host: s.host || undefined, port: numOrUndefined(s.port)},
-    match: s.matches.map(matchOf)
+    match: s.matches.map(m => matchOf(m, s.transport))
   }
-  if (s.tlsEnabled) {
+  if (s.transport === "tls") {
     out.tls = {}
     const protocols = splitList(s.tlsProtocols)
     const ciphers = splitList(s.tlsCiphers)
@@ -344,7 +342,7 @@ const serverOf = (s: ServerEntry): A4Server => {
     if (ciphers.length > 0) out.tls.ciphers = ciphers
     if (s.tlsBase.enabled) out.tls.base = tlsOf(s.tlsBase)
   }
-  if (s.udpEnabled) {
+  if (s.transport === "udp") {
     out.udp = {
       bufferSize: numOrUndefined(s.udpBufferSize),
       idleTimeoutMs: numOrUndefined(s.udpIdleTimeoutMs),

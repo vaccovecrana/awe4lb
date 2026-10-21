@@ -44,6 +44,39 @@ test("keeps the form and YAML document in sync in both directions", async () => 
   assert.equal(await inputValue(page, '[data-testid="host-host"]'), "127.0.0.1")
 })
 
+test("keeps transport selection exclusive and switches panels", async () => {
+  if (!page) return
+  await goto(page, "/config/new/edit")
+  await page.waitForSelector('[data-testid="transport-tcp"]')
+
+  const checked = (sel) => page.$eval(sel, (el) => el.checked)
+  const titles = () => page.$$eval(".a4-subpanel-title", (els) =>
+    els.map((el) => (el.textContent || "").trim()))
+
+  assert.equal(await checked('[data-testid="transport-tcp"]'), true)
+  assert.equal(await checked('[data-testid="transport-tls"]'), false)
+  assert.equal(await checked('[data-testid="transport-udp"]'), false)
+
+  await page.click('[data-testid="transport-udp"]')
+  await page.waitForFunction(() =>
+    document.querySelector('[data-testid="transport-udp"]').checked)
+  let panels = await titles()
+  assert.ok(panels.includes("UDP"))
+  assert.ok(!panels.includes("Server TLS"))
+  assert.ok(!panels.includes("Backend TLS"))
+
+  await page.click('[data-testid="transport-tls"]')
+  await page.waitForFunction(() =>
+    document.querySelector('[data-testid="transport-tls"]').checked)
+  panels = await titles()
+  assert.ok(panels.includes("Server TLS"))
+  assert.ok(panels.includes("Backend TLS"))
+  assert.ok(!panels.includes("UDP"))
+
+  assert.equal(await checked('[data-testid="transport-tcp"]'), false)
+  assert.equal(await checked('[data-testid="transport-udp"]'), false)
+})
+
 test("reports malformed YAML with a line position", async () => {
   if (!page) return
   await goto(page, "/config/new/edit")

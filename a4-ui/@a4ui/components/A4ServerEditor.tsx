@@ -1,7 +1,13 @@
 import {A4Field} from "@a4ui/components/A4Field"
 import A4MatchEditor from "@a4ui/components/A4MatchEditor"
 import A4TlsEditor from "@a4ui/components/A4TlsEditor"
-import {emptyMatch, MatchEntry, ServerEntry} from "@a4ui/yaml"
+import {emptyMatch, MatchEntry, ServerEntry, ServerTransport} from "@a4ui/yaml"
+
+const TRANSPORTS: {value: ServerTransport, label: string}[] = [
+  {value: "tcp", label: "TCP"},
+  {value: "tls", label: "TLS termination"},
+  {value: "udp", label: "UDP server"},
+]
 
 const A4ServerEditor = (props: {
   server: ServerEntry
@@ -16,13 +22,21 @@ const A4ServerEditor = (props: {
     patch({matches: s.matches.map(m => m.key === key ? next : m)})
   const removeMatch = (key: string) =>
     patch({matches: s.matches.filter(m => m.key !== key)})
+  const setTransport = (transport: ServerTransport) => {
+    const matches = transport === "udp"
+      ? s.matches.map(m => m.poolType === "leastConn" ? {...m, poolType: "" as const} : m)
+      : s.matches
+    patch({transport, matches})
+  }
 
   return (
     <div class="a4-panel a4-mb-4">
       <div class="a4-server-head">
         <div class="a4-server-title">
           <h3>Server {props.index + 1}</h3>
-          <span class="a4-status a4-status-unknown">{s.udpEnabled ? "UDP" : s.tlsEnabled ? "TLS" : "TCP"}</span>
+          <span class="a4-status a4-status-unknown">
+            {s.transport === "udp" ? "UDP" : s.transport === "tls" ? "TLS" : "TCP"}
+          </span>
         </div>
         {props.canRemove && (
           <button class="a4-btn-danger" type="button" onClick={props.onRemove}>Remove server</button>
@@ -60,26 +74,25 @@ const A4ServerEditor = (props: {
         </A4Field>
       </div>
 
-      <div class="a4-row-start a4-mb-4">
-        <label class="a4-check">
-          <input
-            type="checkbox"
-            checked={s.tlsEnabled}
-            onChange={(e: any) => patch({tlsEnabled: e.target.checked})}
-          />
-          TLS termination
-        </label>
-        <label class="a4-check">
-          <input
-            type="checkbox"
-            checked={s.udpEnabled}
-            onChange={(e: any) => patch({udpEnabled: e.target.checked})}
-          />
-          UDP server
-        </label>
+      <div class="a4-field">
+        <span class="a4-form-label">Transport</span>
+        <div class="a4-row-start" role="radiogroup" aria-label="Transport">
+          {TRANSPORTS.map(t => (
+            <label class="a4-check" key={t.value}>
+              <input
+                type="radio"
+                name={`transport-${s.key}`}
+                data-testid={`transport-${t.value}`}
+                checked={s.transport === t.value}
+                onChange={() => setTransport(t.value)}
+              />
+              {t.label}
+            </label>
+          ))}
+        </div>
       </div>
 
-      {s.tlsEnabled && (
+      {s.transport === "tls" && (
         <div class="a4-subpanel">
           <div class="a4-subpanel-head">
             <span class="a4-subpanel-title">Server TLS</span>
@@ -110,7 +123,7 @@ const A4ServerEditor = (props: {
         </div>
       )}
 
-      {s.udpEnabled && (
+      {s.transport === "udp" && (
         <div class="a4-subpanel">
           <div class="a4-subpanel-head">
             <span class="a4-subpanel-title">UDP</span>
@@ -161,6 +174,7 @@ const A4ServerEditor = (props: {
             key={m.key}
             match={m}
             index={idx}
+            transport={s.transport}
             canRemove={s.matches.length > 1}
             onChange={next => patchMatch(m.key, next)}
             onRemove={() => removeMatch(m.key)}

@@ -20,7 +20,7 @@ Servers specify listening sockets (host/port) and rules for routing traffic. Eac
 - `addr`: Listening address (e.g., `{"host": "0.0.0.0", "port": 8070}`).
 - `match`: Array of rules to select backend pools.
 
-Optional configuration blocks can be defined for `tls` (TCP/TLS) or `udp` for UDP settings.
+Optional configuration blocks can be defined for `tls` (TCP/TLS termination) or `udp` (UDP forwarding). They are mutually exclusive; omit both for plain TCP forwarding.
 
 ### Server Match Operations
 

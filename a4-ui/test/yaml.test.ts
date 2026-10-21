@@ -77,7 +77,7 @@ test("maps a complete configuration into the form and back", () => {
     }]
   }
   const form = fromConfig(cfg as any)
-  assert.equal(form.servers[0].tlsEnabled, true)
+  assert.equal(form.servers[0].transport, "tls")
   assert.equal(form.servers[0].matches[0].op.kind, "sni")
   assert.equal(form.servers[0].matches[0].op.op, "endsWith")
   assert.equal(form.servers[0].matches[0].health.args, "-z $host $port")
@@ -87,6 +87,45 @@ test("maps a complete configuration into the form and back", () => {
   assert.equal(round.servers![0].match![0].op?.sni?.endsWith, ".localhost")
   assert.equal(round.servers![0].match![0].pool?.type, "weight")
   assert.equal(round.servers![0].match![0].tls?.open, true)
+})
+
+test("maps transport exclusively and emits only the selected block", () => {
+  const tls = fromConfig({
+    id: "tls", description: "tls",
+    servers: [{id: "s", addr: {host: "0.0.0.0", port: 8443}, tls: {}, match: [{}]}]
+  } as any)
+  assert.equal(tls.servers[0].transport, "tls")
+  const tlsWire = toConfig(tls).servers![0]
+  assert.ok(tlsWire.tls)
+  assert.equal(tlsWire.udp, undefined)
+
+  const udp = fromConfig({
+    id: "udp", description: "udp",
+    servers: [{id: "s", addr: {host: "0.0.0.0", port: 8070}, udp: {}, match: [{}]}]
+  } as any)
+  assert.equal(udp.servers[0].transport, "udp")
+  const udpWire = toConfig(udp).servers![0]
+  assert.ok(udpWire.udp)
+  assert.equal(udpWire.tls, undefined)
+
+  const tcp = fromConfig({
+    id: "tcp", description: "tcp",
+    servers: [{id: "s", addr: {host: "0.0.0.0", port: 8080}, match: [{}]}]
+  } as any)
+  assert.equal(tcp.servers[0].transport, "tcp")
+})
+
+test("UDP servers omit match-level backend TLS", () => {
+  const form = fromConfig({
+    id: "udp", description: "udp",
+    servers: [{
+      id: "s", addr: {host: "0.0.0.0", port: 8070}, udp: {},
+      match: [{tls: {certPath: "a.pem", keyPath: "a.key"}}]
+    }]
+  } as any)
+  form.servers[0].matches[0].tls = {enabled: true, certPath: "a.pem", keyPath: "a.key", open: false}
+  const wire = toConfig(form).servers![0]
+  assert.equal(wire.match![0].tls, undefined)
 })
 
 test("re-parsing YAML preserves stable form keys by position", () => {
@@ -106,6 +145,7 @@ test("empty optional sections are omitted from the wire config", () => {
     servers: [{id: "tcp", addr: {host: "0.0.0.0", port: 8080}, match: [{}]}]
   } as any)
   const match = form.servers[0].matches[0]
+  assert.equal(form.servers[0].transport, "tcp")
   assert.equal(match.discover.enabled, false)
   assert.equal(match.health.enabled, false)
   assert.equal(match.tls.enabled, false)

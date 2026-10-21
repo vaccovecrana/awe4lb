@@ -3,16 +3,18 @@ import A4HostsEditor from "@a4ui/components/A4HostsEditor"
 import A4DiscoverEditor from "@a4ui/components/A4DiscoverEditor"
 import A4HealthEditor from "@a4ui/components/A4HealthEditor"
 import A4TlsEditor from "@a4ui/components/A4TlsEditor"
-import {MatchEntry, PoolType} from "@a4ui/yaml"
+import {MatchEntry, PoolType, ServerTransport} from "@a4ui/yaml"
 
 const A4MatchEditor = (props: {
   match: MatchEntry
   index: number
+  transport: ServerTransport
   canRemove: boolean
   onChange: (next: MatchEntry) => void
   onRemove: () => void
 }) => {
   const m = props.match
+  const isUdp = props.transport === "udp"
   const patch = (p: Partial<MatchEntry>) => props.onChange({...m, ...p})
 
   return (
@@ -66,7 +68,9 @@ const A4MatchEditor = (props: {
           >
             <option value="">random</option>
             <option value="roundRobin">roundRobin</option>
-            <option value="leastConn">leastConn</option>
+            <option value="leastConn" disabled={isUdp}>
+              {isUdp ? "leastConn (UDP unsupported)" : "leastConn"}
+            </option>
             <option value="ipHash">ipHash</option>
             <option value="weight">weight</option>
           </select>
@@ -76,8 +80,10 @@ const A4MatchEditor = (props: {
         <A4HostsEditor hosts={m.hosts} onChange={hosts => patch({hosts})}/>
       )}
       <A4DiscoverEditor discover={m.discover} onChange={discover => patch({discover})}/>
-      <A4HealthEditor health={m.health} onChange={health => patch({health})}/>
-      <A4TlsEditor title="Backend TLS" tls={m.tls} onChange={tls => patch({tls})}/>
+      <A4HealthEditor health={m.health} udp={isUdp} onChange={health => patch({health})}/>
+      {!isUdp && (
+        <A4TlsEditor title="Backend TLS" tls={m.tls} onChange={tls => patch({tls})}/>
+      )}
     </div>
   )
 }
