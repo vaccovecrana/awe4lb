@@ -3,9 +3,9 @@ import {A4Config, A4Disc, A4Format, A4HealthCheck, A4Match, A4PoolType, A4Server
 import {numOrUndefined, splitArgs, splitList} from "@a4ui/util"
 
 export type PoolType = "" | "roundRobin" | "leastConn" | "ipHash" | "weight"
-export type OpKind = "any" | "host" | "sni"
-export type OpType = "equals" | "startsWith" | "endsWith"
-export type DiscoverKind = "http" | "exec" | "k8s"
+type OpKind = "any" | "host" | "sni"
+type OpType = "equals" | "startsWith" | "endsWith"
+type DiscoverKind = "http" | "exec" | "k8s"
 export type ServerTransport = "tcp" | "tls" | "udp"
 
 export interface HostEntry {
@@ -16,7 +16,7 @@ export interface HostEntry {
   priority: string
 }
 
-export interface OpEntry {
+interface OpEntry {
   kind: OpKind
   op: OpType
   value: string
@@ -84,14 +84,14 @@ export interface ConfigForm {
   servers: ServerEntry[]
 }
 
-export interface YamlParseResult {
+interface YamlParseResult {
   form?: ConfigForm
   error?: string
   warnings: string[]
 }
 
 let keySeq = 0
-export const nextKey = (prefix = "k") => `${prefix}-${++keySeq}`
+const nextKey = (prefix = "k") => `${prefix}-${++keySeq}`
 
 export const emptyHost = (host = "", port = ""): HostEntry => ({
   key: nextKey("host"), host, port, weight: "", priority: ""

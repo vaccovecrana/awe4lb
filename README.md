@@ -49,8 +49,8 @@ Or from a Docker image:
 docker run -d --name awe4lb \
   -p 7070:7070 -p 8070:8070/udp -p 443:8443 \
   -v $(pwd)/configs:/etc/a4lb \
-  ghcr.io/vaccovecrana/awe4lb:0.7.1 \
-  --logLevel=info --config=/etc/a4lb
+  ghcr.io/vaccovecrana/awe4lb:1.0.0 \
+  --log-level=info --config=/etc/a4lb
 ```
 
 > Note: in both cases, the user executing `a4lb` must be able to open any ports that will be used for front-end load
@@ -135,21 +135,12 @@ see [test-config-00](./a4-test/src/test/resources/test-config-00.json).
 
 ## Development
 
-Requires Gradle 8 or later.
-
-Create a file with the following content at `~/.gsOrgConfig.json`:
-
-```
-{
-  "orgId": "vacco-oss",
-  "orgConfigUrl": "https://raw.githubusercontent.com/vaccovecrana/org-config/refs/heads/main/vacco-oss-java-21.json"
-}
-```
+Use the Gradle wrapper (Gradle 9.6) and JDK 21+.
 
 Then run:
 
 ```
-gradle clean build
+./gradlew clean build
 ```
 
 The UI toolchain (Node 22.17, rspack, Sass) is provisioned by the Gradle node plugin.

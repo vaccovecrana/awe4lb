@@ -11,7 +11,7 @@ import static java.util.stream.Collectors.groupingBy;
 
 public class A4SelWeight {
 
-  public static A4Backend wtRdSelect(List<A4Backend> backends, Random rnd) {
+  private static A4Backend wtRdSelect(List<A4Backend> backends, Random rnd) {
     if (backends == null || backends.isEmpty()) {
       throw new IllegalStateException("No available backends for weighted selection");
     }

@@ -1,11 +1,5 @@
 [
   {
-    "name": "io.vacco.a4lb.cfg.A4Avg",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
     "name": "io.vacco.a4lb.cfg.A4Backend",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true,
@@ -91,12 +85,6 @@
   },
   {
     "name": "io.vacco.a4lb.cfg.A4PoolType",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.vacco.a4lb.cfg.A4RxTx",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true,
     "allDeclaredFields": true

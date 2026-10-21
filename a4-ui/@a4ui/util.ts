@@ -1,11 +1,7 @@
 import {A4BackendState, A4Match, A4Server} from "@a4ui/rpc"
 
-export const classNames = (...names: (string | false | null | undefined)[]): string =>
-  names.filter(Boolean).join(" ")
-
 export const uiRoot = "/"
 export const uiConfigList = "/config/list"
-export const uiConfigEdit = "/config/:configId/edit"
 export const uiTraffic = "/traffic"
 
 export const uiConfigEditFmt = (configId: string) => `/config/${configId}/edit`

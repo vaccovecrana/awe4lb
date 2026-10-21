@@ -22,7 +22,7 @@ public class A4LbMain {
         );
       }
     }, "a4lb-shutdown"));
-    try { // TODO add UNIX SIGTERM handler
+    try {
       ctx.init(A4Options.from(args));
     } catch (Exception e) {
       System.out.printf("Unable to initialize load balancer - %s %s%n",

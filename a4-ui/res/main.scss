@@ -33,7 +33,6 @@
   --a4-text-2: var(--a4-nord4);
   --a4-text-3: #7b88a1;
   --a4-accent: var(--a4-nord8);
-  --a4-accent-2: var(--a4-nord9);
   --a4-accent-contrast: var(--a4-nord0);
   --a4-radius: 16px;
   --a4-radius-sm: 10px;
@@ -239,7 +238,6 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
 .a4-host-row .a4-btn-danger { flex: 0 0 auto; }
 
 /* ---------- badges / status ---------- */
-.a4-intent,
 .a4-status {
   font-size: 10.5px;
   font-weight: 600;
@@ -251,18 +249,11 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
   border: 1px solid transparent;
   line-height: 1.5;
 }
-.a4-intent-port { background: rgba(136, 192, 208, 0.16); color: var(--a4-nord8);  border-color: rgba(136, 192, 208, 0.4); }
 
-.a4-status-up,
-.a4-status-running     { background: rgba(163, 190, 140, 0.16); color: var(--a4-nord14); border-color: rgba(163, 190, 140, 0.4); }
-.a4-status-down,
-.a4-status-failed      { background: rgba(191, 97, 106, 0.16);  color: var(--a4-nord11); border-color: rgba(191, 97, 106, 0.4); }
-.a4-status-unknown,
-.a4-status-stopped,
-.a4-status-pending     { background: rgba(76, 86, 106, 0.35);   color: var(--a4-nord4);  border-color: rgba(76, 86, 106, 0.6); }
-.a4-status-provisioning { background: rgba(235, 203, 139, 0.16); color: var(--a4-nord13); border-color: rgba(235, 203, 139, 0.4); }
-.a4-status-partial      { background: rgba(208, 135, 112, 0.16); color: var(--a4-nord12); border-color: rgba(208, 135, 112, 0.4); }
-.a4-status-active       { background: rgba(136, 192, 208, 0.16); color: var(--a4-nord8);  border-color: rgba(136, 192, 208, 0.4); }
+.a4-status-up     { background: rgba(163, 190, 140, 0.16); color: var(--a4-nord14); border-color: rgba(163, 190, 140, 0.4); }
+.a4-status-down   { background: rgba(191, 97, 106, 0.16); color: var(--a4-nord11); border-color: rgba(191, 97, 106, 0.4); }
+.a4-status-unknown { background: rgba(76, 86, 106, 0.35); color: var(--a4-nord4); border-color: rgba(76, 86, 106, 0.6); }
+.a4-status-active { background: rgba(136, 192, 208, 0.16); color: var(--a4-nord8); border-color: rgba(136, 192, 208, 0.4); }
 
 /* ---------- widgets ---------- */
 .a4-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -271,7 +262,7 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
 .a4-edit { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 16px; }
 .a4-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
 .a4-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
-.a4-input, .a4-select, .a4-textarea {
+.a4-input, .a4-select {
   width: 100%;
   padding: 8px 10px;
   color: var(--a4-text);
@@ -279,19 +270,15 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
   border: 1px solid var(--a4-border-2);
   border-radius: var(--a4-radius-sm);
 }
-.a4-input:focus, .a4-select:focus, .a4-textarea:focus {
+.a4-input:focus, .a4-select:focus {
   outline: 2px solid var(--a4-accent);
   outline-offset: 1px;
 }
 .a4-input:disabled { opacity: 0.6; cursor: not-allowed; }
-.a4-textarea { resize: vertical; min-height: 90px; font-family: var(--a4-mono); font-size: 12.5px; }
 .a4-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--a4-text-2); }
 .a4-check input { accent-color: var(--a4-accent); }
-.a4-service-name { font-weight: 700; flex: 1 1 auto; min-width: 0; }
 .a4-panel .a4-pill { background: var(--a4-surface-2); border-color: var(--a4-border-2); }
 .a4-panel .a4-pill:hover { background: var(--a4-border-2); }
-.a4-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.a4-list-item { display: flex; gap: 8px; align-items: center; }
 
 /* Generic content panel (server cards, editor cards, detail blocks). */
 .a4-panel {
@@ -300,7 +287,6 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
   border-radius: var(--a4-radius);
   padding: 24px;
 }
-.a4-panel--tight { padding: 16px; }
 .a4-btn-danger {
   color: var(--a4-nord11);
   background: rgba(191, 97, 106, 0.12);
@@ -309,7 +295,7 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
   padding: 6px 12px;
 }
 .a4-btn-danger:hover { background: rgba(191, 97, 106, 0.22); }
-.a4-log, .a4-yaml {
+.a4-yaml {
   width: 100%;
   font-family: var(--a4-mono);
   font-size: 12.5px;
@@ -321,22 +307,11 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
   border-radius: var(--a4-radius-sm);
   resize: vertical;
 }
-.a4-log { max-height: 360px; overflow: auto; }
 .a4-yaml { min-height: 640px; }
 .a4-yaml--error { border-color: rgba(191, 97, 106, 0.7); }
 
 @media (max-width: 1000px) { .a4-edit { grid-template-columns: 1fr; } }
 @media (max-width: 860px) { .a4-grid-2, .a4-grid-3 { grid-template-columns: 1fr; } }
-
-/* Detail layout */
-.a4-panel-grid, .a4-log-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--a4-gap);
-  align-items: stretch;
-}
-@media (min-width: 900px) { .a4-panel-grid, .a4-log-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.a4-panel-grid > .a4-panel { height: 100%; }
 
 /* ---------- tables ---------- */
 .a4-table-wrap {
@@ -464,20 +439,6 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
 .a4-muted { color: var(--a4-text-3); }
 .a4-mono { font-family: var(--a4-mono); }
 
-/* ---------- progress ---------- */
-.a4-progress {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  overflow: hidden;
-}
-.a4-progress > div {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--a4-accent-2), var(--a4-accent));
-  transition: width 0.4s ease;
-}
-
 /* ---------- stats / charts ---------- */
 .a4-stat-grid {
   display: grid;
@@ -525,18 +486,6 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
 .a4-chart canvas { max-height: 340px; }
 .a4-legend { display: flex; gap: 14px; font-size: 12px; color: var(--a4-text-2); }
 .a4-legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-
-/* ---------- editor summary ---------- */
-.a4-summary { display: flex; flex-direction: column; gap: 10px; }
-.a4-summary-server {
-  border: 1px solid var(--a4-border);
-  border-radius: var(--a4-radius-sm);
-  padding: 10px 12px;
-  font-size: 13px;
-  background: color-mix(in srgb, var(--a4-nord0) 30%, transparent);
-}
-.a4-summary-server strong { color: var(--a4-text); }
-.a4-summary-line { display: flex; justify-content: space-between; gap: 10px; }
 
 /* ---------- skeletons / states ---------- */
 .a4-skeleton {
@@ -624,11 +573,6 @@ button { cursor: pointer; background: none; border: none; padding: 0; }
 .a4-mt16 { margin-top: 16px; }
 .a4-mb-2 { margin-bottom: 8px; }
 .a4-mb-4 { margin-bottom: 20px; }
-.a4-mb-4px { margin-bottom: 6px; }
-.a4-me-1 { margin-inline-end: 4px; }
-.a4-txr { text-align: right; }
-.a4-txc { text-align: center; }
-.a4-full { width: 100%; }
 
 /* Form field labels/hints */
 .a4-form-label {

@@ -117,9 +117,4 @@ public class A4StatsRecorder {
     return frames.size();
   }
 
-  public synchronized void clear() {
-    frames.clear();
-    last = null;
-  }
-
 }

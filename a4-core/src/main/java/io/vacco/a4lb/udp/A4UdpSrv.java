@@ -84,7 +84,7 @@ public class A4UdpSrv implements A4Srv {
     }
   }
 
-  public void update() {
+  private void update() {
     A4Io.select(selector, key -> {
       try {
         if (key.isReadable()) {

@@ -19,8 +19,4 @@ public class A4Base36 {
     return new String(result);
   }
 
-  public static void main(String[] args) {
-    System.out.println(hash4("Hello world!"));
-  }
-
 }

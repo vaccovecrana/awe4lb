@@ -16,12 +16,3 @@ export const messageOf = (e: any): string => {
   }
   return String(e)
 }
-
-/** Returns the first backend validation message, if any. */
-export const validationMessageOf = (validations: any): string => {
-  if (Array.isArray(validations) && validations.length > 0) {
-    const v = validations[0]
-    return v?.message || v?.key || "Validation failed"
-  }
-  return "Validation failed"
-}

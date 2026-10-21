@@ -6,7 +6,6 @@ public class A4Route {
   public static final String pConfigId = "configId";
   public static final String
     apiV1Config = "/api/v1/config",
-    apiV1ConfigValidate = "/api/v1/config/validate",
     apiV1ConfigSelect = "/api/v1/config/select",
     apiV1ConfigList = "/api/v1/config/list",
     apiV1Stats = "/api/v1/stats";

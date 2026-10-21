@@ -8,8 +8,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.StandardCharsets;
@@ -31,33 +29,6 @@ public class A4Io {
       if (log.isDebugEnabled()) {
         log.debug("Unable to close {}", c, e);
       }
-    }
-  }
-
-  public static int eofRead(ByteChannel c, ByteBuffer bb) {
-    try {
-      bb.clear();
-      int bytesRead = c.read(bb);
-      if (bytesRead == -1) {
-        if (log.isTraceEnabled()) {
-          log.trace("{} - channel EOF", c);
-        }
-      } else if (bytesRead > 0) {
-        bb.flip();
-      }
-      return bytesRead;
-    } catch (IOException ioe) {
-      var msg = String.format("Unable to read data from channel %s", c);
-      throw new IllegalStateException(msg, ioe);
-    }
-  }
-
-  public static int eofWrite(ByteChannel c, ByteBuffer bb) {
-    try {
-      return c.write(bb);
-    } catch (IOException ioe) {
-      var msg = String.format("Unable to write data to channel %s", c);
-      throw new IllegalStateException(msg, ioe);
     }
   }
 

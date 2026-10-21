@@ -14,7 +14,6 @@ import static io.vacco.a4lb.web.A4Route.*;
 public class A4UiHdl extends MxStatic {
 
   private static final Logger log = LoggerFactory.getLogger(A4UiHdl.class);
-  private static final String indexHtml = "/index.html";
 
   private static final File pkgJson = new File("../a4-ui/package.json");
 

@@ -5,7 +5,7 @@ import io.vacco.a4lb.cfg.A4Pool;
 
 public class A4SelIpHash {
 
-  public static long getUnsignedInt(int x) {
+  private static long getUnsignedInt(int x) {
     return x & 0x00000000ffffffffL;
   }
 

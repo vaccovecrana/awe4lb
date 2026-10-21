@@ -1,7 +1,5 @@
 package io.vacco.a4lb.sel;
 
-import io.vacco.a4lb.cfg.A4RxTx;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
@@ -11,8 +9,6 @@ import java.util.concurrent.atomic.LongAdder;
  * lock-free so TCP/UDP worker threads never contend on a monitor.
  */
 public class A4BackendContext {
-
-  public final A4RxTx rxTx = new A4RxTx();
 
   private final AtomicInteger connections = new AtomicInteger();
   private final AtomicLong totalConnections = new AtomicLong();
@@ -32,10 +28,8 @@ public class A4BackendContext {
     if (bytes > 0) {
       if (isRx) {
         rxBytes.add(bytes);
-        rxTx.updateRx(bytes);
       } else {
         txBytes.add(bytes);
-        rxTx.updateTx(bytes);
       }
     }
   }

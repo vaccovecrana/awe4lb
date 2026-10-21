@@ -1,20 +1,19 @@
 import puppeteer from "puppeteer"
 import {existsSync} from "node:fs"
-import {mkdir, writeFile} from "node:fs/promises"
+import {mkdir} from "node:fs/promises"
 import {fileURLToPath} from "node:url"
 import net from "node:net"
 import path from "node:path"
 
 export const UI_URL = (process.env.A4_UI_URL || "http://127.0.0.1:7070").replace(/\/+$/, "")
-export const ARTIFACTS = fileURLToPath(new URL("../build/test-artifacts/", import.meta.url))
-export const VISUALS = fileURLToPath(new URL("../build/test-artifacts/visual/", import.meta.url))
+const VISUALS = fileURLToPath(new URL("../build/test-artifacts/visual/", import.meta.url))
 
 let browser
 
 const request = (url, options = {}, timeoutMs = 8000) =>
   fetch(url, {...options, signal: AbortSignal.timeout(timeoutMs)})
 
-export const uiReachable = async () => {
+const uiReachable = async () => {
   try {
     const res = await request(UI_URL + "/", {method: "GET"}, 2000)
     return res.ok
@@ -29,7 +28,7 @@ export const requireUi = async () => {
   return false
 }
 
-export const apiUrl = (p) => UI_URL + "/api" + p
+const apiUrl = (p) => UI_URL + "/api" + p
 
 export const openPage = async () => {
   if (!browser) {
@@ -77,23 +76,6 @@ export const goto = async (page, urlPath) => {
 
 export const text = (page, sel) => page.$eval(sel, (el) => el.textContent.trim())
 
-export const exists = async (page, sel) => (await page.$(sel)) !== null
-
-export const click = async (page, sel) => {
-  await page.waitForSelector(sel, {timeout: 5000})
-  await page.click(sel)
-}
-
-export const clickButtonByText = async (page, label) => {
-  const handle = await page.evaluateHandle((t) => {
-    const btns = [...document.querySelectorAll("button, a")]
-    return btns.find((b) => b.textContent.trim() === t) || null
-  }, label)
-  const el = handle.asElement()
-  if (!el) throw new Error(`no button/link with text "${label}"`)
-  await el.click()
-}
-
 export const setInput = async (page, sel, value) => {
   await page.waitForSelector(sel, {timeout: 5000})
   await page.$eval(sel, (el, v) => {
@@ -130,14 +112,6 @@ export const waitFor = async (predicate, timeout = 8000, interval = 150) => {
   }
 }
 
-export const dumpArtifacts = async (page, name) => {
-  await mkdir(ARTIFACTS, {recursive: true})
-  await page.screenshot({path: path.join(ARTIFACTS, `${name}.png`), fullPage: true}).catch(() => {
-  })
-  await writeFile(path.join(ARTIFACTS, `${name}.log`), (page.errors || []).join("\n") + "\n").catch(() => {
-  })
-}
-
 export const snap = async (page, name, {fullPage = true} = {}) => {
   await mkdir(VISUALS, {recursive: true})
   const file = path.join(VISUALS, `${name}.png`)
@@ -154,7 +128,7 @@ export const freePort = () => new Promise((resolve, reject) => {
   })
 })
 
-export const startEchoServer = async () => {
+const startEchoServer = async () => {
   const sockets = new Set()
   const server = net.createServer((socket) => {
     sockets.add(socket)
@@ -230,19 +204,13 @@ export const deleteConfig = async (id) => {
   })
 }
 
-export const listConfigs = async () => {
-  const res = await request(apiUrl("/v1/config/list"))
-  if (!res.ok) throw new Error(`list failed (${res.status})`)
-  return res.json()
-}
-
-export const activeConfig = async () => {
+const activeConfig = async () => {
   const res = await request(apiUrl("/v1/config"))
   if (!res.ok) throw new Error(`active config failed (${res.status})`)
   return res.json()
 }
 
-export const activateConfig = async (id) => {
+const activateConfig = async (id) => {
   const res = await request(apiUrl(`/v1/config/select?configId=${encodeURIComponent(id)}`))
   if (!res.ok) throw new Error(`activate failed (${res.status})`)
   return res.json()
@@ -251,12 +219,6 @@ export const activateConfig = async (id) => {
 export const stopConfig = async () => {
   const res = await request(apiUrl("/v1/config/select"))
   if (!res.ok) throw new Error(`stop failed (${res.status})`)
-  return res.json()
-}
-
-export const getStats = async () => {
-  const res = await request(apiUrl("/v1/stats"))
-  if (!res.ok) throw new Error(`stats failed (${res.status})`)
   return res.json()
 }
 

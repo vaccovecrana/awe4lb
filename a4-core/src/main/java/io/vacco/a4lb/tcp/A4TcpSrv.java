@@ -108,10 +108,6 @@ public class A4TcpSrv implements A4Srv {
     return null;
   }
 
-  public int localPort() {
-    return serverSocket.getLocalPort();
-  }
-
   @Override
   public void close() {
     A4Io.close(serverSocket);
