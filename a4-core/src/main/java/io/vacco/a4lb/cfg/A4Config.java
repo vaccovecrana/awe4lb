@@ -29,7 +29,8 @@ public class A4Config {
     return servers;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return id;
   }
 

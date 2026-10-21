@@ -1,6 +1,7 @@
 # Static Host Pools
 
-Static host pools define fixed backend servers for routing traffic, specified in the `pool` object of a match rule. Pools support various load balancing algorithms and are ideal for environments with known, stable backends.
+Static host pools define fixed backend servers for routing traffic, specified in the `pool` object of a match rule.
+Pools support various load balancing algorithms and are ideal for environments with known, stable backends.
 
 ## Structure
 
@@ -35,7 +36,8 @@ match:
 ## Selection algorithms
 
 - `random`: Randomly selects an up host.
-- `weight`: Weighted random selection based on `weight` and `priority`. Use to bias traffic (higher `weight` = more traffic) or failover (lower `priority` first).
+- `weight`: Weighted random selection based on `weight` and `priority`. Use to bias traffic (higher `weight` = more
+  traffic) or failover (lower `priority` first).
 - `roundRobin`: Cycles through hosts in order.
 - `ipHash`: Routes based on client IP hash.
 - `leastConn`: Selects the host with fewest connections.

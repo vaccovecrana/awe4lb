@@ -1,6 +1,9 @@
 package io.vacco.a4lb.util;
 
-import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.cfg.A4Match;
+import io.vacco.a4lb.cfg.A4MatchOp;
+import io.vacco.a4lb.cfg.A4StringOp;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -10,7 +13,7 @@ public class A4MatchOps {
   public static final String OpEquals = "equals";
   public static final String OpEndsWith = "endsWith";
   public static final String OpStartsWith = "startsWith";
-  public static final String[] Ops = new String[] { OpEquals, OpEndsWith, OpStartsWith };
+  public static final String[] Ops = new String[]{OpEquals, OpEndsWith, OpStartsWith};
 
   public static boolean eval(A4StringOp op, String val) {
     if (val == null || op == null) {

@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static j8spec.J8Spec.*;
+import static j8spec.J8Spec.it;
 import static org.junit.Assert.*;
 
 @DefinedOrder
@@ -48,7 +48,7 @@ public class A4LbStatsTest {
   }
 
   private static A4Stats waitFor(Supplier<A4Stats> supplier, Predicate<A4Stats> predicate, long timeoutMs)
-      throws InterruptedException {
+    throws InterruptedException {
     var deadline = System.currentTimeMillis() + timeoutMs;
     A4Stats last = null;
     while (System.currentTimeMillis() < deadline) {

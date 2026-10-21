@@ -5,8 +5,9 @@ import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
 
-import static j8spec.J8Spec.*;
-import static org.junit.Assert.*;
+import static j8spec.J8Spec.it;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)

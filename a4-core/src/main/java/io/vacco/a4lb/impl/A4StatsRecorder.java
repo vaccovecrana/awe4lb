@@ -1,11 +1,13 @@
 package io.vacco.a4lb.impl;
 
-import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.cfg.A4Stats;
+import io.vacco.a4lb.cfg.A4StatsBackend;
+import io.vacco.a4lb.cfg.A4StatsHistory;
+import io.vacco.a4lb.cfg.A4StatsSeries;
 
-import java.util.ArrayList;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 /**

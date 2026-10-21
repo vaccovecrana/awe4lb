@@ -3,7 +3,7 @@ import A4MatchEditor from "@a4ui/components/A4MatchEditor"
 import A4TlsEditor from "@a4ui/components/A4TlsEditor"
 import {emptyMatch, MatchEntry, ServerEntry, ServerTransport} from "@a4ui/yaml"
 
-const TRANSPORTS: {value: ServerTransport, label: string}[] = [
+const TRANSPORTS: { value: ServerTransport, label: string }[] = [
   {value: "tcp", label: "TCP"},
   {value: "tls", label: "TLS termination"},
   {value: "udp", label: "UDP server"},

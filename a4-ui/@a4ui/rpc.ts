@@ -15,12 +15,13 @@ const doJsonIo = <I, O>(url: string, method: string, body: I,
   return fetch(url, options)
     .then(response => Promise
       .resolve(response.json() as O)
-      .catch(cause => Promise.reject({ response, cause }))
+      .catch(cause => Promise.reject({response, cause}))
     )
 }
 
 /* ====================================== */
 /* ============= RPC types ============== */
+
 /* ====================================== */
 
 export interface A4Backend {
@@ -220,7 +221,7 @@ export const apiV1ConfigDelete = (configId: string): Promise<boolean> => {
   }
   path = `${path}?${qParams.toString()}`
   return doJsonIo(path, "DELETE",
-      undefined
+    undefined
     ,
     new Map(),
     undefined
@@ -235,7 +236,7 @@ export const apiV1ConfigGet = (configId: string): Promise<A4Config> => {
   }
   path = `${path}?${qParams.toString()}`
   return doJsonIo(path, "GET",
-      undefined
+    undefined
     ,
     new Map(),
     undefined
@@ -245,7 +246,7 @@ export const apiV1ConfigGet = (configId: string): Promise<A4Config> => {
 export const apiV1ConfigListGet = (): Promise<A4Config[]> => {
   let path = "/api/v1/config/list"
   return doJsonIo(path, "GET",
-      undefined
+    undefined
     ,
     new Map(),
     undefined
@@ -260,7 +261,7 @@ export const apiV1ConfigSelectGet = (configId: string): Promise<A4ConfigState> =
   }
   path = `${path}?${qParams.toString()}`
   return doJsonIo(path, "GET",
-      undefined
+    undefined
     ,
     new Map(),
     undefined
@@ -270,7 +271,7 @@ export const apiV1ConfigSelectGet = (configId: string): Promise<A4ConfigState> =
 export const apiV1StatsGet = (): Promise<A4Stats> => {
   let path = "/api/v1/stats"
   return doJsonIo(path, "GET",
-      undefined
+    undefined
     ,
     new Map(),
     undefined
@@ -285,7 +286,7 @@ export const apiV1ConfigPost = (configId: string, arg1: A4Config): Promise<A4Val
   }
   path = `${path}?${qParams.toString()}`
   return doJsonIo(path, "POST",
-      JSON.stringify(arg1)
+    JSON.stringify(arg1)
     ,
     new Map(),
     "application/json"

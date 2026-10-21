@@ -13,12 +13,12 @@ termination and a REST/UI management surface.
 
 Modules:
 
-| Module | Purpose |
-|---|---|
+| Module    | Purpose                                                                                |
+|-----------|----------------------------------------------------------------------------------------|
 | `a4-core` | Config model, selectors, TCP/UDP proxy, discovery, health checks, validation, counters |
-| `a4-ui` | Murmux/Ronove REST API, static UI hosting, Preact SPA (`@a4ui`), rspack build |
-| `a4-lb` | Packaging module: `a4lb` application + GraalVM native image |
-| `a4-test` | Centralized unit and integration tests |
+| `a4-ui`   | Murmux/Ronove REST API, static UI hosting, Preact SPA (`@a4ui`), rspack build          |
+| `a4-lb`   | Packaging module: `a4lb` application + GraalVM native image                            |
+| `a4-test` | Centralized unit and integration tests                                                 |
 
 Configuration is stored as JSON on disk, but the UI edits a YAML document and
 keeps it in sync with a structured form. The active configuration owns all

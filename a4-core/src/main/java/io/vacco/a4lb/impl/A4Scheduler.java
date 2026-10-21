@@ -2,10 +2,14 @@ package io.vacco.a4lb.impl;
 
 import am.ik.yavi.jsr305.NonNull;
 import io.vacco.a4lb.util.A4Io;
-import org.slf4j.*;
-import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.function.*;
+import java.util.function.Consumer;
 
 import static io.vacco.a4lb.util.A4Logging.onError;
 
@@ -91,7 +95,8 @@ public class A4Scheduler implements ThreadFactory {
     log.info("{} - stopped", this.id);
   }
 
-  @Override public Thread newThread(@NonNull Runnable r) {
+  @Override
+  public Thread newThread(@NonNull Runnable r) {
     var t = new Thread(r);
     t.setName(String.format("a4lb-%s-%x", this.id, t.hashCode()));
     t.setDaemon(true);

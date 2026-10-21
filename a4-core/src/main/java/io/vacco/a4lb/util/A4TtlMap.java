@@ -26,8 +26,13 @@ public class A4TtlMap<K, V> {
       this.entry = entry;
     }
 
-    public long getExpireBy() { return expireBy; }
-    public V getEntry() { return entry; }
+    public long getExpireBy() {
+      return expireBy;
+    }
+
+    public V getEntry() {
+      return entry;
+    }
   }
 
   private final Map<K, CacheEntry<V>> cache;

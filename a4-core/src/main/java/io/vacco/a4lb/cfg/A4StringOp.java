@@ -39,7 +39,8 @@ public class A4StringOp {
       : "?";
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return String.format("%s(%s)", opId(), opVal());
   }
 

@@ -7,9 +7,9 @@ import java.util.List;
 public class A4ServerTls {
 
   public String[] protocols, ciphers;
-  public A4Tls    base;
+  public A4Tls base;
 
-  public A4ServerTls protocols(String ... versions) {
+  public A4ServerTls protocols(String... versions) {
     this.protocols = versions;
     return this;
   }
@@ -18,7 +18,7 @@ public class A4ServerTls {
     return protocols == null ? Collections.emptyList() : Arrays.asList(protocols);
   }
 
-  public A4ServerTls ciphers(String ... ciphers) {
+  public A4ServerTls ciphers(String... ciphers) {
     this.ciphers = ciphers;
     return this;
   }

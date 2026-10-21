@@ -6,12 +6,12 @@ public class A4RxTx {
   public static final long UpdateTimeMs = 500;
 
   public A4Avg
-      rxAvg = new A4Avg().init(AvgSize),
-      txAvg = new A4Avg().init(AvgSize);
+    rxAvg = new A4Avg().init(AvgSize),
+    txAvg = new A4Avg().init(AvgSize);
 
   public long
-      rxTimeMs = System.currentTimeMillis(),
-      txTimeMs = System.currentTimeMillis();
+    rxTimeMs = System.currentTimeMillis(),
+    txTimeMs = System.currentTimeMillis();
 
   public synchronized boolean canUpdate(long t0, long t1) {
     return (t1 - t0) >= UpdateTimeMs;

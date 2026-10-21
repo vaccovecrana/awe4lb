@@ -12,7 +12,7 @@ interface Param {
   mono?: boolean
 }
 
-const addParam = (params: Param[], label: string, value: any, options?: {wide?: boolean, mono?: boolean}) => {
+const addParam = (params: Param[], label: string, value: any, options?: { wide?: boolean, mono?: boolean }) => {
   if (value === undefined || value === null || value === "") {
     return
   }
@@ -73,7 +73,7 @@ const matchParamsOf = (match: A4Match): Param[] => {
   return params
 }
 
-const A4Params = (props: {params: Param[]}) => (
+const A4Params = (props: { params: Param[] }) => (
   <div class="a4-params">
     {props.params.map((p, idx) => (
       <div class={`a4-param${p.wide ? " a4-param--wide" : ""}`} key={`${p.label}-${idx}`} title={p.value}>
@@ -84,7 +84,7 @@ const A4Params = (props: {params: Param[]}) => (
   </div>
 )
 
-const A4Dashboard = (props: {default?: boolean, path?: string}) => {
+const A4Dashboard = (props: { default?: boolean, path?: string }) => {
   const {dispatch} = useContext(A4Context)
   const [config, setConfig] = useState<A4Config>()
   const [loaded, setLoaded] = useState(false)
@@ -192,20 +192,20 @@ const A4Dashboard = (props: {default?: boolean, path?: string}) => {
                             <div class="a4-table-wrap">
                               <table class="a4-table a4-table--compact">
                                 <thead>
-                                  <tr>
-                                    <th>Host / Port</th>
-                                    <th>Weight / Priority</th>
-                                    <th>State</th>
-                                  </tr>
+                                <tr>
+                                  <th>Host / Port</th>
+                                  <th>Weight / Priority</th>
+                                  <th>State</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                  {hosts.map((bk, bIdx) => (
-                                    <tr key={`${bk.addr?.host}:${bk.addr?.port}-${bIdx}`}>
-                                      <td class="a4-mono">{bk.addr?.host}:{bk.addr?.port}</td>
-                                      <td>{bk.weight ?? "-"} / {bk.priority ?? "-"}</td>
-                                      <td><A4StatusPill state={bk.state}/></td>
-                                    </tr>
-                                  ))}
+                                {hosts.map((bk, bIdx) => (
+                                  <tr key={`${bk.addr?.host}:${bk.addr?.port}-${bIdx}`}>
+                                    <td class="a4-mono">{bk.addr?.host}:{bk.addr?.port}</td>
+                                    <td>{bk.weight ?? "-"} / {bk.priority ?? "-"}</td>
+                                    <td><A4StatusPill state={bk.state}/></td>
+                                  </tr>
+                                ))}
                                 </tbody>
                               </table>
                             </div>

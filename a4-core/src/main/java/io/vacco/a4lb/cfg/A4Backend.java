@@ -26,21 +26,24 @@ public class A4Backend {
     return this;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return String.format(
-        "%s[w: %d, p: %d, s: %s]",
-        addr, weight, priority, state
+      "%s[w: %d, p: %d, s: %s]",
+      addr, weight, priority, state
     );
   }
 
-  @Override public boolean equals(Object obj) {
+  @Override
+  public boolean equals(Object obj) {
     if (obj instanceof A4Backend) {
       return obj.hashCode() == this.hashCode();
     }
     return false;
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     return addr != null ? addr.hashCode() : 0;
   }
 

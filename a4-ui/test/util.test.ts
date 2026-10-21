@@ -1,6 +1,14 @@
 import {test} from "node:test"
 import assert from "node:assert/strict"
-import {formatBytes, formatDuration, formatRate, numOrUndefined, splitArgs, splitList, statusClass} from "../@a4ui/util.ts"
+import {
+  formatBytes,
+  formatDuration,
+  formatRate,
+  numOrUndefined,
+  splitArgs,
+  splitList,
+  statusClass
+} from "../@a4ui/util.ts"
 
 test("splits command arguments with quotes", () => {
   assert.deepEqual(splitArgs("-z -v $host $port"), ["-z", "-v", "$host", "$port"])

@@ -4,12 +4,18 @@ import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.sel.A4BackendContext;
 import io.vacco.a4lb.sel.A4Selector;
-import io.vacco.a4lb.tcp.*;
+import io.vacco.a4lb.tcp.A4TcpSrv;
 import io.vacco.a4lb.udp.A4UdpSrv;
-import io.vacco.a4lb.util.*;
-import org.slf4j.*;
+import io.vacco.a4lb.util.A4Io;
+import io.vacco.a4lb.util.A4Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.String.format;
@@ -18,9 +24,9 @@ public class A4Lb implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(A4Lb.class);
 
-  public  final A4Config    config;
+  public final A4Config config;
   private final A4Scheduler scheduler;
-  private final Gson        gson;
+  private final Gson gson;
 
   private final Map<String, A4Selector> selectors = new LinkedHashMap<>();
   private A4StatsRecorder statsRecorder;
@@ -117,7 +123,8 @@ public class A4Lb implements Closeable {
       scheduler.scheduleFixed(
         format("%s-stats", config.id),
         A4StatsRecorder.DefaultIntervalMs, TimeUnit.MILLISECONDS,
-        () -> statsRecorder.tick(), r -> {}
+        () -> statsRecorder.tick(), r -> {
+        }
       );
       this.scheduler.start();
       log.info("{} - started", config.id);
@@ -184,7 +191,8 @@ public class A4Lb implements Closeable {
     sb.txBytes = ctx.txBytes();
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     this.statsRecorder = null;
     this.selectors.clear();
     this.scheduler.stop();

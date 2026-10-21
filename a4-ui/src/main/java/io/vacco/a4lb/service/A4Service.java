@@ -1,12 +1,21 @@
 package io.vacco.a4lb.service;
 
 import com.google.gson.Gson;
-import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.cfg.A4Config;
+import io.vacco.a4lb.cfg.A4ConfigState;
+import io.vacco.a4lb.cfg.A4Stats;
+import io.vacco.a4lb.cfg.A4Validation;
 import io.vacco.a4lb.impl.A4Lb;
-import io.vacco.a4lb.util.*;
+import io.vacco.a4lb.util.A4Configs;
+import io.vacco.a4lb.util.A4Io;
+import io.vacco.a4lb.util.A4Valid;
+
 import java.io.Closeable;
 import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
@@ -66,7 +75,8 @@ public class A4Service implements Closeable {
     return lockInstanceAnd(() -> instance != null ? instance.stats() : new A4Stats());
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     A4Io.close(instance);
   }
 

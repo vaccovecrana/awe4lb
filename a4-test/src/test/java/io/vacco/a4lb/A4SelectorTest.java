@@ -8,7 +8,7 @@ import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
 
-import static j8spec.J8Spec.*;
+import static j8spec.J8Spec.it;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
@@ -17,9 +17,9 @@ public class A4SelectorTest {
     it("Selects backend matches", () -> {
       var cfg = A4Configs.loadFromOrFail(A4SelectorTest.class.getResource("/test-config-00.json"), new Gson());
       cfg.servers.stream()
-          .flatMap(srv -> srv.match.stream())
-          .flatMap(m -> m.pool.hosts.stream())
-          .forEach(bk -> bk.state(A4BackendState.Up));
+        .flatMap(srv -> srv.match.stream())
+        .flatMap(m -> m.pool.hosts.stream())
+        .forEach(bk -> bk.state(A4BackendState.Up));
       var matches = cfg.servers.get(3).match;
       var sel = new A4Selector(matches);
       var host = "172.16.0.111";

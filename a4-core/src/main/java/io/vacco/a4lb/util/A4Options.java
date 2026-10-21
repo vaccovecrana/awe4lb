@@ -2,6 +2,7 @@ package io.vacco.a4lb.util;
 
 import io.vacco.a4lb.cfg.A4Format;
 import io.vacco.a4lb.cfg.A4Sock;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,10 +11,10 @@ import java.util.Map;
 
 public class A4Options {
 
-  public enum LogLevel { error, warning, info, debug, trace }
+  public enum LogLevel {error, warning, info, debug, trace}
 
   public static final String DefaultHost = "127.0.0.1";
-  public static final int    DefaultPort = 7070;
+  public static final int DefaultPort = 7070;
 
   public static final String
     kConfig = "--config",
@@ -84,7 +85,8 @@ public class A4Options {
     return A4Valid.validateOrFail(opt);
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return String.format(
       "[root: %s, api: %s, logFormat: %s, logLevel: %s]",
       root != null ? root.getAbsolutePath() : "?",

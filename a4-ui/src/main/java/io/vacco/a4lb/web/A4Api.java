@@ -7,15 +7,18 @@ import io.vacco.murmux.Murmux;
 import io.vacco.murmux.http.MxStatus;
 import io.vacco.murmux.middleware.MxRouter;
 import io.vacco.ronove.murmux.RvMxAdapter;
-import org.slf4j.*;
-import java.io.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Closeable;
+import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static java.lang.String.format;
-import static java.lang.Integer.toHexString;
 import static io.vacco.a4lb.util.A4Logging.onError;
+import static java.lang.Integer.toHexString;
+import static java.lang.String.format;
 
 public class A4Api implements Closeable {
 
@@ -51,7 +54,8 @@ public class A4Api implements Closeable {
     return this;
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     mx.stop();
     apiExecutor.shutdownNow();
     log.info("ui - stopped");

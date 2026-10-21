@@ -6,7 +6,7 @@ import {uiConfigEditFmt, uiRoot} from "@a4ui/util"
 import {A4IcnAdd, A4IcnPlay, A4IcnStop, A4IconEdit, A4Inspect} from "@a4ui/components/A4Icons"
 import A4StatusPill from "@a4ui/components/A4StatusPill"
 
-const A4Configs = (props: {path?: string}) => {
+const A4Configs = (props: { path?: string }) => {
   const {dispatch} = useContext(A4Context)
   const [active, setActive] = useState<A4Config>()
   const [configs, setConfigs] = useState<A4Config[]>([])
@@ -104,7 +104,8 @@ const A4Configs = (props: {path?: string}) => {
                       <a class="a4-pill" href={uiConfigEditFmt(cfg.id || "")}>
                         <A4IconEdit maxHeight={14}/> Edit
                       </a>
-                      <button class="a4-pill" data-action="toggle-active" type="button" onClick={() => toggleActive(cfg)}>
+                      <button class="a4-pill" data-action="toggle-active" type="button"
+                              onClick={() => toggleActive(cfg)}>
                         {isActive ? <A4IcnStop maxHeight={14}/> : <A4IcnPlay maxHeight={14}/>}
                         {isActive ? "Stop" : "Activate"}
                       </button>

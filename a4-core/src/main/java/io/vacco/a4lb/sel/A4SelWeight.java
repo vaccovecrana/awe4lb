@@ -1,7 +1,11 @@
 package io.vacco.a4lb.sel;
 
-import io.vacco.a4lb.cfg.*;
-import java.util.*;
+import io.vacco.a4lb.cfg.A4Backend;
+import io.vacco.a4lb.cfg.A4Pool;
+
+import java.util.List;
+import java.util.Random;
+import java.util.TreeMap;
 
 import static java.util.stream.Collectors.groupingBy;
 

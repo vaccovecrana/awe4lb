@@ -7,7 +7,7 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static j8spec.J8Spec.*;
+import static j8spec.J8Spec.it;
 import static org.junit.Assert.*;
 
 @DefinedOrder
@@ -15,7 +15,8 @@ import static org.junit.Assert.*;
 public class A4TtlMapTest {
   static {
     it("Evicts the oldest entry when the map is full", () -> {
-      var map = new A4TtlMap<String, String>(2, v -> {});
+      var map = new A4TtlMap<String, String>(2, v -> {
+      });
       map.put("a", "1", -1);
       map.put("b", "2", -1);
       map.put("c", "3", -1);
@@ -37,7 +38,8 @@ public class A4TtlMapTest {
     });
 
     it("Refreshes an existing key without duplicating it", () -> {
-      var map = new A4TtlMap<String, String>(2, v -> {});
+      var map = new A4TtlMap<String, String>(2, v -> {
+      });
       map.put("a", "1", -1);
       map.put("a", "2", -1);
       assertEquals(1, map.size());
@@ -48,7 +50,8 @@ public class A4TtlMapTest {
     });
 
     it("Clears all entries and resets the size", () -> {
-      var map = new A4TtlMap<String, String>(4, v -> {});
+      var map = new A4TtlMap<String, String>(4, v -> {
+      });
       map.put("a", "1", -1);
       map.put("b", "2", -1);
       map.clear();
@@ -57,7 +60,8 @@ public class A4TtlMapTest {
     });
 
     it("Removes entries idempotently", () -> {
-      var map = new A4TtlMap<String, String>(4, v -> {});
+      var map = new A4TtlMap<String, String>(4, v -> {
+      });
       map.put("a", "1", -1);
       assertEquals("1", map.removeAndGet("a"));
       assertNull(map.removeAndGet("a"));
@@ -65,8 +69,10 @@ public class A4TtlMapTest {
     });
 
     it("Rejects invalid configuration and values", () -> {
-      assertThrows(IllegalArgumentException.class, () -> new A4TtlMap<String, String>(0, v -> {}));
-      var map = new A4TtlMap<String, String>(1, v -> {});
+      assertThrows(IllegalArgumentException.class, () -> new A4TtlMap<String, String>(0, v -> {
+      }));
+      var map = new A4TtlMap<String, String>(1, v -> {
+      });
       assertThrows(IllegalArgumentException.class, () -> map.put(null, "v", -1));
       assertThrows(IllegalArgumentException.class, () -> map.put("k", null, -1));
       assertThrows(IllegalArgumentException.class, () -> map.get(null));

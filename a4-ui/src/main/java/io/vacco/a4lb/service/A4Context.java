@@ -1,21 +1,24 @@
 package io.vacco.a4lb.service;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.vacco.a4lb.cfg.A4Format;
-import io.vacco.a4lb.util.*;
+import io.vacco.a4lb.util.A4Io;
+import io.vacco.a4lb.util.A4Options;
 import io.vacco.a4lb.web.A4Api;
-import java.io.Closeable;
-import java.util.*;
 
+import java.io.Closeable;
+import java.util.Objects;
+
+import static io.vacco.a4lb.util.A4Configs.loadFromOrFail;
 import static io.vacco.a4lb.util.A4Logging.onError;
-import static io.vacco.a4lb.util.A4Configs.*;
 import static io.vacco.shax.logging.ShOption.*;
 import static java.lang.String.join;
 
 public class A4Context implements Closeable {
 
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-  public  final A4Service service = new A4Service(gson);
+  public final A4Service service = new A4Service(gson);
 
   private A4Api api;
 
@@ -25,13 +28,13 @@ public class A4Context implements Closeable {
     setSysProp(IO_VACCO_SHAX_LOGLEVEL, fl.logLevel.toString());
     var log = org.slf4j.LoggerFactory.getLogger(A4Service.class);
     log.info(
-        join("\n", "",
-            "                       __ __  ____  ",
-            "  ____ __      _____  / // / / / /_ ",
-            " / __ `/ | /| / / _ \\/ // /_/ / __ \\",
-            "/ /_/ /| |/ |/ /  __/__  __/ / /_/ /",
-            "\\__,_/ |__/|__/\\___/  /_/ /_/_.___/ "
-        )
+      join("\n", "",
+        "                       __ __  ____  ",
+        "  ____ __      _____  / // / / / /_ ",
+        " / __ `/ | /| / / _ \\/ // /_/ / __ \\",
+        "/ /_/ /| |/ |/ /  __/__  __/ / /_/ /",
+        "\\__,_/ |__/|__/\\___/  /_/ /_/_.___/ "
+      )
     );
     try {
       var root = Objects.requireNonNull(fl.root);
@@ -46,7 +49,8 @@ public class A4Context implements Closeable {
     }
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     A4Io.close(service);
     A4Io.close(api);
   }

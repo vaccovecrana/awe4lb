@@ -3,13 +3,20 @@ package io.vacco.a4lb.udp;
 import io.vacco.a4lb.cfg.A4Server;
 import io.vacco.a4lb.impl.A4Srv;
 import io.vacco.a4lb.sel.A4Selector;
-import io.vacco.a4lb.util.*;
-import org.slf4j.*;
-import java.io.*;
-import java.net.*;
+import io.vacco.a4lb.util.A4Io;
+import io.vacco.a4lb.util.A4TtlMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
-import java.util.*;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 import static io.vacco.a4lb.util.A4Logging.onError;
@@ -18,11 +25,11 @@ public class A4UdpSrv implements A4Srv {
 
   public static final Logger log = LoggerFactory.getLogger(A4UdpSrv.class);
 
-  private final Selector        selector;
+  private final Selector selector;
   private final DatagramChannel channel;
-  private final A4Server        srvConfig;
-  private final A4Selector      bkSel;
-  private final ByteBuffer      buff;
+  private final A4Server srvConfig;
+  private final A4Selector bkSel;
+  private final ByteBuffer buff;
 
   private final A4TtlMap<String, A4UdpIo> sessions;
 
@@ -103,13 +110,15 @@ public class A4UdpSrv implements A4Srv {
     };
   }
 
-  @Override public Void call() {
+  @Override
+  public Void call() {
     while (true) {
       update();
     }
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     A4Io.close(channel);
     A4Io.close(selector);
     for (var e : sessions.values()) {

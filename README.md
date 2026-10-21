@@ -4,13 +4,16 @@
 
 ![a4lb-02](./docs/img/a4lb-02.png)
 
-It supports TLS termination, backend selection via various algorithms (e.g., round-robin, weighted, IP hash, least connections), dynamic discovery (HTTP, exec, Kubernetes), health checks, and UDP proxying. Configurations use a simple JSON-based DSL for defining servers, matching rules, pools, and discovery mechanisms.
+It supports TLS termination, backend selection via various algorithms (e.g., round-robin, weighted, IP hash, least
+connections), dynamic discovery (HTTP, exec, Kubernetes), health checks, and UDP proxying. Configurations use a simple
+JSON-based DSL for defining servers, matching rules, pools, and discovery mechanisms.
 
 It includes a web-based UI for management and an API for runtime operations.
 
 ## Purpose
 
-Incoming TCP/UDP traffic gets distributed across backend servers to improve scalability, reliability, and performance. Key use cases include:
+Incoming TCP/UDP traffic gets distributed across backend servers to improve scalability, reliability, and performance.
+Key use cases include:
 
 - TLS-termination proxies for HTTP services.
 - Load balancing for databases, APIs, or custom protocols.
@@ -26,11 +29,13 @@ It prioritizes simplicity, low overhead, and extensibility while handling produc
 - **Discovery**: Static hosts, HTTP endpoints, external commands, Kubernetes API.
 - **Health Checks**: Exec-based (e.g., ping, nc) with configurable intervals/timeouts.
 - **Management**: REST API for config CRUD/select, web UI with a bidirectional YAML/form config editor.
-- **Metrics**: Per-backend RX/TX totals, throughput rates, connection counts and a server-side five-minute history ring buffer.
+- **Metrics**: Per-backend RX/TX totals, throughput rates, connection counts and a server-side five-minute history ring
+  buffer.
 
 ## Quick Start
 
-Grab the [latest release](https://github.com/vaccovecrana/awe4lb/releases) or [docker image](https://github.com/vaccovecrana/awe4lb/pkgs/container/awe4lb)
+Grab the [latest release](https://github.com/vaccovecrana/awe4lb/releases)
+or [docker image](https://github.com/vaccovecrana/awe4lb/pkgs/container/awe4lb)
 
 Run the load balancer:
 
@@ -48,7 +53,8 @@ docker run -d --name awe4lb \
   --logLevel=info --config=/etc/a4lb
 ```
 
-> Note: in both cases, the user executing `a4lb` must be able to open any ports that will be used for front-end load balancing (i.e. port `443/tcp` for TLS termination, port `22/tcp` for SSH proxying, or any other services you define).
+> Note: in both cases, the user executing `a4lb` must be able to open any ports that will be used for front-end load
+> balancing (i.e. port `443/tcp` for TLS termination, port `22/tcp` for SSH proxying, or any other services you define).
 
 Open `http://localhost:7070` in a browser for config management.
 
@@ -56,13 +62,19 @@ Open `http://localhost:7070` in a browser for config management.
 
 The Preact UI is bundled with rspack and provides three views:
 
-- **Status**: the active configuration, its servers, matches, TLS/UDP settings, discovery, health checks and live backend state.
-- **Configs**: create, edit, activate, stop and delete configurations. The editor keeps a structured form and a YAML document in sync in both directions, reports YAML syntax errors with line/column information, and surfaces backend validation errors inline. `Ctrl/Cmd+S` saves.
-- **Traffic**: live per-backend RX/TX throughput charts and counters, rendered from a server-side ring buffer sampled once per second.
+- **Status**: the active configuration, its servers, matches, TLS/UDP settings, discovery, health checks and live
+  backend state.
+- **Configs**: create, edit, activate, stop and delete configurations. The editor keeps a structured form and a YAML
+  document in sync in both directions, reports YAML syntax errors with line/column information, and surfaces backend
+  validation errors inline. `Ctrl/Cmd+S` saves.
+- **Traffic**: live per-backend RX/TX throughput charts and counters, rendered from a server-side ring buffer sampled
+  once per second.
 
 The REST API also exposes the raw snapshot at `GET /api/v1/stats`.
 
-Using the UI, you can define load balancer configurations. In this example, we have 3 front servers. The first proxying HTTP connections, the second terminating HTTPS connections to HTTP backends, and the third proxying UDP connections via sticky sessions.
+Using the UI, you can define load balancer configurations. In this example, we have 3 front servers. The first proxying
+HTTP connections, the second terminating HTTPS connections to HTTP backends, and the third proxying UDP connections via
+sticky sessions.
 
 ```yaml
 id: test-config-00
@@ -105,7 +117,8 @@ servers:
 
 For in-depth configuration options, [read the docs](https://vaccovecrana.github.io/awe4lb).
 
-For an in-depth example load balancing configuration, see [test-config-00](./a4-test/src/test/resources/test-config-00.json).
+For an in-depth example load balancing configuration,
+see [test-config-00](./a4-test/src/test/resources/test-config-00.json).
 
 ## Configuration notes
 
@@ -114,8 +127,11 @@ For an in-depth example load balancing configuration, see [test-config-00](./a4-
 
 ## Security considerations
 
-- Do not allow public access to the REST API, since it allows for full management. Expose it only within a trusted network perimeter.
-- Most applications and use cases should work fine with the default TCP buffer size. However, applications which stream large amounts of data should make sure that the underlying hardware has enough memory capacity to handle backpressure from either clients or backends.
+- Do not allow public access to the REST API, since it allows for full management. Expose it only within a trusted
+  network perimeter.
+- Most applications and use cases should work fine with the default TCP buffer size. However, applications which stream
+  large amounts of data should make sure that the underlying hardware has enough memory capacity to handle backpressure
+  from either clients or backends.
 
 ## Development
 
@@ -204,15 +220,18 @@ Hello there! I'm Dr. Casper Darling, head of research at the Federal Bureau of C
 
 Now, listen closely, because what we have here with `awe4lb` is nothing short of remarkable.
 
-It's a load balancer, yes, but think of it as a Control Point in the digital realm—routing TCP and UDP traffic through sockets that act like our very own Thresholds!
+It's a load balancer, yes, but think of it as a Control Point in the digital realm—routing TCP and UDP traffic through
+sockets that act like our very own Thresholds!
 
-These altered streams of data, infused with the energies of everyday networks, are balanced across backends with algorithms as precise as binding an Object of Power.
+These altered streams of data, infused with the energies of everyday networks, are balanced across backends with
+algorithms as precise as binding an Object of Power.
 
 We've got discovery methods pulling from HTTP, commands, even Kubernetes—containing the chaos, keeping it stable.
 
 But remember, every connection could be an intrusion, a potential AWE waiting to unfold.
 
-As for me, well... I've been exposed to something profound, a resonance that's changing everything. This is my final presentation on the matter.
+As for me, well... I've been exposed to something profound, a resonance that's changing everything. This is my final
+presentation on the matter.
 
 Use `awe4lb` wisely; the Bureau's depending on it.
 

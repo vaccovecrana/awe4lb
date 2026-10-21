@@ -1,6 +1,7 @@
 package io.vacco.a4lb;
 
-import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.cfg.A4Stats;
+import io.vacco.a4lb.cfg.A4StatsBackend;
 import io.vacco.a4lb.impl.A4StatsRecorder;
 import io.vacco.a4lb.sel.A4BackendContext;
 import j8spec.annotation.DefinedOrder;
@@ -9,8 +10,9 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import static j8spec.J8Spec.*;
-import static org.junit.Assert.*;
+import static j8spec.J8Spec.it;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)

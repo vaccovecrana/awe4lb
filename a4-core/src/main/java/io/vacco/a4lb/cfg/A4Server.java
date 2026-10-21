@@ -28,7 +28,7 @@ public class A4Server {
     return this;
   }
 
-  public A4Server match(A4Match ... match) {
+  public A4Server match(A4Match... match) {
     this.match = new ArrayList<>(Arrays.asList(match));
     return this;
   }

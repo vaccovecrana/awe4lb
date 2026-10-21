@@ -3,14 +3,17 @@ package io.vacco.a4lb.tcp;
 import io.vacco.a4lb.cfg.A4Match;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.A4Io;
-import org.slf4j.*;
-import javax.net.ssl.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.SNIMatcher;
+import javax.net.ssl.SNIServerName;
 import java.io.Closeable;
-import java.util.*;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import static io.vacco.a4lb.util.A4Logging.*;
+import static io.vacco.a4lb.util.A4Logging.rootCauseOf;
 import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
@@ -19,16 +22,16 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
-  private A4Selector    bkSel;
-  private A4TcpIo       client, backend;
+  private A4Selector bkSel;
+  private A4TcpIo client, backend;
 
-  private String        tlsSni;
-  private A4Match       tlsMatch;
+  private String tlsSni;
+  private A4Match tlsMatch;
   private final boolean tlsClient;
 
   private final AtomicBoolean stop = new AtomicBoolean(false);
   private Consumer<A4TcpSess> onInit, onTearDown;
-  private Thread              clt, bkt;
+  private Thread clt, bkt;
 
   public A4TcpSess(A4Selector bkSel,
                    Consumer<A4TcpSess> onInit,
@@ -84,7 +87,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     this.onInit.accept(this);
   }
 
-  @Override public boolean matches(SNIServerName sn) {
+  @Override
+  public boolean matches(SNIServerName sn) {
     var sni = A4TlsCerts.sniOf(sn).orElseThrow();
     var op = bkSel.matches(client.socket, sni);
     if (op.isPresent()) {
@@ -213,7 +217,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     return this;
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     A4Io.close(client);
     if (clt != null) {
       clt.interrupt();

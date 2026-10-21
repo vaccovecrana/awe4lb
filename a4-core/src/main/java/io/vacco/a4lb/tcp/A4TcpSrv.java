@@ -4,12 +4,19 @@ import io.vacco.a4lb.cfg.A4Server;
 import io.vacco.a4lb.impl.A4Srv;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.A4Io;
-import org.slf4j.*;
-import javax.net.ssl.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
 import java.io.IOException;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static io.vacco.a4lb.util.A4Logging.onError;
 
@@ -73,7 +80,8 @@ public class A4TcpSrv implements A4Srv {
     }
   }
 
-  @Override public Void call() {
+  @Override
+  public Void call() {
     while (!serverSocket.isClosed()) {
       Socket clientSocket;
       try {
@@ -104,7 +112,8 @@ public class A4TcpSrv implements A4Srv {
     return serverSocket.getLocalPort();
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     A4Io.close(serverSocket);
     int sessCount = this.sessions.size();
     this.sessions.values().forEach(A4Io::close);

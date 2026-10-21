@@ -13,7 +13,8 @@ public class A4Validation {
     return v;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return message != null ? message : "validation[?]";
   }
 

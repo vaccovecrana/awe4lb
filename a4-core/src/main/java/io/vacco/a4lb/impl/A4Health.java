@@ -1,9 +1,13 @@
 package io.vacco.a4lb.impl;
 
-import io.vacco.a4lb.cfg.*;
-import org.slf4j.*;
-import java.util.*;
-import java.util.concurrent.*;
+import io.vacco.a4lb.cfg.A4Backend;
+import io.vacco.a4lb.cfg.A4BackendState;
+import io.vacco.a4lb.cfg.A4HealthCheck;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
+import java.util.concurrent.Callable;
 
 import static io.vacco.a4lb.util.A4Logging.onError;
 
@@ -21,7 +25,8 @@ public class A4Health implements Callable<A4BackendState> {
     this.backend = Objects.requireNonNull(backend);
   }
 
-  @Override public A4BackendState call() {
+  @Override
+  public A4BackendState call() {
     try {
       return A4HealthState.stateOf(serverId, backend, healthCheck);
     } catch (Exception e) {

@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static j8spec.J8Spec.*;
+import static j8spec.J8Spec.it;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)
@@ -29,7 +29,7 @@ public class A4DiscoverK8sTest {
   }
 
   static {
-    it("Finds K8s service backends",  () -> {
+    it("Finds K8s service backends", () -> {
       var jsonIdx = new HashMap<String, String>();
       jsonIdx.put("/api/v1/namespaces/grayhawk/services/cockroachdb", load("/discover/k8s-service.json"));
       jsonIdx.put("/api/v1/namespaces/grayhawk/pods?labelSelector=app=cockroachdb", load("/discover/k8s-pod-list.json"));

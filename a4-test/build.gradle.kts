@@ -14,8 +14,8 @@ configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
 
 tasks.withType<JacocoReport> {
   sourceSets(
-      project(":a4-core").sourceSets.main.get(),
-      project(":a4-ui").sourceSets.main.get(),
+    project(":a4-core").sourceSets.main.get(),
+    project(":a4-ui").sourceSets.main.get(),
   )
 }
 

@@ -1,6 +1,7 @@
 # Health Checks
 
-Health checks monitor backend availability, updating the `state` (`Up`, `Down`, `Unknown`) of hosts in a `pool`. Defined in the `healthCheck` field of a match rule, they ensure traffic routes only to healthy backends.
+Health checks monitor backend availability, updating the `state` (`Up`, `Down`, `Unknown`) of hosts in a `pool`. Defined
+in the `healthCheck` field of a match rule, they ensure traffic routes only to healthy backends.
 
 ## Structure
 

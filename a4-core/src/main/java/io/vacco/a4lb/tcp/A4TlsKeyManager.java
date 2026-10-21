@@ -1,12 +1,20 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Tls;
-import javax.net.ssl.*;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.X509ExtendedKeyManager;
 import java.io.*;
 import java.net.Socket;
-import java.security.*;
-import java.security.cert.*;
+import java.security.KeyFactory;
+import java.security.KeyStore;
+import java.security.Principal;
+import java.security.PrivateKey;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 
@@ -115,30 +123,36 @@ public class A4TlsKeyManager extends X509ExtendedKeyManager {
     }
   }
 
-  @Override public String chooseEngineServerAlias(String keyType, Principal[] issuers, SSLEngine engine) {
+  @Override
+  public String chooseEngineServerAlias(String keyType, Principal[] issuers, SSLEngine engine) {
     return defaultKeyManager.chooseEngineServerAlias(keyType, issuers, null);
   }
 
-  @Override public PrivateKey getPrivateKey(String alias) {
+  @Override
+  public PrivateKey getPrivateKey(String alias) {
     if (matchKeys.containsKey(alias)) {
       return matchKeys.get(alias).getPrivateKey();
     }
     return defaultKeyManager.getPrivateKey(alias);
   }
 
-  @Override public String[] getClientAliases(String keyType, Principal[] issuers) {
+  @Override
+  public String[] getClientAliases(String keyType, Principal[] issuers) {
     return defaultKeyManager.getClientAliases(keyType, issuers);
   }
 
-  @Override public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket) {
+  @Override
+  public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket) {
     return defaultKeyManager.chooseClientAlias(keyType, issuers, socket);
   }
 
-  @Override public String[] getServerAliases(String keyType, Principal[] issuers) {
+  @Override
+  public String[] getServerAliases(String keyType, Principal[] issuers) {
     return defaultKeyManager.getServerAliases(keyType, issuers);
   }
 
-  @Override public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
+  @Override
+  public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
     if (socket instanceof SSLSocket sslSocket) {
       var params = sslSocket.getSSLParameters();
       for (var matcher : params.getSNIMatchers()) {
@@ -156,7 +170,8 @@ public class A4TlsKeyManager extends X509ExtendedKeyManager {
     return defaultKeyManager.chooseServerAlias(keyType, issuers, socket);
   }
 
-  @Override public X509Certificate[] getCertificateChain(String alias) {
+  @Override
+  public X509Certificate[] getCertificateChain(String alias) {
     if (matchKeys.containsKey(alias)) {
       return (X509Certificate[]) matchKeys.get(alias).getCertificateChain();
     }

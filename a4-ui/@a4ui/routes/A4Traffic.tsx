@@ -1,10 +1,17 @@
 import {useContext, useEffect, useMemo, useState} from "preact/hooks"
 import {
-  CategoryScale, Chart as ChartJS, Filler, Legend, LinearScale, LineElement, PointElement, Tooltip
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Tooltip
 } from "chart.js"
 import {Line} from "react-chartjs-2"
 import {A4Context, dedupeError, setActiveConfig} from "@a4ui/store"
-import {apiV1StatsGet, A4Stats} from "@a4ui/rpc"
+import {A4Stats, apiV1StatsGet} from "@a4ui/rpc"
 import {messageOf} from "@a4ui/api"
 import {formatBytes, formatNumber, formatRate, formatTime, statusClass} from "@a4ui/util"
 
@@ -13,7 +20,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, 
 const RX_COLOR = "#88c0d0"
 const TX_COLOR = "#d08770"
 
-const A4Traffic = (props: {path?: string}) => {
+const A4Traffic = (props: { path?: string }) => {
   const {dispatch} = useContext(A4Context)
   const [stats, setStats] = useState<A4Stats>()
   const [selected, setSelected] = useState("all")
@@ -233,36 +240,36 @@ const A4Traffic = (props: {path?: string}) => {
           <div class="a4-table-wrap">
             <table class="a4-table">
               <thead>
-                <tr>
-                  <th>Server</th>
-                  <th>Match</th>
-                  <th>Backend</th>
-                  <th>State</th>
-                  <th class="a4-num">Active</th>
-                  <th class="a4-num">Total conn.</th>
-                  <th class="a4-num">RX</th>
-                  <th class="a4-num">TX</th>
-                  <th class="a4-num">RX/s</th>
-                  <th class="a4-num">TX/s</th>
-                </tr>
+              <tr>
+                <th>Server</th>
+                <th>Match</th>
+                <th>Backend</th>
+                <th>State</th>
+                <th class="a4-num">Active</th>
+                <th class="a4-num">Total conn.</th>
+                <th class="a4-num">RX</th>
+                <th class="a4-num">TX</th>
+                <th class="a4-num">RX/s</th>
+                <th class="a4-num">TX/s</th>
+              </tr>
               </thead>
               <tbody>
-                {[...backends].sort((a, b) =>
-                  `${a.serverId}${a.matchLabel}${a.host}:${a.port}`.localeCompare(`${b.serverId}${b.matchLabel}${b.host}:${b.port}`)
-                ).map(b => (
-                  <tr key={b.id}>
-                    <td>{b.serverId} <span class="a4-muted">({b.serverType})</span></td>
-                    <td><code>{b.matchLabel}</code> <span class="a4-muted">· {b.poolType}</span></td>
-                    <td class="a4-mono">{b.host}:{b.port}</td>
-                    <td><span class={statusClass(b.state)}>{b.state || "Unknown"}</span></td>
-                    <td class="a4-num">{formatNumber(b.activeConnections)}</td>
-                    <td class="a4-num">{formatNumber(b.totalConnections)}</td>
-                    <td class="a4-num">{formatBytes(b.rxBytes)}</td>
-                    <td class="a4-num">{formatBytes(b.txBytes)}</td>
-                    <td class="a4-num">{formatRate(b.rxBps)}</td>
-                    <td class="a4-num">{formatRate(b.txBps)}</td>
-                  </tr>
-                ))}
+              {[...backends].sort((a, b) =>
+                `${a.serverId}${a.matchLabel}${a.host}:${a.port}`.localeCompare(`${b.serverId}${b.matchLabel}${b.host}:${b.port}`)
+              ).map(b => (
+                <tr key={b.id}>
+                  <td>{b.serverId} <span class="a4-muted">({b.serverType})</span></td>
+                  <td><code>{b.matchLabel}</code> <span class="a4-muted">· {b.poolType}</span></td>
+                  <td class="a4-mono">{b.host}:{b.port}</td>
+                  <td><span class={statusClass(b.state)}>{b.state || "Unknown"}</span></td>
+                  <td class="a4-num">{formatNumber(b.activeConnections)}</td>
+                  <td class="a4-num">{formatNumber(b.totalConnections)}</td>
+                  <td class="a4-num">{formatBytes(b.rxBytes)}</td>
+                  <td class="a4-num">{formatBytes(b.txBytes)}</td>
+                  <td class="a4-num">{formatRate(b.rxBps)}</td>
+                  <td class="a4-num">{formatRate(b.txBps)}</td>
+                </tr>
+              ))}
               </tbody>
             </table>
           </div>

@@ -1,17 +1,24 @@
 import {useContext, useEffect, useRef, useState} from "preact/hooks"
 import {A4Context, lockUi, usrError, usrInfo} from "@a4ui/store"
-import {apiV1ConfigGet, apiV1ConfigPost, A4Validation} from "@a4ui/rpc"
+import {A4Validation, apiV1ConfigGet, apiV1ConfigPost} from "@a4ui/rpc"
 import {messageOf} from "@a4ui/api"
 import {uiConfigEditFmt, uiConfigList} from "@a4ui/util"
 import {A4Field} from "@a4ui/components/A4Field"
 import A4ServerEditor from "@a4ui/components/A4ServerEditor"
 import {
-  ConfigForm, emptyServer, fromConfig, newConfigForm, parseConfigYaml, ServerEntry, toConfig, yamlOf
+  ConfigForm,
+  emptyServer,
+  fromConfig,
+  newConfigForm,
+  parseConfigYaml,
+  ServerEntry,
+  toConfig,
+  yamlOf
 } from "@a4ui/yaml"
 
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
 
-const A4ConfigEdit = (props: {configId?: string, path?: string, default?: boolean}) => {
+const A4ConfigEdit = (props: { configId?: string, path?: string, default?: boolean }) => {
   const {dispatch} = useContext(A4Context)
   const isNew = !props.configId || props.configId === "new"
   const configId = isNew ? "" : props.configId || ""
@@ -140,7 +147,8 @@ const A4ConfigEdit = (props: {configId?: string, path?: string, default?: boolea
       })
   }
 
-  const saveRef = useRef<() => void>(() => {})
+  const saveRef = useRef<() => void>(() => {
+  })
   saveRef.current = save
 
   useEffect(() => {
@@ -186,7 +194,8 @@ const A4ConfigEdit = (props: {configId?: string, path?: string, default?: boolea
         </div>
         <div class="a4-hero-actions" style="margin-left:auto">
           <a class="a4-pill" href={uiConfigList}>← Configurations</a>
-          <button class="a4-pill a4-pill--accent" data-testid="save-config" type="button" disabled={processing} onClick={save}>
+          <button class="a4-pill a4-pill--accent" data-testid="save-config" type="button" disabled={processing}
+                  onClick={save}>
             {processing ? "Saving…" : "Save"}
           </button>
         </div>
@@ -212,7 +221,8 @@ const A4ConfigEdit = (props: {configId?: string, path?: string, default?: boolea
           <div class="a4-panel">
             <h2 class="a4-section-title">Configuration</h2>
             <div class="a4-grid-2">
-              <A4Field label="Id" hint={isNew ? "Letters, numbers, dots, dashes or underscores." : "The id cannot be changed."}>
+              <A4Field label="Id"
+                       hint={isNew ? "Letters, numbers, dots, dashes or underscores." : "The id cannot be changed."}>
                 <input
                   class="a4-input"
                   data-testid="config-id"
@@ -278,8 +288,8 @@ const A4ConfigEdit = (props: {configId?: string, path?: string, default?: boolea
             />
             <div class="a4-form-text">
               Edits here immediately update the form when the YAML is valid. {isNew
-                ? "Saving a new configuration creates it on the server."
-                : "Use Save or Ctrl/Cmd+S to persist changes."}
+              ? "Saving a new configuration creates it on the server."
+              : "Use Save or Ctrl/Cmd+S to persist changes."}
             </div>
           </div>
         </div>

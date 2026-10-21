@@ -1,9 +1,7 @@
 // Captures desktop + mobile screenshots for visual inspection.
 // Requires a running awe4lb instance:
 //   A4_UI_URL=http://127.0.0.1:7070 npm run visual
-import {
-  closeBrowser, goto, openPage, requireUi, sendTraffic, snap, stopConfig, withProxy
-} from "./harness.mjs"
+import {closeBrowser, goto, openPage, requireUi, sendTraffic, snap, stopConfig, withProxy} from "./harness.mjs"
 
 const VIEWPORTS = [
   {name: "desktop", width: 1440, height: 1000},

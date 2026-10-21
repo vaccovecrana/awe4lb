@@ -8,8 +8,9 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 
-import static j8spec.J8Spec.*;
-import static org.junit.Assert.*;
+import static j8spec.J8Spec.it;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)

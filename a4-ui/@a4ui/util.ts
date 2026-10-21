@@ -16,21 +16,21 @@ const stringOpLabelOf = (op: any): string => {
   }
   const opId =
     op.endsWith ? "endsWith" :
-    op.equals ? "equals" :
-    op.startsWith ? "startsWith" :
-    "?"
+      op.equals ? "equals" :
+        op.startsWith ? "startsWith" :
+          "?"
   const opVal =
     op.endsWith ? op.endsWith :
-    op.equals ? op.equals :
-    op.startsWith ? op.startsWith :
-    "?"
+      op.equals ? op.equals :
+        op.startsWith ? op.startsWith :
+          "?"
   return `${opId}(${opVal})`
 }
 
 const matchOpLabelOf = (op: any): string => {
   const varId =
     op.host ? "host" :
-    op.sni ? "sni" : "?"
+      op.sni ? "sni" : "?"
   return `${varId} ${stringOpLabelOf(op.host || op.sni)}`
 }
 

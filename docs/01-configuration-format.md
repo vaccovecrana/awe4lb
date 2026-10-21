@@ -1,8 +1,10 @@
 # Configuration Format
 
-`awe4lb` uses a JSON-based Domain-Specific Language to define load balancer behavior. Configurations are loaded via the `--config` flag or REST API (`http://localhost:7070/api/v1/config`).
+`awe4lb` uses a JSON-based Domain-Specific Language to define load balancer behavior. Configurations are loaded via the
+`--config` flag or REST API (`http://localhost:7070/api/v1/config`).
 
-Each configuration is a JSON object with an `id`, optional `description`, and a `servers` array defining load balancing rules.
+Each configuration is a JSON object with an `id`, optional `description`, and a `servers` array defining load balancing
+rules.
 
 ## Structure
 
@@ -20,11 +22,13 @@ Servers specify listening sockets (host/port) and rules for routing traffic. Eac
 - `addr`: Listening address (e.g., `{"host": "0.0.0.0", "port": 8070}`).
 - `match`: Array of rules to select backend pools.
 
-Optional configuration blocks can be defined for `tls` (TCP/TLS termination) or `udp` (UDP forwarding). They are mutually exclusive; omit both for plain TCP forwarding.
+Optional configuration blocks can be defined for `tls` (TCP/TLS termination) or `udp` (UDP forwarding). They are
+mutually exclusive; omit both for plain TCP forwarding.
 
 ### Server Match Operations
 
-Match rules (`match`) filter incoming connections based on conditions like SNI or host address, directing traffic to specific pools. Example: `{"op": {"sni": {"equals": "momo.localhost"}}}`.
+Match rules (`match`) filter incoming connections based on conditions like SNI or host address, directing traffic to
+specific pools. Example: `{"op": {"sni": {"equals": "momo.localhost"}}}`.
 
 ### Static Host Pools
 
@@ -67,9 +71,12 @@ UDP servers support sticky sessions only, regardless of the backend selection me
 
 ## Example
 
-> Note: `awe4lb` stores configuration files as JSON, but the UI allows you to edit configurations in YAML format for easier readability. The editor keeps the YAML document and a structured form in sync in both directions; backend validation errors are shown inline before the configuration is saved. This guide will use YAML formatting.
+> Note: `awe4lb` stores configuration files as JSON, but the UI allows you to edit configurations in YAML format for
+> easier readability. The editor keeps the YAML document and a structured form in sync in both directions; backend
+> validation errors are shown inline before the configuration is saved. This guide will use YAML formatting.
 
-See [test-config-00.json](https://raw.githubusercontent.com/vaccovecrana/awe4lb/refs/heads/main/a4-test/src/test/resources/test-config-00.json) for a full example:
+See [test-config-00.json](https://raw.githubusercontent.com/vaccovecrana/awe4lb/refs/heads/main/a4-test/src/test/resources/test-config-00.json)
+for a full example:
 
 ```yaml
 id: test-config-00

@@ -14,10 +14,10 @@ public class A4SelLConn {
       throw new IllegalStateException("No available backends for least-connections selection");
     }
     return up
-        .stream()
-        .min(Comparator.comparingInt(bk ->
-            bkContextIdx.computeIfAbsent(bk, b -> new A4BackendContext()).activeConnections()))
-        .orElseThrow();
+      .stream()
+      .min(Comparator.comparingInt(bk ->
+        bkContextIdx.computeIfAbsent(bk, b -> new A4BackendContext()).activeConnections()))
+      .orElseThrow();
   }
 
 }

@@ -1,7 +1,7 @@
 package io.vacco.a4lb;
 
 import io.vacco.a4lb.service.A4Context;
-import io.vacco.a4lb.util.*;
+import io.vacco.a4lb.util.A4Options;
 
 import java.util.Arrays;
 

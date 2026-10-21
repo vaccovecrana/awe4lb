@@ -1,8 +1,6 @@
 import {after, before, test} from "node:test"
 import assert from "node:assert/strict"
-import {
-  closeBrowser, deleteConfig, goto, openPage, requireUi, setInput, uniqueId, waitForText
-} from "../harness.mjs"
+import {closeBrowser, deleteConfig, goto, openPage, requireUi, setInput, uniqueId, waitForText} from "../harness.mjs"
 
 let page
 

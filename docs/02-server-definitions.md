@@ -1,6 +1,8 @@
 # Server Definitions
 
-Server definitions specify the listening sockets and rules for routing incoming TCP or UDP traffic. Each server is a JSON object within the `servers` array of a configuration file, defining how `awe4lb` binds to network interfaces and directs traffic to backends.
+Server definitions specify the listening sockets and rules for routing incoming TCP or UDP traffic. Each server is a
+JSON object within the `servers` array of a configuration file, defining how `awe4lb` binds to network interfaces and
+directs traffic to backends.
 
 ## Structure
 
@@ -13,7 +15,8 @@ A server object includes:
 Optional configurations:
 
 - `tls`: TLS settings for TCP servers (see [TLS Termination](#07-tls-termination.md)).
-- `udp`: UDP settings (e.g., `{"bufferSize": 2048, "idleTimeoutMs": 2000, "maxSessions": 1024}`) (see [UDP Configuration](#08-udp-configuration.md)).
+- `udp`: UDP settings (e.g., `{"bufferSize": 2048, "idleTimeoutMs": 2000, "maxSessions": 1024}`)
+  (see [UDP Configuration](#08-udp-configuration.md)).
 
 ## Example
 
@@ -61,5 +64,6 @@ servers:
 ## Usage
 
 - **Binding**: Use `0.0.0.0` to listen on all interfaces or a specific IP for restricted access.
-- **Ports**: Ensure the user running `awe4lb` has permissions for ports < 1024 (e.g., via `CAP_NET_BIND_SERVICE` in systemd).
+- **Ports**: Ensure the user running `awe4lb` has permissions for ports < 1024 (e.g., via `CAP_NET_BIND_SERVICE` in
+  systemd).
 - **Multiple Servers**: Define multiple servers for different protocols or ports in the same config.

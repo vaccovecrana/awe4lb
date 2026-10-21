@@ -3,10 +3,15 @@ package io.vacco.a4lb.util;
 import am.ik.yavi.core.ConstraintViolations;
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
-import java.io.*;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
@@ -81,7 +86,7 @@ public class A4Configs {
             }
           }
           if (A4Disc.DefaultIntervalMs.equals(m.discover.intervalMs)
-              && A4Disc.DefaultTimeoutMs.equals(m.discover.timeoutMs)) {
+            && A4Disc.DefaultTimeoutMs.equals(m.discover.timeoutMs)) {
             m.discover.intervalMs = null;
             m.discover.timeoutMs = null;
           }
@@ -92,8 +97,8 @@ public class A4Configs {
           }
         }
         if (m.healthCheck != null
-            && A4HealthCheck.DefaultIntervalMs.equals(m.healthCheck.intervalMs)
-            && A4HealthCheck.DefaultTimeoutMs.equals(m.healthCheck.timeoutMs)) {
+          && A4HealthCheck.DefaultIntervalMs.equals(m.healthCheck.intervalMs)
+          && A4HealthCheck.DefaultTimeoutMs.equals(m.healthCheck.timeoutMs)) {
           m.healthCheck.intervalMs = null;
           m.healthCheck.timeoutMs = null;
           if (m.healthCheck.exec == null) {
@@ -126,15 +131,15 @@ public class A4Configs {
     var files = configRoot.listFiles();
     if (files != null) {
       return Arrays.stream(files)
-          .filter(f -> f.getName().endsWith(ExtJson))
-          .map(f -> {
-            try {
-              return A4Configs.loadFromOrFail(f.toURI().toURL(), g);
-            } catch (Exception e) {
-              return null;
-            }
-          })
-          .filter(Objects::nonNull);
+        .filter(f -> f.getName().endsWith(ExtJson))
+        .map(f -> {
+          try {
+            return A4Configs.loadFromOrFail(f.toURI().toURL(), g);
+          } catch (Exception e) {
+            return null;
+          }
+        })
+        .filter(Objects::nonNull);
     }
     return Stream.empty();
   }

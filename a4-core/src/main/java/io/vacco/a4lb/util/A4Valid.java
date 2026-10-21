@@ -1,12 +1,15 @@
 package io.vacco.a4lb.util;
 
 import am.ik.yavi.builder.ValidatorBuilder;
-import am.ik.yavi.constraint.*;
+import am.ik.yavi.constraint.CharSequenceConstraint;
+import am.ik.yavi.constraint.IntegerConstraint;
 import am.ik.yavi.constraint.base.ContainerConstraintBase;
 import am.ik.yavi.core.*;
 import io.vacco.a4lb.cfg.*;
+
 import java.io.File;
-import java.net.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,15 +32,15 @@ public class A4Valid {
   /**
    * Not null, not empty, not blank.
    *
-   * @param c constraint
-   * @return constraint
+   * @param c   constraint
    * @param <T> input type
+   * @return constraint
    */
   public static <T> CharSequenceConstraint<T, String> nnNeNb(CharSequenceConstraint<T, String> c) {
     return c.notNull().notBlank().notEmpty();
   }
 
-  public static boolean allNoNullLtEq(int ltEq, Object ... vals) {
+  public static boolean allNoNullLtEq(int ltEq, Object... vals) {
     return Arrays.stream(vals).filter(Objects::nonNull).count() <= ltEq;
   }
 
@@ -46,11 +49,10 @@ public class A4Valid {
       try {
         new URI(x);
         return true;
-      }
-      catch (URISyntaxException e) {
+      } catch (URISyntaxException e) {
         return false;
       }
-    }, CHAR_SEQUENCE_URL, () -> new Object[] {}, VALID));
+    }, CHAR_SEQUENCE_URL, () -> new Object[]{}, VALID));
     return c;
   }
 
@@ -62,7 +64,7 @@ public class A4Valid {
       } catch (Exception e) {
         return false;
       }
-    }, ViolationMessage.of("file.exists", "\"{0}\" file does not exist"), () -> new Object[] {}, VALID));
+    }, ViolationMessage.of("file.exists", "\"{0}\" file does not exist"), () -> new Object[]{}, VALID));
     return c;
   }
 

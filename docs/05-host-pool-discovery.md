@@ -1,8 +1,9 @@
 # Backend Host Pool Discovery Methods
 
-`awe4lb` supports dynamic discovery of backend hosts, populating `pool` objects via external sources. 
+`awe4lb` supports dynamic discovery of backend hosts, populating `pool` objects via external sources.
 
-Defined in the `discover` field of a match rule, discovery methods fetch hosts from HTTP endpoints, exec commands, or Kubernetes APIs, ideal for dynamic environments.
+Defined in the `discover` field of a match rule, discovery methods fetch hosts from HTTP endpoints, exec commands, or
+Kubernetes APIs, ideal for dynamic environments.
 
 ## Structure
 

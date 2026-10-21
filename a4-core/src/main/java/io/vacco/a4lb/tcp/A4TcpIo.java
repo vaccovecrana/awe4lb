@@ -1,9 +1,13 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Backend;
-import io.vacco.a4lb.util.*;
-import java.io.*;
-import java.net.*;
+import io.vacco.a4lb.util.A4Base36;
+import io.vacco.a4lb.util.A4Io;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -11,11 +15,11 @@ public class A4TcpIo implements Closeable {
 
   public final String id;
   public final Socket socket;
-  public A4Backend    backend;
+  public A4Backend backend;
 
-  public byte[]       peek = new byte[128 * 1024];
-  public int          peekBytes;
-  public Exception    rxe, txe;
+  public byte[] peek = new byte[128 * 1024];
+  public int peekBytes;
+  public Exception rxe, txe;
 
   public A4TcpIo(Socket socket) {
     this.socket = Objects.requireNonNull(socket);
@@ -77,11 +81,13 @@ public class A4TcpIo implements Closeable {
     return this;
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     A4Io.close(socket);
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return id;
   }
 

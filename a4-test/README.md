@@ -42,12 +42,12 @@ A4_INTEGRATION_TESTS=1 ./gradlew :a4-test:test
 docker compose -f a4-test/src/test/resources/docker-compose.yml down -v
 ```
 
-| Service group | Host ports | Purpose |
-|---|---|---|
-| `momo-discover-json/txt` | 4010, 4011 | HTTP discovery |
-| `momo-00..02`, `sdr-00..02` | 4000–4002, 4020–4022 | HTTP/TLS backends |
-| `momo-udp-00..02` | 6000–6002/udp | UDP echo backends |
-| test proxies | 8080, 8090, 8443, 8070 | listeners opened by `test-config-00.json` |
+| Service group               | Host ports             | Purpose                                   |
+|-----------------------------|------------------------|-------------------------------------------|
+| `momo-discover-json/txt`    | 4010, 4011             | HTTP discovery                            |
+| `momo-00..02`, `sdr-00..02` | 4000–4002, 4020–4022   | HTTP/TLS backends                         |
+| `momo-udp-00..02`           | 6000–6002/udp          | UDP echo backends                         |
+| test proxies                | 8080, 8090, 8443, 8070 | listeners opened by `test-config-00.json` |
 
 `momo.localhost` and `sdr.localhost` must resolve to loopback. If they do not:
 
@@ -68,4 +68,5 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ## Security checks
 
-1. Generate UDP connections in large numbers. This should exercise the LB's capability to clear out expired UDP sessions (TTL timeout).
+1. Generate UDP connections in large numbers. This should exercise the LB's capability to clear out expired UDP sessions
+   (TTL timeout).

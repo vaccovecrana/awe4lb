@@ -19,11 +19,13 @@ public class A4Sock {
     return String.format("%s:%d", host, port);
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return id();
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     return id().hashCode();
   }
 

@@ -1,8 +1,19 @@
 import {after, before, test} from "node:test"
 import assert from "node:assert/strict"
 import {
-  closeBrowser, deleteConfig, freePort, goto, openPage, proxyConfigOf, requireUi, seedConfig,
-  text, uniqueId, waitFor, waitForText, withProxy
+  closeBrowser,
+  deleteConfig,
+  freePort,
+  goto,
+  openPage,
+  proxyConfigOf,
+  requireUi,
+  seedConfig,
+  text,
+  uniqueId,
+  waitFor,
+  waitForText,
+  withProxy
 } from "../harness.mjs"
 
 let page
