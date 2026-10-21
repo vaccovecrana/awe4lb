@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Display release tag
         run: echo ${{ github.event.release.tag_name }}
       - name: Pull Docker Image
@@ -16,7 +16,6 @@ jobs:
           docker run --rm \
             -e GITHUB_REF=${{ github.ref }} \
             -e GITHUB_SHA=${{ github.sha }} \
-            -e PLUGIN_ORGCONFIG=https://raw.githubusercontent.com/vaccovecrana/org-config/refs/heads/main/vacco-oss-java-21.json \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
             gradle:jdk21-graal-jammy \

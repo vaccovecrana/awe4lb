@@ -1,5 +1,5 @@
 plugins {
-  id("io.vacco.oss.gitflow") version "1.8.3" apply(false)
+  id("io.vacco.oss.gitflow") version "1.10.0" apply(false)
 }
 
 subprojects {
@@ -8,6 +8,7 @@ subprojects {
   version = "0.7.1"
 
   configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
+    orgConfigUrl("https://raw.githubusercontent.com/vaccovecrana/org-config/refs/heads/main/vacco-oss-java-21.json")
     addClasspathHell()
   }
 

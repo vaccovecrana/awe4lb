@@ -4,7 +4,7 @@ configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
   sharedLibrary(true, false)
 }
 
-val api by configurations
+val api = configurations.getByName("api")
 
 dependencies {
   api("io.vacco.shax:shax:2.0.16.0.1.2")

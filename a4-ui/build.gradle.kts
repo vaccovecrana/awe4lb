@@ -10,7 +10,7 @@ configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
   sharedLibrary(true, false)
 }
 
-val api by configurations
+val api = configurations.getByName("api")
 
 dependencies {
   api(project(":a4-core"))
