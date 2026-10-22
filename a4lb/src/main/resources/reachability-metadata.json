@@ -1,0 +1,221 @@
+{
+  "reflection": [
+    {
+      "type": "io.vacco.a4lb.cfg.A4Backend",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4BackendState",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Config",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4ConfigState",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Disc",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4DiscExec",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4DiscHttp",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4DiscK8s",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Format",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4HealthCheck",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4HealthExec",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Match",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4MatchOp",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Pool",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4PoolType",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Server",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4ServerTls",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Sock",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Stats",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4StatsBackend",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4StatsHistory",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4StatsSeries",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4StatsServer",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4StringOp",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Tcp",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Tls",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Udp",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.cfg.A4Validation",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.a4lb.web.A4ApiHdl",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.shax.logging.ShLogConfig",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    },
+    {
+      "type": "io.vacco.shax.logging.ShLogLevel",
+      "allDeclaredConstructors": true,
+      "allDeclaredFields": true,
+      "allDeclaredMethods": true,
+      "unsafeAllocated": true
+    }
+  ]
+}
