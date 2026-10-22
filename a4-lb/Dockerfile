@@ -1,4 +1,4 @@
-FROM busybox:stable-glibc as runtime
+FROM busybox:stable-glibc AS runtime
 
 COPY ./libz.so.1 /lib/
 COPY ./build/native/nativeCompile/a4lb-linux-amd64 /a4lb-linux-amd64
