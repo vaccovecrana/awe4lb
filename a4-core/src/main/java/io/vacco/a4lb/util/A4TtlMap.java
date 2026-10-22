@@ -1,6 +1,8 @@
 package io.vacco.a4lb.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
@@ -13,6 +15,10 @@ import java.util.function.Consumer;
  * Bounded TTL map. A key may be re-inserted (refreshing its TTL); the queue
  * keeps insertion order for size-based eviction, while stale queue entries are
  * ignored when the key has already been replaced or removed.
+ *
+ * <p>Refreshing an existing entry updates its expiry without moving it in the
+ * eviction queue. This keeps activity updates O(1); max-size eviction remains
+ * insertion-order rather than strict LRU.</p>
  */
 public class A4TtlMap<K, V> {
 
@@ -52,6 +58,10 @@ public class A4TtlMap<K, V> {
     queue = new ConcurrentLinkedQueue<>();
   }
 
+  private static boolean isExpired(CacheEntry<?> entry, long now) {
+    return entry.getExpireBy() != -1 && now > entry.getExpireBy();
+  }
+
   public V get(K key) {
     if (key == null) {
       throw new IllegalArgumentException("Invalid Key.");
@@ -60,8 +70,7 @@ public class A4TtlMap<K, V> {
     if (entry == null) {
       return null;
     }
-    long timestamp = entry.getExpireBy();
-    if (timestamp != -1 && System.currentTimeMillis() > timestamp) {
+    if (isExpired(entry, System.currentTimeMillis())) {
       if (cache.remove(key, entry)) {
         cacheSize.decrementAndGet();
         onExpired.accept(entry.getEntry());
@@ -69,6 +78,46 @@ public class A4TtlMap<K, V> {
       return null;
     }
     return entry.getEntry();
+  }
+
+  /**
+   * Extends the expiry of an existing entry without changing its value or
+   * eviction-queue position. Returns false if the key is absent or expired.
+   */
+  public boolean refresh(K key, int ttlMs) {
+    if (key == null) {
+      throw new IllegalArgumentException("Invalid Key.");
+    }
+    var entry = cache.get(key);
+    if (entry == null) {
+      return false;
+    }
+    var now = System.currentTimeMillis();
+    if (isExpired(entry, now)) {
+      if (cache.remove(key, entry)) {
+        cacheSize.decrementAndGet();
+        onExpired.accept(entry.getEntry());
+      }
+      return false;
+    }
+    var expireBy = ttlMs != -1 ? now + ttlMs : ttlMs;
+    return cache.replace(key, entry, new CacheEntry<>(expireBy, entry.getEntry()));
+  }
+
+  /**
+   * Removes a specific key/value pair. This is useful for closing a session
+   * without accidentally removing a newer session that replaced it.
+   */
+  public boolean remove(K key, V value) {
+    if (key == null) {
+      throw new IllegalArgumentException("Invalid Key.");
+    }
+    var entry = cache.get(key);
+    if (entry != null && entry.getEntry() == value && cache.remove(key, entry)) {
+      cacheSize.decrementAndGet();
+      return true;
+    }
+    return false;
   }
 
   public V removeAndGet(K key) {
@@ -81,6 +130,24 @@ public class A4TtlMap<K, V> {
       return entry.getEntry();
     }
     return null;
+  }
+
+  /**
+   * Removes and notifies every entry expired at {@code now}. Entries refreshed
+   * while the sweep is running are kept because removal is conditional on the
+   * exact CacheEntry observed by the sweep.
+   */
+  public List<V> removeExpired(long now) {
+    var expired = new ArrayList<V>();
+    for (var e : cache.entrySet()) {
+      var entry = e.getValue();
+      if (isExpired(entry, now) && cache.remove(e.getKey(), entry)) {
+        cacheSize.decrementAndGet();
+        expired.add(entry.getEntry());
+        onExpired.accept(entry.getEntry());
+      }
+    }
+    return expired;
   }
 
   public void put(K key, V value, int ttlMs) {
@@ -110,14 +177,17 @@ public class A4TtlMap<K, V> {
       var removed = cache.remove(oldest);
       if (removed != null) {
         cacheSize.decrementAndGet();
+        onExpired.accept(removed.getEntry());
       }
     }
   }
 
   public void clear() {
+    var entries = new ArrayList<CacheEntry<V>>(cache.values());
     cache.clear();
     queue.clear();
     cacheSize.set(0);
+    entries.forEach(e -> onExpired.accept(e.getEntry()));
   }
 
   public int size() {

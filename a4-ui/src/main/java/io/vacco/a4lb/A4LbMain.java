@@ -25,10 +25,7 @@ public class A4LbMain {
     try {
       ctx.init(A4Options.from(args));
     } catch (Exception e) {
-      System.out.printf("Unable to initialize load balancer - %s %s%n",
-        e.getClass().getSimpleName(), e.getMessage()
-      );
-      ctx.close();
+      throw new IllegalStateException("Unable to initialize load balancer: " + e.getMessage(), e);
     }
   }
 

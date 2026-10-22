@@ -23,6 +23,7 @@ import static io.vacco.a4lb.util.A4Logging.onError;
 public class A4TcpSrv implements A4Srv {
 
   public static final Logger log = LoggerFactory.getLogger(A4TcpSrv.class);
+  private static final int Backlog = 4096;
 
   private final ServerSocket serverSocket;
   private final A4Server srvConfig;
@@ -39,7 +40,7 @@ public class A4TcpSrv implements A4Srv {
         var factory = A4TlsCerts.forServer(srv).getServerSocketFactory();
         var sslSocket = (SSLServerSocket) factory.createServerSocket();
         sslSocket.setReuseAddress(true);
-        sslSocket.bind(addr);
+        sslSocket.bind(addr, Backlog);
         sslSocket.setEnabledProtocols(srvConfig.tls.protocols != null ? srvConfig.tls.protocols : sslSocket.getSupportedProtocols());
         sslSocket.setEnabledCipherSuites(srvConfig.tls.ciphers != null ? srvConfig.tls.ciphers : sslSocket.getSupportedCipherSuites());
         sslSocket.setNeedClientAuth(false);
@@ -47,7 +48,7 @@ public class A4TcpSrv implements A4Srv {
       } else {
         var plainSocket = new ServerSocket();
         plainSocket.setReuseAddress(true);
-        plainSocket.bind(addr);
+        plainSocket.bind(addr, Backlog);
         this.serverSocket = plainSocket;
       }
       log.info("{} - {} - TCP ingress open", srv.id, serverSocket.getLocalSocketAddress());

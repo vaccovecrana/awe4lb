@@ -29,6 +29,7 @@ public class A4Lb implements Closeable {
   private final Gson gson;
 
   private final Map<String, A4Selector> selectors = new LinkedHashMap<>();
+  private final Map<String, A4UdpSrv> udpServers = new LinkedHashMap<>();
   private A4StatsRecorder statsRecorder;
 
   public A4Lb(A4Config config, Gson gson) {
@@ -57,9 +58,24 @@ public class A4Lb implements Closeable {
         scheduler.scheduleFixed(
           healthCheckTaskIdOf(srv, match, bk),
           match.healthCheck.intervalMs, TimeUnit.MILLISECONDS,
-          new A4Health(srv.id, match.healthCheck, bk), bk::state
+          new A4Health(srv.id, match.healthCheck, bk), state -> {
+            bk.state(state);
+            if (state == A4BackendState.Down) {
+              var udp = udpServers.get(srv.id);
+              if (udp != null) {
+                udp.closeSessionsFor(bk);
+              }
+            }
+          }
         );
       }
+    }
+  }
+
+  private void markUdpHostsUpIfUnchecked(A4Server srv, A4Match match) {
+    if (srv.udp != null && match.healthCheck == null
+      && match.pool != null && match.pool.hosts != null) {
+      match.pool.hosts.forEach(bk -> bk.state(A4BackendState.Up));
     }
   }
 
@@ -72,6 +88,7 @@ public class A4Lb implements Closeable {
           if (bkl1 != null) {
             this.cancelHealthCheck(srv, match);
             match.pool.hosts(bkl1);
+            this.markUdpHostsUpIfUnchecked(srv, match);
             this.initHealthCheck(srv, match);
             var keep = new HashSet<A4Backend>();
             for (var m : srv.match) {
@@ -80,6 +97,10 @@ public class A4Lb implements Closeable {
               }
             }
             bkSel.retainContexts(keep);
+            var udp = udpServers.get(srv.id);
+            if (udp != null) {
+              udp.retainBackends(keep);
+            }
           }
         }
       );
@@ -90,10 +111,12 @@ public class A4Lb implements Closeable {
 
   private void initUdp(A4Server srv, A4Selector bkSel) {
     var udpImpl = new A4UdpSrv(A4Io.newSelector(), srv, bkSel);
+    udpServers.put(srv.id, udpImpl);
     var taskId = format("%s-udp-cleanup", srv.id);
+    var cleanupMs = Math.max(100, Math.min(srv.udp.idleTimeoutMs, 1000));
     scheduler.schedulePermanent(udpImpl);
     scheduler.scheduleFixed(taskId,
-      srv.udp.idleTimeoutMs, TimeUnit.MILLISECONDS,
+      cleanupMs, TimeUnit.MILLISECONDS,
       udpImpl.createSessionCleanupTask(),
       expiredSessions -> {
         if (!expiredSessions.isEmpty() && log.isDebugEnabled()) {
@@ -109,6 +132,9 @@ public class A4Lb implements Closeable {
       for (var srv : config.servers) {
         var bkSel = new A4Selector(srv.match);
         selectors.put(srv.id, bkSel);
+        for (var match : srv.match) {
+          this.markUdpHostsUpIfUnchecked(srv, match);
+        }
         if (srv.udp != null) {
           this.initUdp(srv, bkSel);
         } else {
@@ -195,6 +221,7 @@ public class A4Lb implements Closeable {
   public void close() {
     this.statsRecorder = null;
     this.selectors.clear();
+    this.udpServers.clear();
     this.scheduler.stop();
   }
 

@@ -15,7 +15,7 @@ graalvmNative {
   binaries {
     named("main") {
       configurationFileDirectories.from(file("src/main/resources"))
-      buildArgs.add("--enable-url-protocols=http")
+      buildArgs.add("--enable-url-protocols=http,https")
       buildArgs.add("-march=compatibility")
     }
   }

@@ -36,16 +36,27 @@ public class A4Context implements Closeable {
         "\\__,_/ |__/|__/\\___/  /_/ /_/_.___/ "
       )
     );
+    var root = Objects.requireNonNull(fl.root).getAbsoluteFile();
+    if (!root.exists()) {
+      throw new IllegalArgumentException("Configuration path does not exist: " + root);
+    }
+    if (!root.isDirectory() && !root.isFile()) {
+      throw new IllegalArgumentException("Configuration path is not a file or directory: " + root);
+    }
+    var configRoot = root.isDirectory() ? root : root.getParentFile();
+    var startup = root.isFile() ? root : null;
     try {
-      var root = Objects.requireNonNull(fl.root);
-      var configRoot = root.isDirectory() ? root : root.getParentFile();
       this.api = new A4Api(configRoot, service, fl, gson).open();
-      if (root.isFile()) {
-        service.setActive(loadFromOrFail(root, gson));
-      }
     } catch (Exception e) {
-      onError(log, "unable to initialize options: {}", e, fl);
+      onError(log, "unable to initialize API/UI: {}", e, fl);
       throw new IllegalStateException(e);
+    }
+    if (startup != null) {
+      try {
+        service.setActive(loadFromOrFail(startup, gson));
+      } catch (Exception e) {
+        onError(log, "unable to load startup configuration; UI remains available - {}", e, startup);
+      }
     }
   }
 

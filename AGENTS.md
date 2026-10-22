@@ -24,6 +24,11 @@ Configuration is stored as JSON on disk, but the UI edits a YAML document and
 keeps it in sync with a structured form. The active configuration owns all
 runtime state (listeners, sessions, counters, stats history).
 
+`--config` may point to a directory or a file. File mode treats the file as the
+boot configuration for each restart; the API/UI still starts first and remains
+available if the startup file is invalid. A missing `--config` path fails fast.
+Runtime stop/select changes are intentionally not persisted across restarts.
+
 ## Frameworks (custom sources)
 
 | Concern                  | Framework       | Path                                                       |

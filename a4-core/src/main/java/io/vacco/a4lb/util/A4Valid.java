@@ -330,6 +330,11 @@ public class A4Valid {
 
   private static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
     ._string(c -> c.id, "id", A4Valid::nnNeNb)
+    .constraintOnTarget(
+      c -> A4Configs.isValidId(c.id),
+      "id", "id.invalid",
+      "\"{0}\" must start with a letter or number and contain only letters, numbers, dots, dashes or underscores"
+    )
     ._string(c -> c.description, "description", A4Valid::nnNeNb)
     .constraint(A4Config::serverList, "servers", c -> c.notNull().notEmpty())
     .forEach(A4Config::serverList, "servers", A4ServerVld)
@@ -345,10 +350,6 @@ public class A4Valid {
 
   private static final Validator<A4Options> A4FlagsVld = ValidatorBuilder.<A4Options>of()
     ._object(fl -> fl.root, A4Options.kConfig, Constraint::notNull)
-    .constraintOnTarget(
-      fl -> fl.root != null && fl.root.exists(), A4Options.kConfig, "exists",
-      "\"{0}\" does not exist (not a file or directory)"
-    )
     .nest(fl -> fl.api, "--api-*", A4SockVld)
     .build();
 

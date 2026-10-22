@@ -46,11 +46,6 @@ public class A4OptionsTest {
       assertThrows(A4Exceptions.A4ValidationException.class, () -> A4Options.from(new String[]{}));
     });
 
-    it("Reports a validation error for a missing path", () -> {
-      assertThrows(A4Exceptions.A4ValidationException.class,
-        () -> A4Options.from(new String[]{A4Options.flagOf(A4Options.kConfig, "/definitely/not/here")}));
-    });
-
     it("Rejects unknown log levels", () -> {
       var dir = Files.createTempDirectory("a4-options");
       assertThrows(IllegalArgumentException.class, () -> A4Options.from(new String[]{

@@ -96,5 +96,22 @@ public class A4ConfigsTest {
       assertThrows(IllegalArgumentException.class, () -> A4Configs.inflate(null));
       assertThrows(IllegalArgumentException.class, () -> A4Configs.save(root.toFile(), new Gson(), null));
     });
+
+    it("Rejects path traversal and unsafe configuration ids", () -> {
+      var root = Files.createTempDirectory("a4-configs");
+      for (var id : new String[]{"../escape", "a/b", "a b", ".hidden", "", ".."}) {
+        assertFalse(A4Configs.isValidId(id));
+        assertThrows(IllegalArgumentException.class,
+          () -> A4Configs.configFileOf(root.toFile(), id));
+      }
+      assertTrue(A4Configs.isValidId("cfg-01"));
+      assertTrue(A4Configs.isValidId("cfg.01"));
+      assertTrue(A4Configs.isValidId("cfg_01"));
+    });
+
+    it("Rejects an invalid configuration id during validation", () -> {
+      var cfg = validConfig("../escape");
+      assertFalse(io.vacco.a4lb.util.A4Valid.validate(cfg).isEmpty());
+    });
   }
 }

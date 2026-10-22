@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,8 +19,16 @@ import static java.lang.String.format;
 public class A4Configs {
 
   public static final String ExtJson = ".json";
+  public static final Pattern IdPattern = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]*");
+
+  public static boolean isValidId(String id) {
+    return id != null && IdPattern.matcher(id).matches();
+  }
 
   public static File configFileOf(File configRoot, String id) {
+    if (!isValidId(id)) {
+      throw new IllegalArgumentException("Invalid configuration id: " + id);
+    }
     return new File(configRoot, format("%s%s", id, ExtJson));
   }
 

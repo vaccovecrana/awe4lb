@@ -43,6 +43,9 @@ public class A4ApiHdl {
         if (configId.equals(New)) {
           return res.withBody(new A4Config());
         }
+        if (!isValidId(configId)) {
+          return res.withStatus(Response.Status.NOT_FOUND);
+        }
         var cfg = loadFromOrFail(configFileOf(configRoot, configId), gson);
         return res.withBody(deflate(cfg, gson));
       }
@@ -74,13 +77,16 @@ public class A4ApiHdl {
   @Path(apiV1Config)
   @Produces(MediaType.APPLICATION_JSON)
   public boolean apiV1ConfigDelete(@QueryParam(pConfigId) String configId) {
-    return configId != null && delete(configRoot, configId);
+    return isValidId(configId) && delete(configRoot, configId);
   }
 
   @GET
   @Path(apiV1ConfigSelect)
   @Produces(MediaType.APPLICATION_JSON)
   public A4ConfigState apiV1ConfigSelectGet(@QueryParam(pConfigId) String configId) {
+    if (configId != null && !configId.isEmpty() && !isValidId(configId)) {
+      return new A4ConfigState();
+    }
     var state = configId == null || configId.isEmpty()
       ? service.setActive(null)
       : service.setActive(loadFromOrFail(configFileOf(configRoot, configId), gson));
