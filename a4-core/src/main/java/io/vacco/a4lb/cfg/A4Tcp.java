@@ -8,6 +8,7 @@ public class A4Tcp {
 
   public int maxConnectionsPerIp = DefaultMaxConnectionsPerIp;
   public int tlsHandshakeTimeoutMs = DefaultTlsHandshakeTimeoutMs;
+  /** Listener-wide concurrent handshake limit; not per client IP. */
   public int maxTlsHandshakes = DefaultMaxTlsHandshakes;
 
 }

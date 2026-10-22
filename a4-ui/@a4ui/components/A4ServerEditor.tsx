@@ -129,7 +129,7 @@ const A4ServerEditor = (props: {
                 onInput={(e: any) => patch({tcpTlsHandshakeTimeoutMs: e.target.value})}
               />
             </A4Field>
-            <A4Field label="Max concurrent TLS handshakes" hint="Per listener.">
+            <A4Field label="Max concurrent TLS handshakes" hint="Listener-wide; not per client IP.">
               <input
                 class="a4-input"
                 inputMode="numeric"

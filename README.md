@@ -187,9 +187,14 @@ tcp:
 
 - `maxConnectionsPerIp` is enforced per listener and per client IP. It is not a process-wide limit.
 - `tlsHandshakeTimeoutMs` applies while the server is waiting for the client's TLS handshake.
-- `maxTlsHandshakes` caps concurrent in-progress TLS handshakes per listener.
+- `maxTlsHandshakes` caps concurrent in-progress TLS handshakes **per listener**, not per client IP. A single source
+  can occupy all handshake slots until the timeout expires.
 - The limits are checked before the per-connection buffers are allocated.
 - Rejections are counted and logged at a rate-limited frequency.
+
+The defaults are conservative starting points, not universal values. Tune them for the workload, expected client
+concurrency, and NAT topology. In particular, `maxConnectionsPerIp` may need to be raised for carriers, VPN concentrators,
+or other NAT-heavy deployments, and TLS handshake limits should be sized to the listener's CPU capacity.
 
 Established TCP sessions deliberately have **no idle or maximum-lifetime timeout**. Long-lived protocols can pause
 between bursts (for example, a video client buffering playback) without being disconnected by a4lb.
@@ -213,9 +218,10 @@ interface, not as a public web endpoint.
   host. Do not run it with extra groups, `sudo`, the Docker socket, or other privilege-escalation paths.
 - Running as root is an operator choice for environments where low-port privileges cannot be delegated. In that case a
   service compromise is a host compromise; document and accept that risk explicitly.
-- The API does not currently provide rate limiting for abusive management clients or for excessive front-end connection
-  and TLS-handshake load. Put it behind an external proxy/firewall when exposed beyond localhost, and monitor connection
-  and file-descriptor usage.
+- The management API does not provide request-rate limiting. Front-end listeners support per-client-IP connection
+  limits and listener-wide TLS handshake caps, but there is no per-source accept-rate token bucket or per-IP handshake
+  limit. Put the API behind an external proxy/firewall when exposed beyond localhost, and monitor connection and
+  file-descriptor usage.
 - Most applications and use cases should work fine with the default TCP buffer size. However, applications which stream
   large amounts of data should make sure that the underlying hardware has enough memory capacity to handle backpressure
   from either clients or backends.
