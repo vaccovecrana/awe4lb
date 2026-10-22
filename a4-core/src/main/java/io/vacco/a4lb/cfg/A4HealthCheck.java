@@ -3,8 +3,8 @@ package io.vacco.a4lb.cfg;
 public class A4HealthCheck {
 
   public static final Integer
-      DefaultIntervalMs = 5000,
-      DefaultTimeoutMs = 2500;
+    DefaultIntervalMs = 5000,
+    DefaultTimeoutMs = 2500;
 
   public Integer intervalMs, timeoutMs;
   public A4HealthExec exec;

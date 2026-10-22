@@ -11,6 +11,7 @@ public class A4Server {
   public List<A4Match> match;
 
   public A4ServerTls tls;
+  public A4Tcp tcp;
   public A4Udp udp;
 
   public A4Server id(String id) {
@@ -28,7 +29,7 @@ public class A4Server {
     return this;
   }
 
-  public A4Server match(A4Match ... match) {
+  public A4Server match(A4Match... match) {
     this.match = new ArrayList<>(Arrays.asList(match));
     return this;
   }

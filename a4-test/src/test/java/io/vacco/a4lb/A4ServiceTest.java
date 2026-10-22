@@ -1,29 +1,33 @@
 package io.vacco.a4lb;
 
-import com.github.mizosoft.methanol.*;
+import com.github.mizosoft.methanol.Methanol;
+import com.github.mizosoft.methanol.MutableRequest;
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
 import io.vacco.a4lb.service.A4Context;
 import io.vacco.a4lb.tcp.A4TlsCerts;
-import io.vacco.a4lb.util.*;
+import io.vacco.a4lb.util.A4Configs;
+import io.vacco.a4lb.util.A4Options;
 import io.vacco.a4lb.web.A4Route;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.buildobjects.process.ProcBuilder;
 import org.junit.runner.RunWith;
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.net.ssl.SSLContext;
-import java.awt.*;
 import java.io.IOException;
 import java.net.http.HttpClient;
 
-import static io.vacco.a4lb.web.A4Route.*;
-import static io.vacco.a4lb.util.A4Options.*;
-import static j8spec.J8Spec.*;
-import static org.junit.Assert.*;
 import static com.github.mizosoft.methanol.MutableRequest.*;
-import static java.net.http.HttpResponse.BodyHandlers.ofString;
+import static io.vacco.a4lb.util.A4Options.*;
+import static io.vacco.a4lb.web.A4Route.*;
+import static j8spec.J8Spec.beforeEach;
+import static j8spec.J8Spec.it;
 import static java.lang.String.format;
+import static java.net.http.HttpResponse.BodyHandlers.ofString;
+import static org.junit.Assert.*;
 
 // These tests require podman-compose up and /etc/hosts mappings defined
 
@@ -41,8 +45,8 @@ public class A4ServiceTest {
     .build();
 
   private static final String
-      testConfigId = "test-config-00",
-      tempConfigId = "temp-test-config";
+    testConfigId = "test-config-00",
+    tempConfigId = "temp-test-config";
 
   private static final A4Config tempConfig = new A4Config()
     .id(tempConfigId)
@@ -92,9 +96,14 @@ public class A4ServiceTest {
     }
   }
 
+  private static final boolean IntegrationEnabled =
+    Boolean.getBoolean("a4.integration")
+      || "1".equals(System.getenv("A4_INTEGRATION_TESTS"))
+      || "true".equalsIgnoreCase(System.getenv("A4_INTEGRATION_TESTS"));
+
   static {
-    if (GraphicsEnvironment.isHeadless()) {
-      System.out.println("CI/CD. Skipping.");
+    if (!IntegrationEnabled) {
+      System.out.println("Integration tests skipped. Set -Da4.integration=true or A4_INTEGRATION_TESTS=1 to run them.");
     } else {
       beforeEach(() -> {
         if (log != null) {
@@ -103,7 +112,7 @@ public class A4ServiceTest {
       });
 
       it("Initializes the Load Balancer context", () -> {
-        var fl = A4Options.from(new String[] {
+        var fl = A4Options.from(new String[]{
           flagOf(kLogLevel, "trace"),
           flagOf(kConfig, "./src/test/resources")
         });

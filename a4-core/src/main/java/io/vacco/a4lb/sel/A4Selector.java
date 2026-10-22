@@ -1,11 +1,16 @@
 package io.vacco.a4lb.sel;
 
-import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.cfg.A4Backend;
+import io.vacco.a4lb.cfg.A4Match;
+import io.vacco.a4lb.cfg.A4Pool;
 import io.vacco.a4lb.tcp.A4TcpIo;
 import io.vacco.a4lb.udp.A4UdpIo;
-import io.vacco.a4lb.util.*;
-import java.net.*;
-import java.nio.channels.*;
+import io.vacco.a4lb.util.A4Exceptions;
+import io.vacco.a4lb.util.A4MatchOps;
+
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.channels.Selector;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -69,6 +74,15 @@ public class A4Selector {
 
   public A4BackendContext contextOf(A4Backend bk) {
     return bkContextIdx.computeIfAbsent(bk, bk0 -> new A4BackendContext());
+  }
+
+  /**
+   * Drops idle counters for backends that are no longer present in any pool.
+   */
+  public void retainContexts(Collection<A4Backend> keep) {
+    var keepSet = new HashSet<>(keep);
+    bkContextIdx.entrySet().removeIf(e ->
+      !keepSet.contains(e.getKey()) && e.getValue().activeConnections() == 0);
   }
 
 }

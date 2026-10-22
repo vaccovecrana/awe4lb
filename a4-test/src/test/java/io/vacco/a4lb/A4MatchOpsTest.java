@@ -5,9 +5,10 @@ import io.vacco.a4lb.util.A4MatchOps;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
+
 import java.util.List;
 
-import static j8spec.J8Spec.*;
+import static j8spec.J8Spec.it;
 import static org.junit.Assert.*;
 
 @DefinedOrder
@@ -68,6 +69,31 @@ public class A4MatchOpsTest {
       result = A4MatchOps.eval("stonk.me", "127.0.0.1", rules);
       assertTrue(result.isPresent());
       assertEquals(result.get().pool, pool2);
+    });
+
+    it("Matches case-insensitively without locale surprises", () -> {
+      var op = new A4StringOp().equals("istanbul");
+      assertTrue(A4MatchOps.eval(op, "ISTANBUL"));
+      assertTrue(A4MatchOps.eval(op, "Istanbul"));
+      assertFalse(A4MatchOps.eval(op, null));
+      assertFalse(A4MatchOps.eval(null, "istanbul"));
+    });
+
+    it("Requires both host and SNI operations when both are configured", () -> {
+      var op = new A4MatchOp()
+        .host(new A4StringOp().startsWith("10."))
+        .sni(new A4StringOp().endsWith(".example.com"));
+      assertTrue(A4MatchOps.eval(op, "api.example.com", "10.0.0.1"));
+      assertFalse(A4MatchOps.eval(op, "api.example.com", "192.168.0.1"));
+      assertFalse(A4MatchOps.eval(op, "other.test", "10.0.0.1"));
+    });
+
+    it("Treats a match without operations as a catch-all", () -> {
+      var catchAll = new A4Match().pool(new A4Pool());
+      var specific = new A4Match().op(new A4MatchOp().host(new A4StringOp().equals("later"))).pool(new A4Pool());
+      var result = A4MatchOps.eval("anything", "anything", List.of(catchAll, specific));
+      assertTrue(result.isPresent());
+      assertEquals(catchAll, result.get());
     });
   }
 }

@@ -3,7 +3,7 @@ services:
     image: vacco/http-echo
     build: http-echo
     command: '-text="{\"hosts\": [{\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4000}}, {\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4001}}, {\"addr\": {\"host\": \"127.0.0.1\", \"port\": 4002}}]}"'
-    ports: ["4010:5678"]
+    ports: [ "4010:5678" ]
   momo-discover-txt-00:
     image: vacco/http-echo
     build: http-echo
@@ -12,15 +12,15 @@ services:
         127.0.0.1 4000 1 1
         127.0.0.1 4001 2 1
         127.0.0.1 4002 1 2
-    ports: ["4011:5678"]
-  momo-00: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4000:5678"]}
-  momo-01: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4001:5678"]}
-  momo-02: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4002:5678"]}
+    ports: [ "4011:5678" ]
+  momo-00: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4000:5678" ] }
+  momo-01: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4001:5678" ] }
+  momo-02: { image: vacco/http-echo, build: http-echo, command: -text="This is momo-service", ports: [ "4002:5678" ] }
 
-  sdr-00: { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4020:5678"]}
-  sdr-01: { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4021:5678"]}
-  sdr-02: { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4022:5678"]}
+  sdr-00: { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4020:5678" ] }
+  sdr-01: { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4021:5678" ] }
+  sdr-02: { image: vacco/http-echo, build: http-echo, command: -text="This is sdr-service", ports: [ "4022:5678" ] }
 
-  momo-udp-00: { image: vacco/udp-echo, build: udp-echo, ports: ["6000:7778/udp"] }
-  momo-udp-01: { image: vacco/udp-echo, build: udp-echo, ports: ["6001:7778/udp"] }
-  momo-udp-02: { image: vacco/udp-echo, build: udp-echo, ports: ["6002:7778/udp"] }
+  momo-udp-00: { image: vacco/udp-echo, build: udp-echo, ports: [ "6000:7778/udp" ] }
+  momo-udp-01: { image: vacco/udp-echo, build: udp-echo, ports: [ "6001:7778/udp" ] }
+  momo-udp-02: { image: vacco/udp-echo, build: udp-echo, ports: [ "6002:7778/udp" ] }

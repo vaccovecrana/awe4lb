@@ -1,23 +1,29 @@
 {
   "scripts": {
-    "build": "rollup -c"
+    "build:fonts": "node tools/gen-fonts.mjs",
+    "build:scss": "sass res/main.scss build/ui/index.css --load-path=node_modules",
+    "build": "npm run build:fonts && tsc --noEmit && rspack build --mode production && npm run build:scss",
+    "dev": "rspack serve --mode development",
+    "test:unit": "node --import tsx --test test/*.test.ts",
+    "test:e2e": "node --test --test-concurrency=1 test/e2e/*.test.mjs",
+    "visual": "node test/visual.mjs"
   },
   "author": "Vaccove Crana, LLC.",
   "dependencies": {
-    "nord-ui": "0.10.4",
-    "preact": "10.23.2",
+    "@fontsource/clear-sans": "5.3.0",
+    "chart.js": "4.5.1",
+    "preact": "10.29.8",
     "preact-router": "4.1.2",
-    "yaml": "2.5.0"
+    "react-chartjs-2": "5.3.1",
+    "yaml": "2.6.1"
   },
   "devDependencies": {
-    "@rollup/plugin-alias": "5.1.0",
-    "@rollup/plugin-node-resolve": "15.2.3",
-    "@rollup/plugin-typescript": "11.1.6",
-    "rollup": "4.21.2",
-    "rollup-plugin-scss": "4.0.0",
-    "sass": "1.77.8",
-    "tslib": "2.7.0",
-    "typescript": "5.5.4"
+    "@rspack/cli": "2.2.3",
+    "@rspack/core": "2.2.3",
+    "puppeteer": "25.12.0",
+    "sass": "1.104.1",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
   },
   "type": "module"
 }

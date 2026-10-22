@@ -1,13 +1,16 @@
 # Server Match Operations
 
-Match operations (`match`) filter incoming connections based on conditions like SNI (Server Name Indication) or client host address, routing them to specific backend pools. Defined in the `match` array of a server object, each rule pairs an operation (`op`) with a pool or discovery method.
+Match operations (`match`) filter incoming connections based on conditions like SNI (Server Name Indication) or client
+host address, routing them to specific backend pools. Defined in the `match` array of a server object, each rule pairs
+an operation (`op`) with a pool or discovery method.
 
 ## Structure
 
 A match rule includes:
 
 - `op`: Conditions to match (e.g., `sni: {equals: momo.localhost}` or `host: {startsWith: '127.0'}`).
-- `pool`: Static or dynamic backend pool (see [Static Host Pools](#04-static-host-pools.md) or [Backend Host Pool Discovery](#05-host-pool-discovery.md)).
+- `pool`: Static or dynamic backend pool (see [Static Host Pools](#04-static-host-pools.md)
+  or [Backend Host Pool Discovery](#05-host-pool-discovery.md)).
 - Optional: `healthCheck`, `tls`, `discover` (detailed in later sections).
 
 ## Supported Operations

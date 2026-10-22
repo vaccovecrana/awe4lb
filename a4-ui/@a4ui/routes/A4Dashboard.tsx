@@ -1,241 +1,237 @@
-import * as React from "preact/compat"
+import {useContext, useEffect, useState} from "preact/hooks"
+import {A4Context, lockUi, setActiveConfig} from "@a4ui/store"
+import {A4Config, A4Match, A4Server, apiV1ConfigGet} from "@a4ui/rpc"
+import {formatBytes, formatDuration, formatNumber, matchLabelOf, serverTypeOf, uiConfigList, uiTraffic} from "@a4ui/util"
+import {A4Router} from "@a4ui/components/A4Icons"
+import A4StatusPill from "@a4ui/components/A4StatusPill"
 
-import { useContext } from "preact/hooks"
-import { lockUi, A4Context, A4Store } from "@a4ui/store"
-import { A4Backend, A4BackendState, A4Config, A4Disc, A4HealthCheck, A4Match, A4Server, A4ServerTls, A4Tls, A4Udp, apiV1ConfigGet } from "@a4ui/rpc"
-import { RenderableProps } from "preact"
-
-import { A4Router } from "@a4ui/components/A4Icons"
-import { matchLabelOf, serverTypeOf } from "@a4ui/util"
-
-type A4DProps = RenderableProps<{ s?: A4Store }>
-interface A4DState { config?: A4Config }
-
-class A4Dashboard extends React.Component<A4DProps, A4DState> {
-
-  public componentDidMount(): void {
-    const {dispatch: d} = this.props.s
-    lockUi(true, d)
-      .then(() => apiV1ConfigGet(undefined))
-      .then(config => this.setState({config}))
-      .then(() => lockUi(false, d))
-  }
-
-  public renderBkState(bk: A4Backend) {
-    const clazz = bk.state === A4BackendState.Up ? "pill pill-green" : "pill pill-red"
-    return <span class={clazz}>{bk.state}</span>
-  }  
-
-  public renderPoolHostsTable(match: A4Match) {
-    if (!match.pool?.hosts || match.pool.hosts.length === 0) {
-      return <div />
-    }
-    return (
-      <table class="table small">
-        <thead>
-          <th>Host/Port</th>
-          <th>Weight/Priority</th>
-          <th>State</th>
-        </thead>
-        <tbody>
-          {match.pool.hosts.map(bk => (
-            <tr>
-              <td>{bk.addr.host}:{bk.addr.port}</td>
-              <td>{bk.weight}/{bk.priority}</td>
-              <td>{this.renderBkState(bk)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    )
-  }
-
-  public tr(th: string, td: string) {
-    return (
-      <tr>
-        <th>{th}</th>
-        <td>{td}</td>
-      </tr>
-    )
-  }
-
-  public cardCol(element: any) {
-    return (
-      <div class="col auto">
-        <div class="card minimal mv8 mh4">
-          {element}
-        </div>
-      </div>
-    )
-  }
-
-  public renderDiscover(disc: A4Disc) {
-    if (disc.exec) {
-      return this.cardCol(
-        <table class="table small">
-          <tbody>
-            {this.tr("Discover Interval", `${disc.intervalMs}ms`)}
-            {this.tr("Discover Timeout", `${disc.timeoutMs}ms`)}
-            {this.tr("Command", disc.exec.command)}
-            {this.tr("Args", disc.exec.args.join(" "))}
-            {this.tr("Format", disc.exec.format)}
-          </tbody>
-        </table>
-      )
-    }
-    if (disc.http) {
-      return this.cardCol(
-        <table class="table small">
-          <tbody>
-            {this.tr("Discover Interval", `${disc.intervalMs}ms`)}
-            {this.tr("Timeout", `${disc.timeoutMs}ms`)}
-            {this.tr("Endpoint", disc.http.endpoint)}
-            {this.tr("Format", disc.http.format)}
-          </tbody>
-        </table>
-      )
-    }
-    return this.cardCol(
-      <table class="table small">
-        <tbody>
-          {this.tr("Discover Interval", `${disc.intervalMs}ms`)}
-          {this.tr("Timeout", `${disc.timeoutMs}ms`)}
-          {this.tr("API server", disc.k8s.apiUri)}
-          {this.tr("Namespace", disc.k8s.namespace)}
-          {this.tr("Service/Port", `${disc.k8s.service}:${disc.k8s.port}`)}
-          {this.tr("Token", disc.k8s.tokenPath)}
-        </tbody>
-      </table>
-    )
-  }
-
-  public renderUdpTable(udp: A4Udp) {
-    return this.cardCol(
-      <table class="table small">
-        <tbody>
-          {this.tr("UDP timeout", `${udp.idleTimeoutMs}ms`)}
-          {this.tr("Buffer Size", `${udp.bufferSize} bytes`)}
-          {this.tr("Max Sessions", udp.maxSessions.toString())}
-        </tbody>
-      </table>
-    )
-  }
-
-  public renderTlsTable(tls: A4ServerTls) {
-    return this.cardCol(
-      <table class="table small">
-        <tbody>
-          {tls.protocols && this.tr("Protocols", `${tls.protocols}`)}
-          {tls.ciphers && this.tr("Ciphers", `${tls.ciphers}`)}
-          {tls.base?.certPath && this.tr("Default certificate", tls.base.certPath)}
-          {tls.base?.keyPath && this.tr("Default key", tls.base.keyPath)}
-        </tbody>
-      </table>
-    )
-  }
-
-  public renderHealthCheckTable(health: A4HealthCheck) {
-    if (health.exec) {
-      return this.cardCol(
-        <table class="table small">
-          <tbody>
-            {this.tr("Heatlh Interval", `${health.intervalMs}ms`)}
-            {this.tr("Timeout", `${health.timeoutMs}ms`)}
-            {this.tr("Command", health.exec.command)}
-            {this.tr("Args", health.exec.args.join(" "))}
-          </tbody>
-        </table>
-      )
-    }
-    return this.cardCol(
-      <table class="table small">
-        <tbody>
-          {this.tr("Heatlh Interval", `${health.intervalMs}ms`)}
-          {this.tr("Timeout", `${health.timeoutMs}ms`)}
-        </tbody>
-      </table>
-    )
-  }
-
-  public renderMatchTlsTable(tls: A4Tls) {
-    return this.cardCol(
-      <table class="table small">
-        <tbody>
-          {this.tr("Cert path", tls.certPath)}
-          {this.tr("Key path", tls.keyPath)}
-          {this.tr("Backend trust", (tls.open ? tls.open : false).toString())}
-        </tbody>
-      </table>
-    )
-  }
-
-  public renderServerCard(srv: A4Server) {
-    return (
-      <div class="card minimal mt16 p8">
-        <div class="hFlexBorder">
-          <div class="row align-center">
-            <div class="col auto">
-              <h4 class="hFlex">
-                <A4Router maxHeight={24} />
-                <span class="pl8">{srv.id}</span>
-              </h4>
-            </div>
-            <div class="col auto txr">
-              <code class="mh4">
-                {serverTypeOf(srv)}/{srv.addr.host}:{srv.addr.port}
-              </code>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          {srv.tls ? this.renderTlsTable(srv.tls) : []}
-          {srv.udp ? this.renderUdpTable(srv.udp) : []}
-        </div>
-        {srv.match.map(match => (
-          <div class="mt8">
-            <div class="matchLabel">
-              Match: <code>{matchLabelOf(match)} :: {match.pool.type ? match.pool.type : "random"}</code>
-            </div>
-            <div class="row">
-              {match.tls ? this.renderMatchTlsTable(match.tls) : []}
-              {match.healthCheck ? this.renderHealthCheckTable(match.healthCheck) : []}
-              {match.discover ? this.renderDiscover(match.discover) : []}
-            </div>
-            {this.renderPoolHostsTable(match)}
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  public render() {
-    var {config: cfg} = this.state
-    var servers = cfg && cfg.id
-      ? cfg.servers.sort((a, b) => a.id.localeCompare(b.id))
-      : []
-    return (
-      <div>
-        <h1>Active config</h1>
-        <div class="row">
-          <div class="col auto">
-            {servers.length > 0 ? (
-              <div class="mt16">
-                <h3>{cfg.id}</h3>
-                <div class="callout mt16">
-                  <small>{cfg.description}</small>
-                </div>
-                <h3 class="mt16">Servers</h3>
-                {servers.map(srv => this.renderServerCard(srv))}
-              </div>
-            ) : (
-              <div class="frame txc p16">No active config</div>
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
+interface Param {
+  label: string
+  value: string
+  wide?: boolean
+  mono?: boolean
 }
 
-export default (props: A4DProps) => <A4Dashboard s={useContext(A4Context)} />
+const addParam = (params: Param[], label: string, value: any, options?: { wide?: boolean, mono?: boolean }) => {
+  if (value === undefined || value === null || value === "") {
+    return
+  }
+  params.push({label, value: String(value), ...options})
+}
+
+const serverParamsOf = (srv: A4Server): Param[] => {
+  const params: Param[] = []
+  if (srv.tls) {
+    addParam(params, "Protocols", (srv.tls.protocols || []).join(", "))
+    addParam(params, "Ciphers", (srv.tls.ciphers || []).join(", "), {wide: true, mono: true})
+    addParam(params, "Default certificate", srv.tls.base?.certPath, {wide: true, mono: true})
+    addParam(params, "Default key", srv.tls.base?.keyPath, {wide: true, mono: true})
+  }
+  if (srv.udp) {
+    addParam(params, "UDP idle timeout", `${srv.udp.idleTimeoutMs} ms`)
+    addParam(params, "Buffer size", formatBytes(srv.udp.bufferSize))
+    addParam(params, "Max sessions", srv.udp.maxSessions)
+  } else {
+    addParam(params, "Max connections / IP",
+      srv.tcp?.maxConnectionsPerIp != null ? formatNumber(srv.tcp.maxConnectionsPerIp) : undefined)
+    if (srv.tls) {
+      if (srv.tcp?.tlsHandshakeTimeoutMs != null) {
+        addParam(params, "TLS handshake timeout", formatDuration(srv.tcp.tlsHandshakeTimeoutMs))
+      }
+      addParam(params, "Max TLS handshakes",
+        srv.tcp?.maxTlsHandshakes != null ? formatNumber(srv.tcp.maxTlsHandshakes) : undefined)
+    }
+  }
+  return params
+}
+
+const matchParamsOf = (match: A4Match): Param[] => {
+  const params: Param[] = []
+  if (match.tls) {
+    addParam(params, "Backend certificate", match.tls.certPath, {wide: true, mono: true})
+    addParam(params, "Backend key", match.tls.keyPath, {wide: true, mono: true})
+    addParam(params, "Backend trust", String(match.tls.open || false))
+  }
+  if (match.healthCheck) {
+    addParam(params, "Health",
+      `${formatDuration(match.healthCheck.intervalMs)} / ${formatDuration(match.healthCheck.timeoutMs)}`)
+    if (match.healthCheck.exec) {
+      addParam(params, "Health command",
+        `${match.healthCheck.exec.command} ${(match.healthCheck.exec.args || []).join(" ")}`.trim(),
+        {wide: true, mono: true})
+    }
+  }
+  if (match.discover) {
+    const d = match.discover
+    const source = d.http ? "HTTP" : d.exec ? "Command" : d.k8s ? "Kubernetes" : "Discovery"
+    const timing = d.intervalMs != null || d.timeoutMs != null
+      ? `${formatDuration(d.intervalMs)} / ${formatDuration(d.timeoutMs)}`
+      : ""
+    addParam(params, "Discover", `${source}${timing ? ` · ${timing}` : ""}`)
+    if (d.http) {
+      addParam(params, "Endpoint", d.http.endpoint, {wide: true, mono: true})
+    }
+    if (d.exec) {
+      addParam(params, "Discover command",
+        `${d.exec.command} ${(d.exec.args || []).join(" ")}`.trim(), {wide: true, mono: true})
+    }
+    if (d.k8s) {
+      addParam(params, "Kubernetes service",
+        `${d.k8s.namespace}/${d.k8s.service}:${d.k8s.port}`, {wide: true, mono: true})
+    }
+  }
+  return params
+}
+
+const A4Params = (props: { params: Param[] }) => (
+  <div class="a4-params">
+    {props.params.map((p, idx) => (
+      <div class={`a4-param${p.wide ? " a4-param--wide" : ""}`} key={`${p.label}-${idx}`} title={p.value}>
+        <span class="a4-param-label">{p.label}</span>
+        <span class={`a4-param-value${p.mono ? " a4-mono" : ""}`}>{p.value}</span>
+      </div>
+    ))}
+  </div>
+)
+
+const A4Dashboard = (props: { default?: boolean, path?: string }) => {
+  const {dispatch} = useContext(A4Context)
+  const [config, setConfig] = useState<A4Config>()
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    lockUi(true, dispatch)
+    apiV1ConfigGet("")
+      .then(cfg => {
+        setConfig(cfg)
+        setActiveConfig(cfg?.id, dispatch)
+      })
+      .catch(() => setConfig(undefined))
+      .finally(() => {
+        setLoaded(true)
+        lockUi(false, dispatch)
+      })
+  }, [])
+
+  if (!loaded) {
+    return (
+      <div>
+        <div class="a4-skeleton a4-skeleton-card"/>
+        <div class="a4-skeleton a4-skeleton-card a4-mt16"/>
+      </div>
+    )
+  }
+
+  if (!config || !config.id) {
+    return (
+      <section>
+        <h1>Status</h1>
+        <div class="a4-empty a4-mt16">
+          <p>No active configuration.</p>
+          <p class="a4-mt8"><a class="a4-pill a4-pill--accent" href={uiConfigList}>Choose a configuration</a></p>
+        </div>
+      </section>
+    )
+  }
+
+  const servers = [...(config.servers || [])].sort((a, b) => (a.id || "").localeCompare(b.id || ""))
+
+  return (
+    <section>
+      <div class="a4-hero-row">
+        <div>
+          <h1>{config.id}</h1>
+          <div class="a4-subtitle">{config.description || "Active configuration"}</div>
+        </div>
+        <div style="margin-left:auto">
+          <a class="a4-pill" href={uiTraffic}>Live traffic →</a>
+        </div>
+      </div>
+
+      <div class="a4-mt16">
+        {servers.length === 0 && <div class="a4-empty">This configuration has no servers.</div>}
+        {servers.map((srv, idx) => {
+          const type = serverTypeOf(srv)
+          const srvParams = serverParamsOf(srv)
+          return (
+            <div class="a4-panel a4-mb-4" key={srv.id || idx}>
+              <div class="a4-server-head">
+                <div class="a4-server-title">
+                  <A4Router maxHeight={24}/>
+                  <h3>{srv.id || "(unnamed server)"}</h3>
+                  <span class="a4-status a4-status-active">{type}</span>
+                </div>
+                <span class="a4-server-addr">{srv.addr?.host}:{srv.addr?.port}</span>
+              </div>
+
+              {srvParams.length > 0 && (
+                <div class="a4-mb-4">
+                  <div class="a4-section-title">Parameters</div>
+                  <A4Params params={srvParams}/>
+                </div>
+              )}
+
+              {(srv.match || []).map((match, mIdx) => {
+                const params = matchParamsOf(match)
+                const hosts = match.pool?.hosts || []
+                return (
+                  <div class="a4-match" key={`${srv.id}-${mIdx}`}>
+                    <div class="a4-match-head">
+                      <span class="a4-match-label">
+                        <span class="a4-muted">Match</span>
+                        <code>{matchLabelOf(match)}</code>
+                      </span>
+                      <span class="a4-tag">{match.pool?.type || "random"}</span>
+                    </div>
+
+                    <div class={`a4-match-body${params.length === 0 ? " a4-match-body--single" : ""}`}>
+                      {params.length > 0 && (
+                        <div class="a4-match-params">
+                          <div class="a4-section-title">Parameters</div>
+                          <A4Params params={params}/>
+                        </div>
+                      )}
+                      <div class="a4-match-backends">
+                        <div class="a4-section-title">
+                          Backends <span class="a4-muted">({hosts.length})</span>
+                        </div>
+                        {hosts.length === 0 ? (
+                          <div class="a4-form-text">No backends assigned yet.</div>
+                        ) : (
+                          <>
+                            <div class="a4-table-wrap">
+                              <table class="a4-table a4-table--compact">
+                                <thead>
+                                <tr>
+                                  <th>Host / Port</th>
+                                  <th>Weight / Priority</th>
+                                  <th>State</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {hosts.map((bk, bIdx) => (
+                                  <tr key={`${bk.addr?.host}:${bk.addr?.port}-${bIdx}`}>
+                                    <td class="a4-mono">{bk.addr?.host}:{bk.addr?.port}</td>
+                                    <td>{bk.weight ?? "-"} / {bk.priority ?? "-"}</td>
+                                    <td><A4StatusPill state={bk.state}/></td>
+                                  </tr>
+                                ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+export default A4Dashboard

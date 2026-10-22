@@ -1,19 +1,21 @@
 package io.vacco.a4lb.cfg;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class A4Pool {
 
   public A4PoolType type;
-  public List<A4Backend> hosts;
+  public volatile List<A4Backend> hosts;
 
   public A4Pool hosts(List<A4Backend> hosts) {
     this.hosts = new ArrayList<>(hosts);
     return this;
   }
 
-  public A4Pool hosts(A4Backend ... hosts) {
+  public A4Pool hosts(A4Backend... hosts) {
     return hosts(Arrays.asList(hosts));
   }
 
@@ -27,9 +29,13 @@ public class A4Pool {
   }
 
   public List<A4Backend> upHosts() {
-    return hosts.stream()
-        .filter(bk -> bk.state == A4BackendState.Up)
-        .collect(Collectors.toList());
+    var current = hosts;
+    if (current == null) {
+      return List.of();
+    }
+    return current.stream()
+      .filter(bk -> bk.state == A4BackendState.Up)
+      .collect(Collectors.toList());
   }
 
   /*

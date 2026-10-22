@@ -3,14 +3,19 @@ package io.vacco.a4lb.tcp;
 import io.vacco.a4lb.cfg.A4Match;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.A4Io;
-import org.slf4j.*;
-import javax.net.ssl.*;
-import java.io.Closeable;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static io.vacco.a4lb.util.A4Logging.*;
+import javax.net.ssl.SNIMatcher;
+import javax.net.ssl.SNIServerName;
+import javax.net.ssl.SSLSocket;
+import java.io.Closeable;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.vacco.a4lb.util.A4Logging.rootCauseOf;
 import static java.lang.String.format;
 
 public class A4TcpSess extends SNIMatcher implements Closeable {
@@ -19,26 +24,22 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(A4TcpSess.class);
 
-  private A4Selector    bkSel;
-  private A4TcpIo       client, backend;
+  private A4Selector bkSel;
+  private A4TcpIo client, backend;
+  private final A4TcpSessions.SessionContext context;
 
-  private String        tlsSni;
-  private A4Match       tlsMatch;
+  private String tlsSni;
+  private A4Match tlsMatch;
   private final boolean tlsClient;
 
   private final AtomicBoolean stop = new AtomicBoolean(false);
-  private Consumer<A4TcpSess> onInit, onTearDown;
-  private Thread              clt, bkt;
+  private Thread clt, bkt;
 
-  public A4TcpSess(A4Selector bkSel,
-                   Consumer<A4TcpSess> onInit,
-                   Consumer<A4TcpSess> onTearDown,
-                   boolean tlsClient) {
+  public A4TcpSess(A4Selector bkSel, A4TcpSessions.SessionContext context) {
     super(0);
     this.bkSel = Objects.requireNonNull(bkSel);
-    this.tlsClient = tlsClient;
-    this.onInit = Objects.requireNonNull(onInit);
-    this.onTearDown = Objects.requireNonNull(onTearDown);
+    this.context = Objects.requireNonNull(context);
+    this.tlsClient = context.tls();
   }
 
   private void logError(Exception e) {
@@ -81,10 +82,10 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
     this.backend = bkSel.assign(client.socket, tlsSni);
     this.bkSel.contextOf(backend.backend).trackConn(true);
-    this.onInit.accept(this);
   }
 
-  @Override public boolean matches(SNIServerName sn) {
+  @Override
+  public boolean matches(SNIServerName sn) {
     var sni = A4TlsCerts.sniOf(sn).orElseThrow();
     var op = bkSel.matches(client.socket, sni);
     if (op.isPresent()) {
@@ -139,20 +140,61 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   }
 
   private void tearDown() {
-    A4Io.close(client);
-    A4Io.close(backend);
+    var c = client;
+    var b = backend;
+    var sel = bkSel;
+    A4Io.close(c);
+    A4Io.close(b);
     if (stop.compareAndSet(false, true)) {
-      bkSel.contextOf(backend.backend).trackConn(false);
-      this.onTearDown.accept(this);
-      this.client = null;
-      this.backend = null;
-      this.bkSel = null;
-      this.tlsSni = null;
-      this.tlsMatch = null;
-      this.onInit = null;
-      this.onTearDown = null;
-      if (log.isDebugEnabled()) {
-        log.debug("----------------------------------------------------------");
+      try {
+        if (sel != null && b != null && b.backend != null) {
+          sel.contextOf(b.backend).trackConn(false);
+        }
+      } finally {
+        context.lease().release();
+        context.owner().unregister(context.id());
+        this.client = null;
+        this.backend = null;
+        this.bkSel = null;
+        this.tlsSni = null;
+        this.tlsMatch = null;
+        if (log.isDebugEnabled()) {
+          log.debug("----------------------------------------------------------");
+        }
+      }
+    }
+  }
+
+  private boolean handshake() {
+    if (!(client.socket instanceof SSLSocket sslSocket)) {
+      return true;
+    }
+    var lease = context.owner().tryAcquireHandshake();
+    if (lease == null) {
+      return false;
+    }
+    var previousTimeout = 0;
+    try {
+      previousTimeout = sslSocket.getSoTimeout();
+    } catch (IOException e) {
+      logError(e);
+    }
+    try {
+      sslSocket.setSoTimeout(context.owner().tlsHandshakeTimeoutMs());
+      sslSocket.startHandshake();
+      return true;
+    } catch (SocketTimeoutException e) {
+      context.owner().recordTlsHandshakeTimeout();
+      return false;
+    } catch (Exception e) {
+      logError(e);
+      return false;
+    } finally {
+      lease.release();
+      try {
+        sslSocket.setSoTimeout(previousTimeout);
+      } catch (IOException e) {
+        logError(e);
       }
     }
   }
@@ -176,22 +218,31 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
         }
         if (br > 0) {
           bw = in.writeTo(out);
-          bkSel.contextOf(backend.backend).trackRxTx(!fromClient, br);
+          if (backend != null && backend.backend != null) {
+            bkSel.contextOf(backend.backend).trackRxTx(!fromClient, br);
+          }
         }
         if (in.eof()) { // Try one last drain
           in.writeTo(out);
-          tearDown();
           break;
         }
         logState(br, bw, fromClient);
       }
     } catch (Exception e) {
       logError(e);
+    } finally {
+      tearDown();
     }
   }
 
   public void start() {
-    this.clt = Thread.ofVirtual().name(id()).start(() -> pump(true));
+    this.clt = Thread.ofVirtual().name(id()).start(() -> {
+      if (tlsClient && !handshake()) {
+        tearDown();
+        return;
+      }
+      pump(true);
+    });
   }
 
   public A4TcpSess withClient(A4TcpIo client) {
@@ -199,7 +250,8 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     return this;
   }
 
-  @Override public void close() {
+  @Override
+  public void close() {
     A4Io.close(client);
     if (clt != null) {
       clt.interrupt();
@@ -208,6 +260,7 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     if (bkt != null) {
       bkt.interrupt();
     }
+    tearDown();
   }
 
   public A4Match getTlsMatch() {

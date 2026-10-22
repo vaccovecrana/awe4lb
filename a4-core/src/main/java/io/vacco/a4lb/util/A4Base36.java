@@ -9,7 +9,7 @@ public class A4Base36 {
   private static final int Length = 4;
 
   public static String hash4(String in) {
-    int hash = Math.abs(Objects.requireNonNull(in).hashCode());
+    int hash = Objects.requireNonNull(in).hashCode() & 0x7fffffff;
     hash = hash % MAX_VALUE_4; // Reduce to fit within base-36^4 range
     var result = new char[Length];
     for (int i = Length; i > 0; i--) {
@@ -17,10 +17,6 @@ public class A4Base36 {
       hash /= 36;
     }
     return new String(result);
-  }
-
-  public static void main(String[] args) {
-    System.out.println(hash4("Hello world!"));
   }
 
 }

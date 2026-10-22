@@ -14,7 +14,8 @@ public class A4MatchOp {
     return this;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     if (sni != null && host != null) {
       return String.format("sni %s and host %s", sni, host);
     }

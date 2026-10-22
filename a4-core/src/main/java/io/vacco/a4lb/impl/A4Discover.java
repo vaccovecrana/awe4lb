@@ -1,20 +1,28 @@
 package io.vacco.a4lb.impl;
 
 import com.google.gson.Gson;
-import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.cfg.A4Backend;
+import io.vacco.a4lb.cfg.A4Match;
+import io.vacco.a4lb.cfg.A4PoolType;
 import io.vacco.a4lb.tcp.A4TlsCerts;
-import io.vacco.a4lb.util.*;
-import org.slf4j.*;
+import io.vacco.a4lb.util.A4TtlMap;
+import io.vacco.a4lb.util.A4Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.http.HttpClient;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
+import static io.vacco.a4lb.impl.A4DiscoverCore.execDiscover;
+import static io.vacco.a4lb.impl.A4DiscoverCore.httpDiscover;
+import static io.vacco.a4lb.impl.A4DiscoverK8s.k8sDiscover;
 import static io.vacco.a4lb.util.A4Logging.onError;
 import static io.vacco.a4lb.util.A4Valid.validationsOf;
-import static io.vacco.a4lb.impl.A4DiscoverCore.*;
-import static io.vacco.a4lb.impl.A4DiscoverK8s.k8sDiscover;
 
 public class A4Discover implements Callable<List<A4Backend>> {
 
@@ -26,7 +34,8 @@ public class A4Discover implements Callable<List<A4Backend>> {
   private final String serverId;
   private final A4Match match;
   private final Gson gson;
-  private final A4TtlMap<Integer, String> errorLogIdx = new A4TtlMap<>(MaxDiscoveryErrorLogs, msg -> {});
+  private final A4TtlMap<Integer, String> errorLogIdx = new A4TtlMap<>(MaxDiscoveryErrorLogs, msg -> {
+  });
   private final HttpClient client = HttpClient
     .newBuilder()
     .sslContext(A4TlsCerts.trustAllContext()) // TODO should this be configurable?
@@ -80,7 +89,8 @@ public class A4Discover implements Callable<List<A4Backend>> {
     return hlCodes.hashCode();
   }
 
-  @Override public List<A4Backend> call() {
+  @Override
+  public List<A4Backend> call() {
     try {
       var bkl = discoverValid();
       int h0 = hashOf(bkl);

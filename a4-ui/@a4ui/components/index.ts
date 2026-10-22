@@ -1,7 +1,6 @@
-import A4UiLock from "./A4UiLock"
-import A4MenuLeft from "./A4MenuLeft"
-import A4MenuTop from "./A4MenuTop"
+import A4Header from "./A4Header"
+import A4Lock from "./A4Lock"
 
 export {
-  A4UiLock, A4MenuLeft, A4MenuTop
+  A4Header, A4Lock
 }

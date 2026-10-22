@@ -1,8 +1,9 @@
 # Backend Host Pool Discovery Methods
 
-`awe4lb` supports dynamic discovery of backend hosts, populating `pool` objects via external sources. 
+`awe4lb` supports dynamic discovery of backend hosts, populating `pool` objects via external sources.
 
-Defined in the `discover` field of a match rule, discovery methods fetch hosts from HTTP endpoints, exec commands, or Kubernetes APIs, ideal for dynamic environments.
+Defined in the `discover` field of a match rule, discovery methods fetch hosts from HTTP endpoints, exec commands, or
+Kubernetes APIs, ideal for dynamic environments.
 
 ## Structure
 
@@ -77,3 +78,8 @@ discover:
 
 - **Dynamic Updates**: `awe4lb` periodically refreshes pools from discovery sources.
 - **Security**: Ensure `tokenPath` and `apiUri` are secure for Kubernetes.
+
+> **Kubernetes TLS trust:** Kubernetes discovery currently uses an HTTP client configured to trust all TLS
+> certificates. This allows discovery against clusters using self-signed or internal API server certificates, but it
+> does **not** verify the API server's identity. Use a trusted network path, protect the token file, and restrict access
+> to the API server. A configurable CA/trust setting is planned as follow-up work.

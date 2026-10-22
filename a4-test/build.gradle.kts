@@ -14,7 +14,13 @@ configure<io.vacco.oss.gitflow.GsPluginProfileExtension> {
 
 tasks.withType<JacocoReport> {
   sourceSets(
-      project(":a4-core").sourceSets.main.get(),
-      project(":a4-ui").sourceSets.main.get(),
+    project(":a4-core").sourceSets.main.get(),
+    project(":a4-ui").sourceSets.main.get(),
   )
+}
+
+tasks.withType<Test> {
+  if (project.hasProperty("a4Integration")) {
+    environment("A4_INTEGRATION_TESTS", "1")
+  }
 }

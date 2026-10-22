@@ -3,23 +3,46 @@ package io.vacco.a4lb.util;
 import am.ik.yavi.core.ConstraintViolations;
 import com.google.gson.Gson;
 import io.vacco.a4lb.cfg.*;
-import java.io.*;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
-import java.util.stream.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
 public class A4Configs {
 
   public static final String ExtJson = ".json";
+  public static final Pattern IdPattern = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]*");
+
+  public static boolean isValidId(String id) {
+    return id != null && IdPattern.matcher(id).matches();
+  }
 
   public static File configFileOf(File configRoot, String id) {
+    if (!isValidId(id)) {
+      throw new IllegalArgumentException("Invalid configuration id: " + id);
+    }
     return new File(configRoot, format("%s%s", id, ExtJson));
   }
 
   public static A4Config inflate(A4Config cfg) {
+    if (cfg == null) {
+      throw new IllegalArgumentException("Configuration is required");
+    }
+    if (cfg.servers == null) {
+      cfg.servers = new ArrayList<>();
+    }
     for (var srv : cfg.servers) {
+      if (srv.udp == null && srv.tcp == null) {
+        srv.tcp = new A4Tcp();
+      }
       for (var m : allMatchesOf(srv)) {
         if (srv.udp == null && m.healthCheck == null) {
           m.healthCheck = new A4HealthCheck();
@@ -68,12 +91,14 @@ public class A4Configs {
     for (var srv : cfg0.servers) {
       for (var m : allMatchesOf(srv)) {
         if (m.discover != null) {
-          m.pool.clear();
-          if (m.pool.type == null) {
-            m.pool = null;
+          if (m.pool != null) {
+            m.pool.clear();
+            if (m.pool.type == null) {
+              m.pool = null;
+            }
           }
           if (A4Disc.DefaultIntervalMs.equals(m.discover.intervalMs)
-              && A4Disc.DefaultTimeoutMs.equals(m.discover.timeoutMs)) {
+            && A4Disc.DefaultTimeoutMs.equals(m.discover.timeoutMs)) {
             m.discover.intervalMs = null;
             m.discover.timeoutMs = null;
           }
@@ -84,8 +109,8 @@ public class A4Configs {
           }
         }
         if (m.healthCheck != null
-            && A4HealthCheck.DefaultIntervalMs.equals(m.healthCheck.intervalMs)
-            && A4HealthCheck.DefaultTimeoutMs.equals(m.healthCheck.timeoutMs)) {
+          && A4HealthCheck.DefaultIntervalMs.equals(m.healthCheck.intervalMs)
+          && A4HealthCheck.DefaultTimeoutMs.equals(m.healthCheck.timeoutMs)) {
           m.healthCheck.intervalMs = null;
           m.healthCheck.timeoutMs = null;
           if (m.healthCheck.exec == null) {
@@ -100,9 +125,15 @@ public class A4Configs {
   public static A4Config syncFs(File configRoot, Gson g, A4Config config) {
     var cfgFile = configFileOf(configRoot, config.id);
     var cfg0 = deflate(config, g);
-    try (var fw = new FileWriter(cfgFile)) {
-      g.toJson(cfg0, fw);
-      return config;
+    try {
+      var parent = cfgFile.getParentFile();
+      if (parent != null && !parent.exists() && !parent.mkdirs()) {
+        throw new IllegalStateException("Unable to create configuration directory: " + parent.getAbsolutePath());
+      }
+      try (var fw = new FileWriter(cfgFile)) {
+        g.toJson(cfg0, fw);
+        return config;
+      }
     } catch (Exception e) {
       throw new IllegalStateException("Unable to write configuration: " + cfgFile.getAbsolutePath(), e);
     }
@@ -112,20 +143,23 @@ public class A4Configs {
     var files = configRoot.listFiles();
     if (files != null) {
       return Arrays.stream(files)
-          .filter(f -> f.getName().endsWith(ExtJson))
-          .map(f -> {
-            try {
-              return A4Configs.loadFromOrFail(f.toURI().toURL(), g);
-            } catch (Exception e) {
-              return null;
-            }
-          })
-          .filter(Objects::nonNull);
+        .filter(f -> f.getName().endsWith(ExtJson))
+        .map(f -> {
+          try {
+            return A4Configs.loadFromOrFail(f.toURI().toURL(), g);
+          } catch (Exception e) {
+            return null;
+          }
+        })
+        .filter(Objects::nonNull);
     }
     return Stream.empty();
   }
 
   public static ConstraintViolations save(File configRoot, Gson g, A4Config config) {
+    if (config == null) {
+      throw new IllegalArgumentException("Configuration is required");
+    }
     var errors = A4Valid.validate(config);
     if (errors.isEmpty()) {
       syncFs(configRoot, g, config);

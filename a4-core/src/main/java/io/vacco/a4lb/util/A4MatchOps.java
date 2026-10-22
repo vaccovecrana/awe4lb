@@ -1,7 +1,11 @@
 package io.vacco.a4lb.util;
 
-import io.vacco.a4lb.cfg.*;
+import io.vacco.a4lb.cfg.A4Match;
+import io.vacco.a4lb.cfg.A4MatchOp;
+import io.vacco.a4lb.cfg.A4StringOp;
+
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class A4MatchOps {
@@ -9,21 +13,21 @@ public class A4MatchOps {
   public static final String OpEquals = "equals";
   public static final String OpEndsWith = "endsWith";
   public static final String OpStartsWith = "startsWith";
-  public static final String[] Ops = new String[] { OpEquals, OpEndsWith, OpStartsWith };
+  public static final String[] Ops = new String[]{OpEquals, OpEndsWith, OpStartsWith};
 
   public static boolean eval(A4StringOp op, String val) {
-    if (val == null) {
+    if (val == null || op == null) {
       return false;
     }
-    val = val.toUpperCase();
+    val = val.toUpperCase(Locale.ROOT);
     if (op.equals != null) {
-      return op.equals.toUpperCase().equals(val);
+      return op.equals.toUpperCase(Locale.ROOT).equals(val);
     }
     if (op.startsWith != null) {
-      return val.startsWith(op.startsWith.toUpperCase());
+      return val.startsWith(op.startsWith.toUpperCase(Locale.ROOT));
     }
     if (op.endsWith != null) {
-      return val.endsWith(op.endsWith.toUpperCase());
+      return val.endsWith(op.endsWith.toUpperCase(Locale.ROOT));
     }
     return false;
   }

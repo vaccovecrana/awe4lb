@@ -17,7 +17,12 @@
             }
           }
         }
-      ]
+      ],
+      "tcp": {
+        "maxConnectionsPerIp": 512,
+        "tlsHandshakeTimeoutMs": 5000,
+        "maxTlsHandshakes": 256
+      }
     },
     {
       "id": "sdr-http-json",
@@ -56,7 +61,12 @@
             }
           }
         }
-      ]
+      ],
+      "tcp": {
+        "maxConnectionsPerIp": 512,
+        "tlsHandshakeTimeoutMs": 5000,
+        "maxTlsHandshakes": 256
+      }
     },
     {
       "id": "https-txt",
@@ -79,7 +89,8 @@
           },
           "tls": {
             "certPath": "./src/test/resources/certs/awe4lb.pem",
-            "keyPath": "./src/test/resources/certs/awe4lb.key"
+            "keyPath": "./src/test/resources/certs/awe4lb.key",
+            "open": false
           }
         },
         {
@@ -108,8 +119,14 @@
         ],
         "base": {
           "certPath": "./src/test/resources/certs/awe4lb.pem",
-          "keyPath": "./src/test/resources/certs/awe4lb.key"
+          "keyPath": "./src/test/resources/certs/awe4lb.key",
+          "open": false
         }
+      },
+      "tcp": {
+        "maxConnectionsPerIp": 512,
+        "tlsHandshakeTimeoutMs": 5000,
+        "maxTlsHandshakes": 256
       }
     },
     {

@@ -2,17 +2,20 @@ package io.vacco.a4lb.udp;
 
 import io.vacco.a4lb.cfg.A4Backend;
 import io.vacco.a4lb.util.A4Io;
+
 import java.io.Closeable;
-import java.net.*;
-import java.nio.channels.*;
+import java.net.InetSocketAddress;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.util.Objects;
 
 public class A4UdpIo implements Closeable {
 
-  public A4Backend          backend;
-  public DatagramChannel    channel;
-  public SelectionKey       channelKey;
-  public InetSocketAddress  client;
+  public A4Backend backend;
+  public DatagramChannel channel;
+  public SelectionKey channelKey;
+  public InetSocketAddress client;
 
   public A4UdpIo(Selector selector, A4Backend backend, InetSocketAddress client) {
     try {
@@ -27,9 +30,12 @@ public class A4UdpIo implements Closeable {
     }
   }
 
-  @Override public void close() {
-    channelKey.attach(null);
-    channelKey.cancel();
+  @Override
+  public void close() {
+    if (channelKey != null) {
+      channelKey.attach(null);
+      channelKey.cancel();
+    }
     A4Io.close(channel);
     this.backend = null;
   }

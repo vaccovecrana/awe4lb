@@ -1,6 +1,7 @@
 # TLS Termination
 
-`awe4lb` supports TLS termination for TCP servers, securing connections with configurable ciphers, protocols, and certificates. TLS settings are defined in the `tls` field of a server or match rule.
+`awe4lb` supports TLS termination for TCP servers, securing connections with configurable ciphers, protocols, and
+certificates. TLS settings are defined in the `tls` field of a server or match rule.
 
 ## Structure
 
@@ -15,7 +16,8 @@ A `tls` object includes:
 
 Specify secure ciphers and protocols.
 
-For a list of reference cipher values, see [JSSE Cipher Suite Names](https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#jsse-cipher-suite-names)
+For a list of reference cipher values,
+see [JSSE Cipher Suite Names](https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#jsse-cipher-suite-names)
 
 Commonly used and supported protocols in Java 11 include:
 

@@ -1,156 +1,130 @@
-import * as React from "preact/compat"
+import {useContext, useEffect, useState} from "preact/hooks"
+import {A4Context, lockUi, setActiveConfig, usrError, usrInfo} from "@a4ui/store"
+import {A4Config, apiV1ConfigDelete, apiV1ConfigGet, apiV1ConfigListGet, apiV1ConfigSelectGet} from "@a4ui/rpc"
+import {messageOf} from "@a4ui/api"
+import {uiConfigEditFmt, uiRoot} from "@a4ui/util"
+import {A4IcnAdd, A4IcnPlay, A4IcnStop, A4IconEdit, A4Inspect} from "@a4ui/components/A4Icons"
+import A4StatusPill from "@a4ui/components/A4StatusPill"
 
-import { useContext } from "preact/hooks"
-import { lockUi, A4Context, A4Store } from "@a4ui/store"
-import { A4Config, apiV1ConfigGet, apiV1ConfigListGet, apiV1ConfigSelectGet } from "@a4ui/rpc"
-import { RenderableProps } from "preact"
-import { uiConfigEditFmt } from "@a4ui/util"
-import { A4IcnAdd, A4IcnPlay, A4IcnStop, A4IconEdit, A4Inspect } from "@a4ui/components/A4Icons"
+const A4Configs = (props: { path?: string }) => {
+  const {dispatch} = useContext(A4Context)
+  const [active, setActive] = useState<A4Config>()
+  const [configs, setConfigs] = useState<A4Config[]>([])
+  const [loaded, setLoaded] = useState(false)
 
-type A4CProps = RenderableProps<{ s?: A4Store }>
-interface A4CState {
-  active?: A4Config
-  configs?: A4Config[]
-}
-
-class A4Configs extends React.Component<A4CProps, A4CState> {
-
-  public componentDidMount(): void {
-    const {dispatch: d} = this.props.s
-    lockUi(true, d)
-      .then(() => Promise.all([apiV1ConfigGet(undefined), apiV1ConfigListGet()]))
-      .then(([active, configs]) => this.setState({...this.state, active, configs}))
-      .then(() => lockUi(false, d))
+  const load = () => {
+    lockUi(true, dispatch)
+    Promise.all([apiV1ConfigGet(""), apiV1ConfigListGet()])
+      .then(([activeCfg, list]) => {
+        setActive(activeCfg?.id ? activeCfg : undefined)
+        setConfigs(list || [])
+        setActiveConfig(activeCfg?.id, dispatch)
+      })
+      .catch(e => usrError(messageOf(e), dispatch))
+      .finally(() => {
+        setLoaded(true)
+        lockUi(false, dispatch)
+      })
   }
 
-  private setActive(configId: string) {
-    const {dispatch: d} = this.props.s
-    lockUi(true, d)
-      .then(() => apiV1ConfigSelectGet(configId))
-      .then(({active}) => this.setState({...this.state, active}))
-      .then(() => lockUi(false, d))
+  useEffect(load, [])
+
+  const toggleActive = (cfg: A4Config) => {
+    const isActive = active?.id === cfg.id
+    lockUi(true, dispatch)
+    apiV1ConfigSelectGet(isActive ? "" : cfg.id || "")
+      .then(state => {
+        setActive(state.active)
+        setActiveConfig(state.active?.id, dispatch)
+        return usrInfo(isActive ? "Configuration stopped" : `Configuration ${state.active?.id} activated`, dispatch)
+      })
+      .catch(e => usrError(messageOf(e), dispatch))
+      .finally(() => lockUi(false, dispatch))
   }
 
-  public renderControls(active: boolean, cfg: A4Config) {
-    return (
-      <div>
-        <div class="row justify-center align-center">
-          <div class="col auto txc">
-            <a href={active ? "/" : uiConfigEditFmt(cfg.id)}>
-              {active ? <A4Inspect maxHeight={28} /> : <A4IconEdit maxHeight={28} />}
-            </a>
-          </div>
-          <div class="col auto txc">
-            <a class="ptr" onClick={() => this.setActive(active ? undefined : cfg.id)}>
-              {active ? <A4IcnStop maxHeight={28} /> : <A4IcnPlay maxHeight={28} />}
-            </a>
-          </div>
+  const remove = (cfg: A4Config) => {
+    if (!cfg.id || !window.confirm(`Delete configuration "${cfg.id}"?`)) {
+      return
+    }
+    lockUi(true, dispatch)
+    apiV1ConfigDelete(cfg.id)
+      .then(ok => {
+        if (!ok) {
+          return usrError("The configuration could not be deleted", dispatch)
+        }
+        return usrInfo("Configuration deleted", dispatch)
+      })
+      .then(load)
+      .catch(e => usrError(messageOf(e), dispatch))
+      .finally(() => lockUi(false, dispatch))
+  }
+
+  return (
+    <section>
+      <div class="a4-hero-row">
+        <div>
+          <h1>Configurations</h1>
+          <div class="a4-subtitle">Load balancer definitions stored on the server.</div>
+        </div>
+        <div style="margin-left:auto">
+          <a class="a4-pill a4-pill--accent" data-testid="new-config" href={uiConfigEditFmt("new")}>
+            <A4IcnAdd maxHeight={14}/> New configuration
+          </a>
         </div>
       </div>
-    )
-  }
 
-  public renderStatus(active: boolean) {
-    return (
-      <div class={active ? "pill pill-green" : "pill pill-pale"}>
-        {active ? "active" : "stopped"}
-      </div>
-    )
-  }
-
-  public renderConfigRow(cfg: A4Config) {
-    const active = this.state.active?.id === cfg.id
-    return (
-      <tr>
-        <td>{cfg.id}</td>
-        <td>{cfg.description}</td>
-        <td>{this.renderStatus(active)}</td>
-        <td>{cfg.servers.length}</td>
-        <td>{this.renderControls(active, cfg)}</td>
-      </tr>
-    )
-  }
-
-  public renderTable(configs: A4Config[]) {
-    return (
-      <table class="table txSmall">
-        <thead>
-          <th>ID</th>
-          <th>Description</th>
-          <th>Status</th>
-          <th>Servers</th>
-          <th>Actions</th>
-        </thead>
-        <tbody>
-          {configs.map(cfg => this.renderConfigRow(cfg))}
-        </tbody>
-      </table>
-    )
-  }
-
-  public renderCard(cfg: A4Config) {
-    const active = this.state.active?.id === cfg.id
-    return (
-      <div class="card minimal mt16">
-        <div class="card-body">
-          <h4>
-            <div class="row align-center">
-              <div class="col xs-9 sm-9">
-                {cfg.id}
-              </div>
-              <div class="col auto">
-                {this.renderStatus(active)}
-              </div>
-            </div>
-          </h4>
-          <div class="row">
-            <div class="col xs-9 sm9 mt8">
-              <div>{cfg.description}</div>
-              <div>{cfg.servers ? cfg.servers.length : 0} servers</div>
-            </div>
-            <div class="col auto mt8">
-              {this.renderControls(active, cfg)}
-            </div>
-          </div>
+      {!loaded && (
+        <div class="a4-grid a4-mt16">
+          <div class="a4-skeleton a4-skeleton-card"/>
+          <div class="a4-skeleton a4-skeleton-card"/>
         </div>
-      </div>
-    )
-  }
+      )}
 
-  public render() {
-    const {configs} = this.state
-    return (
-      <div>
-        <div class="row align-center">
-          <div class="col xs-11">
-            <h1>Configs</h1>
-          </div>
-          <div class="col auto txr">
-            <a href={uiConfigEditFmt("new")}>
-              <A4IcnAdd maxHeight={32} />
-            </a>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col auto">
-            {configs ? (
-              <div>
-                <div class="col auto sm-down-hide">
-                  <div class="frame">
-                    {this.renderTable(configs)}
+      {loaded && configs.length === 0 && (
+        <div class="a4-empty a4-mt16">No configurations yet. Create one to get started.</div>
+      )}
+
+      {loaded && configs.length > 0 && (
+        <div class="a4-grid a4-mt16">
+          {configs.map(cfg => {
+            const isActive = active?.id === cfg.id
+            return (
+              <div class="a4-card" key={cfg.id} data-testid="config-card" data-config-id={cfg.id}>
+                <div class="a4-card-body">
+                  <div class="a4-row">
+                    <a class="a4-card-title" href={isActive ? uiRoot : uiConfigEditFmt(cfg.id || "")}>{cfg.id}</a>
+                    <A4StatusPill state={isActive ? "Active" : "Stopped"}/>
+                  </div>
+                  <div class="a4-card-sub">{cfg.description || "No description"}</div>
+                  <div class="a4-card-meta">
+                    {(cfg.servers || []).length} server{(cfg.servers || []).length === 1 ? "" : "s"}
+                  </div>
+                  <div class="a4-card-foot">
+                    <div class="a4-card-actions">
+                      <a class="a4-pill" href={uiConfigEditFmt(cfg.id || "")}>
+                        <A4IconEdit maxHeight={14}/> Edit
+                      </a>
+                      <button class="a4-pill" data-action="toggle-active" type="button"
+                              onClick={() => toggleActive(cfg)}>
+                        {isActive ? <A4IcnStop maxHeight={14}/> : <A4IcnPlay maxHeight={14}/>}
+                        {isActive ? "Stop" : "Activate"}
+                      </button>
+                      {isActive && (
+                        <a class="a4-pill" href={uiRoot}><A4Inspect maxHeight={14}/> Inspect</a>
+                      )}
+                    </div>
+                    <button class="a4-btn-danger" data-action="delete" type="button" onClick={() => remove(cfg)}>
+                      Delete
+                    </button>
                   </div>
                 </div>
-                <div class="col auto md-up-hide">
-                  {configs.map(cfg => this.renderCard(cfg))}
-                </div>
               </div>
-            ) : []}
-          </div>
+            )
+          })}
         </div>
-      </div>
-    )
-  }
-
+      )}
+    </section>
+  )
 }
 
-export default (props: A4CProps) => <A4Configs s={useContext(A4Context)} />
+export default A4Configs

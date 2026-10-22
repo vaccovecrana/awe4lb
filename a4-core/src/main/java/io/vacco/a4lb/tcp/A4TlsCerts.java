@@ -1,22 +1,29 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Server;
+
 import javax.net.ssl.*;
-import java.security.*;
-import java.security.cert.*;
-import java.util.*;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import java.util.Optional;
 
 public class A4TlsCerts {
 
   public static SSLContext trustAllContext() {
     try {
       var sslContext = SSLContext.getInstance("TLS");
-      sslContext.init(null, new TrustManager[] {
-          new X509TrustManager() {
-            public X509Certificate[] getAcceptedIssuers() { return null; }
-            public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-            public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+      sslContext.init(null, new TrustManager[]{
+        new X509TrustManager() {
+          public X509Certificate[] getAcceptedIssuers() {
+            return null;
           }
+
+          public void checkClientTrusted(X509Certificate[] certs, String authType) {
+          }
+
+          public void checkServerTrusted(X509Certificate[] certs, String authType) {
+          }
+        }
       }, new SecureRandom());
       return sslContext;
     } catch (Exception e) {
@@ -36,7 +43,7 @@ public class A4TlsCerts {
       if (srv.tls != null && srv.tls.base != null) {
         km.add(srv.tls.base, A4TlsKeyManager.Base);
       }
-      sslContext.init(new KeyManager[] { km }, null, null);
+      sslContext.init(new KeyManager[]{km}, null, null);
       return sslContext;
     } catch (Exception e) {
       throw new IllegalStateException("Unable to initialize SSLContext", e);

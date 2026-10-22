@@ -1,1 +1,9 @@
-{ "resources": { "includes": [{ "pattern": "ui/.*" }] } }
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "ui/.*"
+      }
+    ]
+  }
+}

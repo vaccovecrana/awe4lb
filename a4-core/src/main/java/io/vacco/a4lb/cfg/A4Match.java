@@ -2,11 +2,11 @@ package io.vacco.a4lb.cfg;
 
 public class A4Match {
 
-  public A4MatchOp      op;
-  public A4Pool         pool;
-  public A4Disc         discover;
-  public A4HealthCheck  healthCheck;
-  public A4Tls          tls;
+  public A4MatchOp op;
+  public A4Pool pool;
+  public A4Disc discover;
+  public A4HealthCheck healthCheck;
+  public A4Tls tls;
 
   public A4Match op(A4MatchOp op) {
     this.op = op;
@@ -32,11 +32,13 @@ public class A4Match {
     return op == null ? "any" : op.toString();
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return matchLabel();
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     return matchLabel().hashCode();
   }
 

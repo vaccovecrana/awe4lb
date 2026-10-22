@@ -1,7 +1,7 @@
 package io.vacco.a4lb;
 
 import io.vacco.a4lb.service.A4Context;
-import io.vacco.a4lb.util.*;
+import io.vacco.a4lb.util.A4Options;
 
 import java.util.Arrays;
 
@@ -13,13 +13,19 @@ public class A4LbMain {
       return;
     }
     var ctx = new A4Context();
-    try { // TODO add UNIX SIGTERM handler
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      try {
+        ctx.close();
+      } catch (Exception e) {
+        System.err.printf("Unable to stop load balancer - %s %s%n",
+          e.getClass().getSimpleName(), e.getMessage()
+        );
+      }
+    }, "a4lb-shutdown"));
+    try {
       ctx.init(A4Options.from(args));
     } catch (Exception e) {
-      System.out.printf("Unable to initialize load balancer - %s %s%n",
-        e.getClass().getSimpleName(), e.getMessage()
-      );
-      ctx.close();
+      throw new IllegalStateException("Unable to initialize load balancer: " + e.getMessage(), e);
     }
   }
 

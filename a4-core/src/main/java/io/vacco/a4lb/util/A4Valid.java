@@ -1,12 +1,15 @@
 package io.vacco.a4lb.util;
 
 import am.ik.yavi.builder.ValidatorBuilder;
-import am.ik.yavi.constraint.*;
+import am.ik.yavi.constraint.CharSequenceConstraint;
+import am.ik.yavi.constraint.IntegerConstraint;
 import am.ik.yavi.constraint.base.ContainerConstraintBase;
 import am.ik.yavi.core.*;
 import io.vacco.a4lb.cfg.*;
+
 import java.io.File;
-import java.net.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,15 +32,15 @@ public class A4Valid {
   /**
    * Not null, not empty, not blank.
    *
-   * @param c constraint
-   * @return constraint
+   * @param c   constraint
    * @param <T> input type
+   * @return constraint
    */
   public static <T> CharSequenceConstraint<T, String> nnNeNb(CharSequenceConstraint<T, String> c) {
     return c.notNull().notBlank().notEmpty();
   }
 
-  public static boolean allNoNullLtEq(int ltEq, Object ... vals) {
+  public static boolean allNoNullLtEq(int ltEq, Object... vals) {
     return Arrays.stream(vals).filter(Objects::nonNull).count() <= ltEq;
   }
 
@@ -46,11 +49,10 @@ public class A4Valid {
       try {
         new URI(x);
         return true;
-      }
-      catch (URISyntaxException e) {
+      } catch (URISyntaxException e) {
         return false;
       }
-    }, CHAR_SEQUENCE_URL, () -> new Object[] {}, VALID));
+    }, CHAR_SEQUENCE_URL, () -> new Object[]{}, VALID));
     return c;
   }
 
@@ -62,7 +64,7 @@ public class A4Valid {
       } catch (Exception e) {
         return false;
       }
-    }, ViolationMessage.of("file.exists", "\"{0}\" file does not exist"), () -> new Object[] {}, VALID));
+    }, ViolationMessage.of("file.exists", "\"{0}\" file does not exist"), () -> new Object[]{}, VALID));
     return c;
   }
 
@@ -274,16 +276,24 @@ public class A4Valid {
     .forEach(A4ServerTls::cipherList, "ciphers.cipher",
       svb -> svb._string(s -> s, "value", A4Valid::nnNeNb)
     )
+    .nestIfPresent(t -> t.base, "base", A4TlsVld)
     .build();
 
   private static final Validator<A4Udp> A4UdpVld = ValidatorBuilder.<A4Udp>of()
     ._integer(u -> u.bufferSize, "bufferSize", A4Valid::gtZero)
     .build();
 
+  private static final Validator<A4Tcp> A4TcpVld = ValidatorBuilder.<A4Tcp>of()
+    ._integer(t -> t.maxConnectionsPerIp, "maxConnectionsPerIp", A4Valid::gtZero)
+    ._integer(t -> t.tlsHandshakeTimeoutMs, "tlsHandshakeTimeoutMs", A4Valid::gtZero)
+    ._integer(t -> t.maxTlsHandshakes, "maxTlsHandshakes", A4Valid::gtZero)
+    .build();
+
   private static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
     ._string(s -> s.id, "id", A4Valid::nnNeNb)
     .nest(s -> s.addr, "addr", A4SockVld)
     .nestIfPresent(s -> s.tls, "tls", A4ServerTlsVld)
+    .nestIfPresent(s -> s.tcp, "tcp", A4TcpVld)
     .nestIfPresent(s -> s.udp, "udp", A4UdpVld)
     .constraint(A4Configs::allMatchesOf, "match", c -> c.notNull().notEmpty())
     .forEach(A4Configs::allMatchesOf, "match", A4MatchVld)
@@ -295,6 +305,11 @@ public class A4Valid {
       s -> allNoNullLtEq(1, s.tls, s.udp),
       oneOf, oneOf,
       "\"{0}\" only one of [tls, udp] allowed"
+    )
+    .constraintOnTarget(
+      s -> s.tls != null || A4Configs.allMatchesOf(s).stream().allMatch(m -> m.tls == null),
+      "tls", "tls.required",
+      "\"{0}\" match-level tls requires a server-level tls configuration"
     )
     .constraintOnCondition(
       (s, cg) -> s.udp != null,
@@ -328,6 +343,11 @@ public class A4Valid {
 
   private static final Validator<A4Config> A4ConfigVld = ValidatorBuilder.<A4Config>of()
     ._string(c -> c.id, "id", A4Valid::nnNeNb)
+    .constraintOnTarget(
+      c -> A4Configs.isValidId(c.id),
+      "id", "id.invalid",
+      "\"{0}\" must start with a letter or number and contain only letters, numbers, dots, dashes or underscores"
+    )
     ._string(c -> c.description, "description", A4Valid::nnNeNb)
     .constraint(A4Config::serverList, "servers", c -> c.notNull().notEmpty())
     .forEach(A4Config::serverList, "servers", A4ServerVld)
@@ -343,10 +363,6 @@ public class A4Valid {
 
   private static final Validator<A4Options> A4FlagsVld = ValidatorBuilder.<A4Options>of()
     ._object(fl -> fl.root, A4Options.kConfig, Constraint::notNull)
-    .constraintOnTarget(
-      fl -> fl.root.exists(), A4Options.kConfig, "exists",
-      "\"{0}\" does not exist (not a file or directory)"
-    )
     .nest(fl -> fl.api, "--api-*", A4SockVld)
     .build();
 

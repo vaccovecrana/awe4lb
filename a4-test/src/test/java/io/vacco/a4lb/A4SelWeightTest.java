@@ -1,15 +1,19 @@
 package io.vacco.a4lb;
 
-import io.vacco.a4lb.cfg.*;
-import io.vacco.a4lb.sel.*;
+import io.vacco.a4lb.cfg.A4Backend;
+import io.vacco.a4lb.cfg.A4BackendState;
+import io.vacco.a4lb.cfg.A4Pool;
+import io.vacco.a4lb.cfg.A4Sock;
+import io.vacco.a4lb.sel.A4PoolContext;
+import io.vacco.a4lb.sel.A4SelWeight;
 import j8spec.annotation.DefinedOrder;
 import j8spec.junit.J8SpecRunner;
 import org.junit.runner.RunWith;
 
 import java.util.List;
 
-import static j8spec.J8Spec.*;
-import static org.junit.Assert.*;
+import static j8spec.J8Spec.it;
+import static org.junit.Assert.assertEquals;
 
 @DefinedOrder
 @RunWith(J8SpecRunner.class)

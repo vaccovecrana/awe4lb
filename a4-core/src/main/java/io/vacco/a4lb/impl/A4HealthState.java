@@ -1,9 +1,15 @@
 package io.vacco.a4lb.impl;
 
-import io.vacco.a4lb.cfg.*;
-import org.buildobjects.process.*;
-import org.slf4j.*;
-import java.net.*;
+import io.vacco.a4lb.cfg.A4Backend;
+import io.vacco.a4lb.cfg.A4BackendState;
+import io.vacco.a4lb.cfg.A4HealthCheck;
+import org.buildobjects.process.ProcBuilder;
+import org.buildobjects.process.ProcResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Arrays;
 
 import static io.vacco.a4lb.util.A4Logging.onError;
@@ -21,8 +27,8 @@ public class A4HealthState {
     var args0 = new String[args.length];
     for (int i = 0; i < args.length; i++) {
       args0[i] = args[i]
-          .replace(kHost, bk.addr.host)
-          .replace(kPort, Integer.toString(bk.addr.port));
+        .replace(kHost, bk.addr.host)
+        .replace(kPort, Integer.toString(bk.addr.port));
     }
     return args0;
   }
@@ -36,9 +42,9 @@ public class A4HealthState {
     }
     try {
       res = new ProcBuilder(hlt.exec.command, args)
-          .withTimeoutMillis(hlt.timeoutMs)
-          .ignoreExitStatus()
-          .run();
+        .withTimeoutMillis(hlt.timeoutMs)
+        .ignoreExitStatus()
+        .run();
       if (res.getExitValue() != 0) {
         throw new IllegalStateException();
       }
@@ -67,8 +73,8 @@ public class A4HealthState {
 
   public static A4BackendState stateOf(String serverId, A4Backend bk, A4HealthCheck hlt) {
     var state = hlt.exec != null
-        ? stateOfExec(serverId, bk, hlt)
-        : stateOfTcp(serverId, bk, hlt);
+      ? stateOfExec(serverId, bk, hlt)
+      : stateOfTcp(serverId, bk, hlt);
     if (bk.state != state) {
       log.info("{} - backend state ({}): {} -> {}", serverId, hlt.exec != null ? "exec" : "tcp", bk, state);
     }
