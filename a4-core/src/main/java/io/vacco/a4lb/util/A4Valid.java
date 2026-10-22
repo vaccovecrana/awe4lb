@@ -276,6 +276,7 @@ public class A4Valid {
     .forEach(A4ServerTls::cipherList, "ciphers.cipher",
       svb -> svb._string(s -> s, "value", A4Valid::nnNeNb)
     )
+    .nestIfPresent(t -> t.base, "base", A4TlsVld)
     .build();
 
   private static final Validator<A4Udp> A4UdpVld = ValidatorBuilder.<A4Udp>of()
@@ -304,6 +305,11 @@ public class A4Valid {
       s -> allNoNullLtEq(1, s.tls, s.udp),
       oneOf, oneOf,
       "\"{0}\" only one of [tls, udp] allowed"
+    )
+    .constraintOnTarget(
+      s -> s.tls != null || A4Configs.allMatchesOf(s).stream().allMatch(m -> m.tls == null),
+      "tls", "tls.required",
+      "\"{0}\" match-level tls requires a server-level tls configuration"
     )
     .constraintOnCondition(
       (s, cg) -> s.udp != null,
