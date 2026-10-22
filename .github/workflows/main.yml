@@ -52,5 +52,3 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/awe4lb:${{ github.ref_name }}
-          provenance: true
-          sbom: true
