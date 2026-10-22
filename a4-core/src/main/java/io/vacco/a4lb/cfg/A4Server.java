@@ -11,6 +11,7 @@ public class A4Server {
   public List<A4Match> match;
 
   public A4ServerTls tls;
+  public A4Tcp tcp;
   public A4Udp udp;
 
   public A4Server id(String id) {

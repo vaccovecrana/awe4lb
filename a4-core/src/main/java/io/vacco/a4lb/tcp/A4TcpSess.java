@@ -8,10 +8,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SNIMatcher;
 import javax.net.ssl.SNIServerName;
+import javax.net.ssl.SSLSocket;
 import java.io.Closeable;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import static io.vacco.a4lb.util.A4Logging.rootCauseOf;
 import static java.lang.String.format;
@@ -24,24 +26,20 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
 
   private A4Selector bkSel;
   private A4TcpIo client, backend;
+  private final A4TcpSessions.SessionContext context;
 
   private String tlsSni;
   private A4Match tlsMatch;
   private final boolean tlsClient;
 
   private final AtomicBoolean stop = new AtomicBoolean(false);
-  private Consumer<A4TcpSess> onInit, onTearDown;
   private Thread clt, bkt;
 
-  public A4TcpSess(A4Selector bkSel,
-                   Consumer<A4TcpSess> onInit,
-                   Consumer<A4TcpSess> onTearDown,
-                   boolean tlsClient) {
+  public A4TcpSess(A4Selector bkSel, A4TcpSessions.SessionContext context) {
     super(0);
     this.bkSel = Objects.requireNonNull(bkSel);
-    this.tlsClient = tlsClient;
-    this.onInit = Objects.requireNonNull(onInit);
-    this.onTearDown = Objects.requireNonNull(onTearDown);
+    this.context = Objects.requireNonNull(context);
+    this.tlsClient = context.tls();
   }
 
   private void logError(Exception e) {
@@ -84,7 +82,6 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     }
     this.backend = bkSel.assign(client.socket, tlsSni);
     this.bkSel.contextOf(backend.backend).trackConn(true);
-    this.onInit.accept(this);
   }
 
   @Override
@@ -146,28 +143,58 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
     var c = client;
     var b = backend;
     var sel = bkSel;
-    var callback = onTearDown;
     A4Io.close(c);
     A4Io.close(b);
     if (stop.compareAndSet(false, true)) {
-      if (sel != null && b != null && b.backend != null) {
-        sel.contextOf(b.backend).trackConn(false);
-      }
       try {
-        if (callback != null) {
-          callback.accept(this);
+        if (sel != null && b != null && b.backend != null) {
+          sel.contextOf(b.backend).trackConn(false);
         }
       } finally {
+        context.lease().release();
+        context.owner().unregister(context.id());
         this.client = null;
         this.backend = null;
         this.bkSel = null;
         this.tlsSni = null;
         this.tlsMatch = null;
-        this.onInit = null;
-        this.onTearDown = null;
         if (log.isDebugEnabled()) {
           log.debug("----------------------------------------------------------");
         }
+      }
+    }
+  }
+
+  private boolean handshake() {
+    if (!(client.socket instanceof SSLSocket sslSocket)) {
+      return true;
+    }
+    var lease = context.owner().tryAcquireHandshake();
+    if (lease == null) {
+      return false;
+    }
+    var previousTimeout = 0;
+    try {
+      previousTimeout = sslSocket.getSoTimeout();
+    } catch (IOException e) {
+      logError(e);
+    }
+    try {
+      sslSocket.setSoTimeout(context.owner().tlsHandshakeTimeoutMs());
+      sslSocket.startHandshake();
+      return true;
+    } catch (SocketTimeoutException e) {
+      context.owner().recordTlsHandshakeTimeout();
+      return false;
+    } catch (Exception e) {
+      logError(e);
+      return false;
+    } finally {
+      lease.release();
+      try {
+        sslSocket.setSoTimeout(previousTimeout);
+      } catch (IOException e) {
+        logError(e);
       }
     }
   }
@@ -209,7 +236,13 @@ public class A4TcpSess extends SNIMatcher implements Closeable {
   }
 
   public void start() {
-    this.clt = Thread.ofVirtual().name(id()).start(() -> pump(true));
+    this.clt = Thread.ofVirtual().name(id()).start(() -> {
+      if (tlsClient && !handshake()) {
+        tearDown();
+        return;
+      }
+      pump(true);
+    });
   }
 
   public A4TcpSess withClient(A4TcpIo client) {

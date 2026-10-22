@@ -115,6 +115,26 @@ test("maps transport exclusively and emits only the selected block", () => {
   assert.equal(tcp.servers[0].transport, "tcp")
 })
 
+test("maps TCP admission limits through the form and wire config", () => {
+  const form = newConfigForm()
+  form.id = "tcp-limits"
+  form.description = "TCP limits"
+  const server = form.servers[0]
+  server.tcpMaxConnectionsPerIp = "64"
+  server.tcpTlsHandshakeTimeoutMs = "2500"
+  server.tcpMaxTlsHandshakes = "32"
+
+  const wire = toConfig(form).servers![0]
+  assert.equal(wire.tcp?.maxConnectionsPerIp, 64)
+  assert.equal(wire.tcp?.tlsHandshakeTimeoutMs, 2500)
+  assert.equal(wire.tcp?.maxTlsHandshakes, 32)
+
+  const parsed = fromConfig(toConfig(form))
+  assert.equal(parsed.servers[0].tcpMaxConnectionsPerIp, "64")
+  assert.equal(parsed.servers[0].tcpTlsHandshakeTimeoutMs, "2500")
+  assert.equal(parsed.servers[0].tcpMaxTlsHandshakes, "32")
+})
+
 test("UDP servers omit match-level backend TLS", () => {
   const form = fromConfig({
     id: "udp", description: "udp",

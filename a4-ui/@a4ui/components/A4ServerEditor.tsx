@@ -123,6 +123,40 @@ const A4ServerEditor = (props: {
         </div>
       )}
 
+      {s.transport !== "udp" && (
+        <div class="a4-subpanel">
+          <div class="a4-subpanel-head">
+            <span class="a4-subpanel-title">TCP limits</span>
+          </div>
+          <div class="a4-grid-3">
+            <A4Field label="Max connections per IP">
+              <input
+                class="a4-input"
+                inputMode="numeric"
+                value={s.tcpMaxConnectionsPerIp}
+                onInput={(e: any) => patch({tcpMaxConnectionsPerIp: e.target.value})}
+              />
+            </A4Field>
+            <A4Field label="TLS handshake timeout (ms)">
+              <input
+                class="a4-input"
+                inputMode="numeric"
+                value={s.tcpTlsHandshakeTimeoutMs}
+                onInput={(e: any) => patch({tcpTlsHandshakeTimeoutMs: e.target.value})}
+              />
+            </A4Field>
+            <A4Field label="Max concurrent TLS handshakes">
+              <input
+                class="a4-input"
+                inputMode="numeric"
+                value={s.tcpMaxTlsHandshakes}
+                onInput={(e: any) => patch({tcpMaxTlsHandshakes: e.target.value})}
+              />
+            </A4Field>
+          </div>
+        </div>
+      )}
+
       {s.transport === "udp" && (
         <div class="a4-subpanel">
           <div class="a4-subpanel-head">

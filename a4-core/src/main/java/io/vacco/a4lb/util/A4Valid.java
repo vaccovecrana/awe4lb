@@ -282,10 +282,17 @@ public class A4Valid {
     ._integer(u -> u.bufferSize, "bufferSize", A4Valid::gtZero)
     .build();
 
+  private static final Validator<A4Tcp> A4TcpVld = ValidatorBuilder.<A4Tcp>of()
+    ._integer(t -> t.maxConnectionsPerIp, "maxConnectionsPerIp", A4Valid::gtZero)
+    ._integer(t -> t.tlsHandshakeTimeoutMs, "tlsHandshakeTimeoutMs", A4Valid::gtZero)
+    ._integer(t -> t.maxTlsHandshakes, "maxTlsHandshakes", A4Valid::gtZero)
+    .build();
+
   private static final Validator<A4Server> A4ServerVld = ValidatorBuilder.<A4Server>of()
     ._string(s -> s.id, "id", A4Valid::nnNeNb)
     .nest(s -> s.addr, "addr", A4SockVld)
     .nestIfPresent(s -> s.tls, "tls", A4ServerTlsVld)
+    .nestIfPresent(s -> s.tcp, "tcp", A4TcpVld)
     .nestIfPresent(s -> s.udp, "udp", A4UdpVld)
     .constraint(A4Configs::allMatchesOf, "match", c -> c.notNull().notEmpty())
     .forEach(A4Configs::allMatchesOf, "match", A4MatchVld)

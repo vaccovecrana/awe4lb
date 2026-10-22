@@ -40,6 +40,9 @@ public class A4Configs {
       cfg.servers = new ArrayList<>();
     }
     for (var srv : cfg.servers) {
+      if (srv.udp == null && srv.tcp == null) {
+        srv.tcp = new A4Tcp();
+      }
       for (var m : allMatchesOf(srv)) {
         if (srv.udp == null && m.healthCheck == null) {
           m.healthCheck = new A4HealthCheck();

@@ -11,6 +11,7 @@ public class A4Stats {
 
   public long timestampMs = System.currentTimeMillis();
   public String configId;
+  public List<A4StatsServer> servers = new ArrayList<>();
   public List<A4StatsBackend> backends = new ArrayList<>();
   public A4StatsHistory history = new A4StatsHistory();
 

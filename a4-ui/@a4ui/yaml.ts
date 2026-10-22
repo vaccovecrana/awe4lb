@@ -72,6 +72,9 @@ export interface ServerEntry {
   tlsProtocols: string
   tlsCiphers: string
   tlsBase: TlsEntry
+  tcpMaxConnectionsPerIp: string
+  tcpTlsHandshakeTimeoutMs: string
+  tcpMaxTlsHandshakes: string
   udpBufferSize: string
   udpIdleTimeoutMs: string
   udpMaxSessions: string
@@ -140,6 +143,9 @@ export const emptyServer = (): ServerEntry => ({
   tlsProtocols: "",
   tlsCiphers: "",
   tlsBase: emptyTls(),
+  tcpMaxConnectionsPerIp: "512",
+  tcpTlsHandshakeTimeoutMs: "5000",
+  tcpMaxTlsHandshakes: "256",
   udpBufferSize: "16384",
   udpIdleTimeoutMs: "60000",
   udpMaxSessions: "4096",
@@ -192,6 +198,12 @@ export const fromConfig = (cfg: A4Config | undefined, previous?: ConfigForm): Co
         keyPath: srv.tls?.base?.keyPath || "",
         open: !!srv.tls?.base?.open
       },
+      tcpMaxConnectionsPerIp: srv.tcp?.maxConnectionsPerIp != null
+        ? String(srv.tcp.maxConnectionsPerIp) : "512",
+      tcpTlsHandshakeTimeoutMs: srv.tcp?.tlsHandshakeTimeoutMs != null
+        ? String(srv.tcp.tlsHandshakeTimeoutMs) : "5000",
+      tcpMaxTlsHandshakes: srv.tcp?.maxTlsHandshakes != null
+        ? String(srv.tcp.maxTlsHandshakes) : "256",
       udpBufferSize: srv.udp?.bufferSize != null ? String(srv.udp.bufferSize) : "16384",
       udpIdleTimeoutMs: srv.udp?.idleTimeoutMs != null ? String(srv.udp.idleTimeoutMs) : "60000",
       udpMaxSessions: srv.udp?.maxSessions != null ? String(srv.udp.maxSessions) : "4096",
@@ -341,6 +353,13 @@ const serverOf = (s: ServerEntry): A4Server => {
     if (protocols.length > 0) out.tls.protocols = protocols
     if (ciphers.length > 0) out.tls.ciphers = ciphers
     if (s.tlsBase.enabled) out.tls.base = tlsOf(s.tlsBase)
+  }
+  if (s.transport !== "udp") {
+    out.tcp = {
+      maxConnectionsPerIp: numOrUndefined(s.tcpMaxConnectionsPerIp),
+      tlsHandshakeTimeoutMs: numOrUndefined(s.tcpTlsHandshakeTimeoutMs),
+      maxTlsHandshakes: numOrUndefined(s.tcpMaxTlsHandshakes)
+    }
   }
   if (s.transport === "udp") {
     out.udp = {

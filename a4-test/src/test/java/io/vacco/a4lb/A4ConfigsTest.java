@@ -35,7 +35,12 @@ public class A4ConfigsTest {
         .server(new A4Server().id("srv").addr(new A4Sock().host("0.0.0.0").port(8080))
           .match(new A4Match()));
       A4Configs.inflate(cfg);
-      var match = cfg.servers.get(0).match.get(0);
+      var server = cfg.servers.get(0);
+      var match = server.match.get(0);
+      assertNotNull(server.tcp);
+      assertEquals(A4Tcp.DefaultMaxConnectionsPerIp, server.tcp.maxConnectionsPerIp);
+      assertEquals(A4Tcp.DefaultTlsHandshakeTimeoutMs, server.tcp.tlsHandshakeTimeoutMs);
+      assertEquals(A4Tcp.DefaultMaxTlsHandshakes, server.tcp.maxTlsHandshakes);
       assertNotNull(match.pool);
       assertNotNull(match.pool.hosts);
       assertTrue(match.pool.hosts.isEmpty());
@@ -111,6 +116,13 @@ public class A4ConfigsTest {
 
     it("Rejects an invalid configuration id during validation", () -> {
       var cfg = validConfig("../escape");
+      assertFalse(io.vacco.a4lb.util.A4Valid.validate(cfg).isEmpty());
+    });
+
+    it("Rejects invalid TCP admission limits", () -> {
+      var cfg = validConfig("cfg-tcp");
+      cfg.servers.get(0).tcp = new A4Tcp();
+      cfg.servers.get(0).tcp.maxConnectionsPerIp = 0;
       assertFalse(io.vacco.a4lb.util.A4Valid.validate(cfg).isEmpty());
     });
   }

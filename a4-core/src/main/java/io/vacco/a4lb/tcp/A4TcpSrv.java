@@ -1,6 +1,8 @@
 package io.vacco.a4lb.tcp;
 
 import io.vacco.a4lb.cfg.A4Server;
+import io.vacco.a4lb.cfg.A4StatsServer;
+import io.vacco.a4lb.cfg.A4Tcp;
 import io.vacco.a4lb.impl.A4Srv;
 import io.vacco.a4lb.sel.A4Selector;
 import io.vacco.a4lb.util.A4Io;
@@ -8,15 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static io.vacco.a4lb.util.A4Logging.onError;
 
@@ -28,12 +26,13 @@ public class A4TcpSrv implements A4Srv {
   private final ServerSocket serverSocket;
   private final A4Server srvConfig;
   private final A4Selector bkSel;
-  private final Map<String, A4TcpSess> sessions = new ConcurrentHashMap<>();
+  private final A4TcpSessions sessions;
 
   public A4TcpSrv(A4Server srv, A4Selector bkSel) {
     try {
       this.srvConfig = Objects.requireNonNull(srv);
       this.bkSel = Objects.requireNonNull(bkSel);
+      this.sessions = new A4TcpSessions(srv.id, srv.tcp != null ? srv.tcp : new A4Tcp());
       var addr = new InetSocketAddress(srv.addr.host, srv.addr.port);
       if (srvConfig.tls != null) {
         log.info("{} - initializing SSL context", srv.id);
@@ -58,29 +57,6 @@ public class A4TcpSrv implements A4Srv {
     }
   }
 
-  private A4TcpSess initSession(Socket clientSocket) {
-    try {
-      // TODO check for connection limits here.
-      var isTls = srvConfig.tls != null;
-      var sess = new A4TcpSess(
-        this.bkSel,
-        s0 -> sessions.put(s0.id(), s0),
-        s0 -> sessions.remove(s0.id()),
-        isTls
-      );
-      if (isTls && clientSocket instanceof SSLSocket sslSocket) {
-        var params = sslSocket.getSSLParameters();
-        params.setSNIMatchers(Collections.singletonList(sess));
-        sslSocket.setSSLParameters(params);
-      }
-      return sess.withClient(new A4TcpIo(clientSocket));
-    } catch (Exception ioe) {
-      onError(log, "{} - Unable to initialize tcp session", ioe, serverSocket.getLocalSocketAddress());
-      A4Io.close(clientSocket);
-      return null;
-    }
-  }
-
   @Override
   public Void call() {
     while (!serverSocket.isClosed()) {
@@ -101,7 +77,7 @@ public class A4TcpSrv implements A4Srv {
         }
         continue;
       }
-      var sess = initSession(clientSocket);
+      var sess = sessions.open(bkSel, clientSocket, srvConfig.tls != null);
       if (sess != null) {
         sess.start();
       }
@@ -112,14 +88,16 @@ public class A4TcpSrv implements A4Srv {
   @Override
   public void close() {
     A4Io.close(serverSocket);
-    int sessCount = this.sessions.size();
-    this.sessions.values().forEach(A4Io::close);
-    this.sessions.clear();
+    int sessCount = sessions.closeAll();
     log.info(
       "{} - {} - TCP ingress closed{}",
       srvConfig.id, serverSocket.getLocalSocketAddress(),
-      sessCount > 0 ? " (" + sessCount + ") sessions" : ""
+      sessCount > 0 ? " (" + sessCount + " sessions)" : ""
     );
+  }
+
+  public A4StatsServer stats() {
+    return sessions.stats();
   }
 
 }

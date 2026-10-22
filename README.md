@@ -78,7 +78,8 @@ The Preact UI is bundled with rspack and provides three views:
 - **Traffic**: live per-backend RX/TX throughput charts and counters, rendered from a server-side ring buffer sampled
   once per second.
 
-The REST API also exposes the raw snapshot at `GET /api/v1/stats`.
+The REST API also exposes the raw snapshot at `GET /api/v1/stats`. For TCP listeners the snapshot includes active
+connections, per-IP rejections, TLS handshake rejections, and handshake timeouts.
 
 Using the UI, you can define load balancer configurations. In this example, we have 3 front servers. The first proxying
 HTTP connections, the second terminating HTTPS connections to HTTP backends, and the third proxying UDP connections via
@@ -171,6 +172,26 @@ changes from `Unknown` to `Up`; they are only closed on an explicit `Down` trans
 UDP matches without a health check are still marked `Up` and participate in routing. That state is effectively
 unchecked: the UI shows `Up`, and there is no separate "unchecked" state. Use an explicit `exec` health check when the
 backend can provide a meaningful probe.
+
+### TCP admission limits
+
+TCP listeners support per-source-IP admission limits and TLS handshake protection:
+
+```yaml
+tcp:
+  maxConnectionsPerIp: 512
+  tlsHandshakeTimeoutMs: 5000
+  maxTlsHandshakes: 256
+```
+
+- `maxConnectionsPerIp` is enforced per listener and per client IP. It is not a process-wide limit.
+- `tlsHandshakeTimeoutMs` applies while the server is waiting for the client's TLS handshake.
+- `maxTlsHandshakes` caps concurrent in-progress TLS handshakes per listener.
+- The limits are checked before the per-connection buffers are allocated.
+- Rejections are counted and logged at a rate-limited frequency.
+
+Established TCP sessions deliberately have **no idle or maximum-lifetime timeout**. Long-lived protocols can pause
+between bursts (for example, a video client buffering playback) without being disconnected by a4lb.
 
 ## Security considerations
 

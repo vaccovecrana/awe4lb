@@ -29,6 +29,7 @@ public class A4Lb implements Closeable {
   private final Gson gson;
 
   private final Map<String, A4Selector> selectors = new LinkedHashMap<>();
+  private final Map<String, A4TcpSrv> tcpServers = new LinkedHashMap<>();
   private final Map<String, A4UdpSrv> udpServers = new LinkedHashMap<>();
   private A4StatsRecorder statsRecorder;
 
@@ -139,6 +140,7 @@ public class A4Lb implements Closeable {
           this.initUdp(srv, bkSel);
         } else {
           var tcpImpl = new A4TcpSrv(srv, bkSel);
+          tcpServers.put(srv.id, tcpImpl);
           scheduler.schedulePermanent(tcpImpl);
         }
         for (int i = 0; i < srv.match.size(); i++) {
@@ -179,6 +181,12 @@ public class A4Lb implements Closeable {
       var selector = selectors.get(srv.id);
       if (selector == null) {
         continue;
+      }
+      if (srv.udp == null) {
+        var tcp = tcpServers.get(srv.id);
+        if (tcp != null) {
+          stats.servers.add(tcp.stats());
+        }
       }
       var serverType = srv.udp != null ? "UDP" : srv.tls != null ? "TLS" : "TCP";
       for (int mIdx = 0; mIdx < srv.match.size(); mIdx++) {
@@ -221,6 +229,7 @@ public class A4Lb implements Closeable {
   public void close() {
     this.statsRecorder = null;
     this.selectors.clear();
+    this.tcpServers.clear();
     this.udpServers.clear();
     this.scheduler.stop();
   }
