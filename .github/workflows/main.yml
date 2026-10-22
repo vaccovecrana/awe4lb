@@ -21,7 +21,7 @@ jobs:
       - name: Display release tag
         run: echo "${{ github.event.release.tag_name }}"
       - name: Pull Docker Image
-        run: docker pull docker gradle:9.8.2-jdk25-graal-resolute
+        run: docker pull gradle:9.8.2-jdk25-graal-resolute
       - name: Gradle Build
         run: |
           docker run --rm \
