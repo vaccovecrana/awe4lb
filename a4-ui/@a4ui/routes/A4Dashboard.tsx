@@ -1,7 +1,7 @@
 import {useContext, useEffect, useState} from "preact/hooks"
 import {A4Context, lockUi, setActiveConfig} from "@a4ui/store"
 import {A4Config, A4Match, A4Server, apiV1ConfigGet} from "@a4ui/rpc"
-import {formatBytes, formatDuration, matchLabelOf, serverTypeOf, uiConfigList, uiTraffic} from "@a4ui/util"
+import {formatBytes, formatDuration, formatNumber, matchLabelOf, serverTypeOf, uiConfigList, uiTraffic} from "@a4ui/util"
 import {A4Router} from "@a4ui/components/A4Icons"
 import A4StatusPill from "@a4ui/components/A4StatusPill"
 
@@ -31,6 +31,16 @@ const serverParamsOf = (srv: A4Server): Param[] => {
     addParam(params, "UDP idle timeout", `${srv.udp.idleTimeoutMs} ms`)
     addParam(params, "Buffer size", formatBytes(srv.udp.bufferSize))
     addParam(params, "Max sessions", srv.udp.maxSessions)
+  } else {
+    addParam(params, "Max connections / IP",
+      srv.tcp?.maxConnectionsPerIp != null ? formatNumber(srv.tcp.maxConnectionsPerIp) : undefined)
+    if (srv.tls) {
+      if (srv.tcp?.tlsHandshakeTimeoutMs != null) {
+        addParam(params, "TLS handshake timeout", formatDuration(srv.tcp.tlsHandshakeTimeoutMs))
+      }
+      addParam(params, "Max TLS handshakes",
+        srv.tcp?.maxTlsHandshakes != null ? formatNumber(srv.tcp.maxTlsHandshakes) : undefined)
+    }
   }
   return params
 }

@@ -75,6 +75,7 @@ public class A4StatsRecorder {
     var out = new A4Stats();
     out.timestampMs = last.timestampMs;
     out.configId = last.configId;
+    out.servers = new ArrayList<>(last.servers);
     out.backends = new ArrayList<>(last.backends);
     out.history = historyOf();
     return out;

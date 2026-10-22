@@ -73,7 +73,9 @@ public class A4TcpLimitsTest {
 
         await("second connection was not rejected", () -> {
           var server = lb.snapshot().servers.get(0);
-          return server.activeConnections == 1 && server.rejectedConnections == 1;
+          return server.activeConnections == 1
+            && server.rejectedConnections == 1
+            && "TCP".equals(server.serverType);
         });
         assertEquals(-1, second.getInputStream().read());
 
@@ -133,6 +135,7 @@ public class A4TcpLimitsTest {
         client.setSoTimeout(3000);
         await("handshake timeout was not counted", () ->
           lb.snapshot().servers.get(0).tlsHandshakeTimeouts == 1
+            && "TLS".equals(lb.snapshot().servers.get(0).serverType)
         );
       } finally {
         if (client != null) {

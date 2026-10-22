@@ -97,7 +97,9 @@ public class A4TcpSrv implements A4Srv {
   }
 
   public A4StatsServer stats() {
-    return sessions.stats();
+    var stats = sessions.stats();
+    stats.serverType = srvConfig.tls != null ? "TLS" : "TCP";
+    return stats;
   }
 
 }

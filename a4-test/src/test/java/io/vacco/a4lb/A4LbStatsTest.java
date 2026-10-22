@@ -111,6 +111,9 @@ public class A4LbStatsTest {
         assertEquals(1, withHistory.history.series.size());
         assertEquals(b.id, withHistory.history.series.get(0).id);
         assertEquals(withHistory.history.timestamps.size(), withHistory.history.series.get(0).rxBps.length);
+        assertEquals(1, withHistory.servers.size());
+        assertEquals("tcp", withHistory.servers.get(0).id);
+        assertEquals("TCP", withHistory.servers.get(0).serverType);
       } finally {
         lb.close();
         echo.close();

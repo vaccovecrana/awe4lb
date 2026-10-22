@@ -178,6 +178,7 @@ export interface A4StatsSeries {
 
 export interface A4StatsServer {
   id?: string;
+  serverType?: string;
   activeConnections?: number;
   activeTlsHandshakes?: number;
   rejectedConnections?: number;

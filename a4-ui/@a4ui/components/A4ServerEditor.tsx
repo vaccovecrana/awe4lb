@@ -120,6 +120,24 @@ const A4ServerEditor = (props: {
             tls={s.tlsBase}
             onChange={tlsBase => patch({tlsBase})}
           />
+          <div class="a4-grid-2 a4-mt16">
+            <A4Field label="TLS handshake timeout (ms)" hint="Only while awaiting the client handshake.">
+              <input
+                class="a4-input"
+                inputMode="numeric"
+                value={s.tcpTlsHandshakeTimeoutMs}
+                onInput={(e: any) => patch({tcpTlsHandshakeTimeoutMs: e.target.value})}
+              />
+            </A4Field>
+            <A4Field label="Max concurrent TLS handshakes" hint="Per listener.">
+              <input
+                class="a4-input"
+                inputMode="numeric"
+                value={s.tcpMaxTlsHandshakes}
+                onInput={(e: any) => patch({tcpMaxTlsHandshakes: e.target.value})}
+              />
+            </A4Field>
+          </div>
         </div>
       )}
 
@@ -128,29 +146,13 @@ const A4ServerEditor = (props: {
           <div class="a4-subpanel-head">
             <span class="a4-subpanel-title">TCP limits</span>
           </div>
-          <div class="a4-grid-3">
-            <A4Field label="Max connections per IP">
+          <div class="a4-grid-2">
+            <A4Field label="Max connections per IP" hint="Per listener and source IP.">
               <input
                 class="a4-input"
                 inputMode="numeric"
                 value={s.tcpMaxConnectionsPerIp}
                 onInput={(e: any) => patch({tcpMaxConnectionsPerIp: e.target.value})}
-              />
-            </A4Field>
-            <A4Field label="TLS handshake timeout (ms)">
-              <input
-                class="a4-input"
-                inputMode="numeric"
-                value={s.tcpTlsHandshakeTimeoutMs}
-                onInput={(e: any) => patch({tcpTlsHandshakeTimeoutMs: e.target.value})}
-              />
-            </A4Field>
-            <A4Field label="Max concurrent TLS handshakes">
-              <input
-                class="a4-input"
-                inputMode="numeric"
-                value={s.tcpMaxTlsHandshakes}
-                onInput={(e: any) => patch({tcpMaxTlsHandshakes: e.target.value})}
               />
             </A4Field>
           </div>

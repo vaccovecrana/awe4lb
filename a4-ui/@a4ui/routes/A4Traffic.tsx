@@ -55,6 +55,7 @@ const A4Traffic = (props: { path?: string }) => {
   }, [dispatch, paused])
 
   const backends = stats?.backends || []
+  const servers = stats?.servers || []
   const effectiveSelected = selected === "all" || backends.some(b => b.id === selected)
     ? selected
     : "all"
@@ -199,6 +200,44 @@ const A4Traffic = (props: { path?: string }) => {
           <div class="a4-stat-sub">Client → backend</div>
         </div>
       </div>
+
+      {servers.length > 0 && (
+        <div>
+          <h2 class="a4-section-title">Listener admission</h2>
+          <div class="a4-table-wrap a4-mb-4">
+            <table class="a4-table">
+              <thead>
+              <tr>
+                <th>Listener</th>
+                <th>Type</th>
+                <th class="a4-num">Active sessions</th>
+                <th class="a4-num">TLS handshakes</th>
+                <th class="a4-num">Rejected / IP</th>
+                <th class="a4-num">TLS rejected</th>
+                <th class="a4-num">Handshake timeouts</th>
+              </tr>
+              </thead>
+              <tbody>
+              {[...servers].sort((a, b) => (a.id || "").localeCompare(b.id || "")).map(server => {
+                const tls = server.serverType === "TLS"
+                return (
+                  <tr key={server.id}>
+                    <td>{server.id || "(unnamed)"}</td>
+                    <td><span class="a4-status a4-status-active">{server.serverType || "TCP"}</span></td>
+                    <td class="a4-num">{formatNumber(server.activeConnections)}</td>
+                    <td class="a4-num">{tls ? formatNumber(server.activeTlsHandshakes) : "-"}</td>
+                    <td class="a4-num">{formatNumber(server.rejectedConnections)}</td>
+                    <td class="a4-num">{tls ? formatNumber(server.rejectedTlsHandshakes) : "-"}</td>
+                    <td class="a4-num">{tls ? formatNumber(server.tlsHandshakeTimeouts) : "-"}</td>
+                  </tr>
+                )
+              })}
+              </tbody>
+            </table>
+          </div>
+          <div class="a4-table-hint">Listener admission counters cover accepted sessions; backend counters appear below.</div>
+        </div>
+      )}
 
       <div class="a4-chart-panel">
         <div class="a4-chart-head">

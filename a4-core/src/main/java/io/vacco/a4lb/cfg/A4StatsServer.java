@@ -3,6 +3,7 @@ package io.vacco.a4lb.cfg;
 public class A4StatsServer {
 
   public String id;
+  public String serverType;
 
   public int activeConnections;
   public int activeTlsHandshakes;

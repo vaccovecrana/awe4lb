@@ -21,6 +21,7 @@ configure<io.vacco.ronove.plugin.RvPluginExtension> {
   optionalFields = true
   controllerClasses = arrayOf("io.vacco.a4lb.web.A4ApiHdl")
   outFile.set(file("./@a4ui/rpc.ts"))
+  reflectConfigFile.set(file("../a4-lb/src/main/resources/reflect-config.json"))
 }
 
 node {

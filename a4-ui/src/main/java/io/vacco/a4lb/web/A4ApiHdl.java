@@ -6,7 +6,9 @@ import io.vacco.a4lb.cfg.A4ConfigState;
 import io.vacco.a4lb.cfg.A4Stats;
 import io.vacco.a4lb.cfg.A4Validation;
 import io.vacco.a4lb.service.A4Service;
+import io.vacco.ronove.api.RvGraal;
 import io.vacco.ronove.util.RvResponse;
+import io.vacco.shax.logging.ShLogConfig;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -21,6 +23,7 @@ import static io.vacco.a4lb.service.A4Service.New;
 import static io.vacco.a4lb.util.A4Configs.*;
 import static io.vacco.a4lb.web.A4Route.*;
 
+@RvGraal(include = {ShLogConfig.class})
 public class A4ApiHdl {
 
   private final File configRoot;

@@ -75,7 +75,8 @@ The Preact UI is bundled with rspack and provides three views:
 - **Configs**: create, edit, activate, stop and delete configurations. The editor keeps a structured form and a YAML
   document in sync in both directions, reports YAML syntax errors with line/column information, and surfaces backend
   validation errors inline. `Ctrl/Cmd+S` saves.
-- **Traffic**: live per-backend RX/TX throughput charts and counters, rendered from a server-side ring buffer sampled
+- **Traffic**: live listener admission counters (active sessions, per-IP rejections, TLS handshake rejections and
+  timeouts), plus per-backend RX/TX throughput charts and counters, rendered from a server-side ring buffer sampled
   once per second.
 
 The REST API also exposes the raw snapshot at `GET /api/v1/stats`. For TCP listeners the snapshot includes active
