@@ -31,10 +31,6 @@ jobs:
             -w /workspace \
             gradle:9.8.2-jdk25-graal-resolute \
             gradle --no-daemon clean build :a4lb-linux-amd64:nativeCompile
-      - name: Generate checksum
-        run: |
-          cd a4-lb/build/native/nativeCompile
-          sha256sum a4lb-linux-amd64 > a4lb-linux-amd64.sha256
       - name: Upload binaries
         uses: svenstaro/upload-release-action@v2
         with:
